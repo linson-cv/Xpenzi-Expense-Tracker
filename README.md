@@ -1,114 +1,10 @@
-<h1 align="center" style="font-size:28px; line-height:1"><b>Cashew</b></h1>
+# Spendwise: Expense Tracker
 
-
-<div align="center">
-  <a href="https://cashewapp.web.app/">
-    <img alt="Icon" src="promotional/icons/icon.png" width="150px" >
-  </a>
-</div>
-
-
-<br />
-
-<div align="center">
-  <a href="https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930">
-    <img alt="iOS App Store Badge" src="promotional/store-banners/app-store-badge.png" height="60px">
-  </a>
-  <a href="https://play.google.com/store/apps/details?id=com.budget.tracker_app">
-    <img alt="Google Play Badge" src="promotional/store-banners/google-play-badge.png" height="60px">
-  </a>
-  <a href="https://github.com/jameskokoska/Cashew/releases/">
-    <img alt="GitHub Badge" src="promotional/store-banners/github-badge.png" height="60px">
-  </a>
-  <a href="https://budget-track.web.app/">
-    <img alt="PWA Badge" src="promotional/store-banners/pwa-badge.png" height="60px">
-  </a>
-</div>
-
-<h3 align="center" style="font-size:28px; line-height:1">
-  <a href="https://github.com/jameskokoska/Cashew/issues/725">🚀 Cashew Beta Testing</a>
-</h3>
-
----
-
-<br />
-
-<a href="https://cashewapp.web.app/">
-  <div align="center">
-    <img width="95%" src="promotional/GitHub/SocialPreviewGitHub.png" alt="Promo banner">
-  </div>
-</a>
-
-<br />
-
-Cashew is a full-fledged, feature-rich application designed to empower users in managing their finances effectively. Built using Flutter - with Drift's SQL package, and Firebase - this app offers a seamless and intuitive user experience across various devices. Development started in September 2021.
+Spendwise: Expense Tracker is a full-fledged, feature-rich application designed to empower users in managing their finances effectively. Built using Flutter - with Drift's SQL package, and Firebase - this app offers a seamless and intuitive user experience across various devices.
 
 ---
 
 ## Features
-
-<a href="https://www.youtube.com/watch?v=Oar9pkc7BSc&t=235s">
-  <div align="center">
-    <img width="80%" src="promotional/youtube-promo/thumbnail-oss.png" alt="Review Video">
-  </div>
-</a>
-<p align="center">
-  Cashew was featured on <a href="https://www.youtube.com/watch?v=Oar9pkc7BSc&t=235s">YouTube</a> on 'The Best Free and Open Source Apps in 2024!' (and in the thumbnail!)
-</p>
-
-<br />
-
-<a href="https://www.youtube.com/watch?v=NYZd7IKn1oY&t=536s">
-  <div align="center">
-    <img width="80%" src="promotional/youtube-promo/thumbnail-year-best.png" alt="Review Video">
-  </div>
-</a>
-<p align="center">
-  Cashew was featured on <a href="https://www.youtube.com/watch?v=NYZd7IKn1oY&t=536s">YouTube</a> on 'The Best Apps of 2023!'
-</p>
-
-<br>
-
-<a href="https://www.youtube.com/watch?v=2MwWmqcn--s&t=261s">
-  <div align="center">
-    <img width="80%" src="promotional/youtube-promo/thumbnail.png" alt="Review Video">
-  </div>
-</a>
-<p align="center">
-  Cashew was featured on <a href="https://www.youtube.com/watch?v=2MwWmqcn--s&t=261s">YouTube</a> on 'Top Android Apps! (November 2023)'
-</p>
-
-<br>
-
-<div align="center">
-  <img width="80%" src="promotional/play-store-feature/play-store-feature.png" alt="Play Store Feature">
-</div>
-<p align="center">
-  Cashew was featured on <a href="https://play.google.com/store/apps/editorial?id=mc_apps_new_on_play_fcp">Google Play's Editorial 'New Apps We Love'</a> (November 2023)!
-</p>
-
-<br>
-
-<a href="https://github.com/nyas1/Material-You-app-list?tab=readme-ov-file#-economy:~:text=MDY%20Celenganku-,MDY%20Cashew,-MDY%20Allowance%20FOSS">
-  <div align="center">
-    <img width="80%" src="promotional/material-apps-feature/material-apps-feature.png" alt="Material Apps List Feature">
-  </div>
-</a>
-<p align="center">
-  Cashew was featured in the <a href="https://github.com/nyas1/Material-You-app-list?tab=readme-ov-file#-economy:~:text=MDY%20Celenganku-,MDY%20Cashew,-MDY%20Allowance%20FOSS">Material You Apps List</a>!
-</p>
-
-## Release
-
-Check out the [official website](https://cashewapp.web.app/)!
-
-This application is available on the [App Store](https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930), [Google Play](https://play.google.com/store/apps/details?id=com.budget.tracker_app), [GitHub](https://github.com/jameskokoska/Cashew/releases/) and as a [Web App (PWA)](https://budget-track.web.app/).
-
-### Changelog
-
-Changes and progress about development is all heavily documented in GitHub [commits](https://github.com/jameskokoska/Cashew/commits/main) and in the [changelog](https://github.com/jameskokoska/Cashew/blob/main/budget/lib/widgets/showChangelog.dart)
-
-## Key Features
 
 ### 💸 Budget Management
 
@@ -155,118 +51,45 @@ Changes and progress about development is all heavily documented in GitHub [comm
 - Notifications: Stay informed about important financial events and receive timely reminders for budget goals, transactions, and upcoming due dates.
 - Import CSV Files: Seamlessly import financial data by uploading CSV files, facilitating a smooth transition from other applications or platforms.
 - Import Google Sheets: Seamlessly import Google Sheets tables, quickly importing many transactions from a spreadsheet.
-- App Links: Automatically create transactions with pre-filled data using app linking (documentation below)
+- App Links: Automatically create transactions with pre-filled data using app linking.
 
-## Automation
-
-See the `Automation` section on the FAQ website for information on how to add transactions automatically: https://cashewapp.web.app/faq.html#automation
+---
 
 ## Bundled Packages
 
-This repository contains, bundled in, modified versions of the discontinued packages listed below. They can be found in the folder `/budget/packages`
+This repository contains, bundled in, modified versions of packages listed below. They can be found in the folder `/budget/packages`
 
 - https://pub.dev/packages/implicitly_animated_reorderable_list
 - https://pub.dev/packages/sliding_sheet
 
 ## Translations
 
-The translations are available here: https://docs.google.com/spreadsheets/d/1QQqt28cmrby6JqxLm-oxUXCuM3alniLJ6IRhcPJDOtk/edit?usp=sharing. If you would like to help translate, please reach out on email: dapperappdeveloper@gmail.com
-
-### To Update Translations
-
+To Update Translations:
 1. Run `budget\assets\translations\generate-translations.py`
 2. Restart the application
 
+---
+
 ## Developer Notes
-
-### Pull Requests and Contributions
-
-Unfortunately, I am currently not accepting contributions due to licensing and credits. Since this application turns some profits, I want to avoid any muddy water when it comes to compensation for contributions. You are free to submit an [issue](https://github.com/jameskokoska/Cashew/issues) and I can consider it!
 
 ### Android Release
 
-- To build an app-bundle Android release, run `flutter build appbundle --release`
-
-Note: required Android SDK.
+- To build an app-bundle Android release, run `flutter build appbundle --release` (Requires Android SDK).
 
 ### iOS Release
 
-- To build an IPA iOS release, run `flutter build ipa`
-
-Note: requires MacOS.
+- To build an IPA iOS release, run `flutter build ipa` (Requires macOS).
 
 ### Firebase Deployment
 
 - To deploy to firebase, run `firebase deploy`
 
-Note: required Firebase.
-
-### GitHub release
-
-- Create a tag for the current version specified in `pubspec.yaml`
-- `git tag <version>`
-- Push the tag
-- `git push origin <version>`
-- Create the release and upload binaries
-- https://github.com/jameskokoska/Cashew/releases/new
-
-### Scripts
-
-`deploy_and_build_windows.bat`
-
-- Deploy to Firebase and build the apk and appbundle
-
-`open_release_builds.bat`
-
-- Opens the location of the built apk and appbundle
-
-`update_translations.bat`
-
-- Downloads the latest version of Cashew translations. Runs `budget\assets\translations\generate-translations.py`
-
-### Develop Wirelessly on Android
-
-- `adb tcpip 5555`
-- `adb connect <IP>`
-- Get the phone's IP by going to `About Phone` > `Status Information` > `IP Address`
-
 ### Migrate Database
 
 1. Make any database changes to the schema and tables
-2. Bump the schema version
-   - Change `int schemaVersionGlobal = ...+1` in `tables.dart`
-3. Make sure you are in application root directory
-   - `cd .\budget\`
-4. Generate database code
-   - Run `dart run build_runner build`
-5. Export the new schema
-   - Generate schema dump for the newly created schema
-   - Replace `[schemaVersion]` in the command below with the value of `schemaVersionGlobal`
-   - Run `dart run drift_dev schema dump lib\database\tables.dart drift_schemas//drift_schema_v[schemaVersion].json`
-   - Read more: https://drift.simonbinder.eu/docs/advanced-features/migrations/#exporting-the-schema
-6. Generate step-by-step migrations
-   - Run `dart run drift_dev schema steps drift_schemas/ lib\database\schema_versions.dart`
-7. Implement migration strategy
-   - Edit `await stepByStep(...)` function in `tables.dart` and add the migration strategy for the new version migration
-
-### Get Platform
-
-- Use `getPlatform()` from `functions.dart`
-- Since `Platform` is not supported on web, we must create a wrapper and always use this to determine the current platform
-
-### Push Route
-
-- If we want to navigate to a new page, stick to `pushRoute(context, page)` function from `functions.dart`
-- It handles the platform routing and `PageRouteBuilder`
-
-### Wallets vs. Accounts
-
-- `Wallets` have been been renamed to `Accounts` on the front-end but internally, the name `Wallet` is still used.
-
-### Objectives vs. Goals
-
-- `Objectives` have been been renamed to `Goals` on the front-end but internally, the name `Objectives` is still used.
-
-### Long Term Loans
-
-- Long term loans create a goal. However, the goals total is not used. Instead the total of the goal is calculated by totalling the proper polarity of transactions of the opposite type. For example, if it was a loan of 100$ lent out, the initial transaction would be 100$ of negative polarity (expense) and that would be the total of the goal. When a payment is made, it is made in the opposite (positive) polarity (income) and added to the total 'paid back'. We can easily find how much is remaining by taking the difference (or the addition including polarities).
+2. Bump the schema version (`int schemaVersionGlobal = ...+1` in `tables.dart`)
+3. `cd .\budget\`
+4. Run `dart run build_runner build`
+5. Export new schema (`dart run drift_dev schema dump lib\database\tables.dart drift_schemas//drift_schema_v[schemaVersion].json`)
+6. Generate step-by-step migrations (`dart run drift_dev schema steps drift_schemas/ lib\database\schema_versions.dart`)
+7. Implement migration strategy in `tables.dart`.

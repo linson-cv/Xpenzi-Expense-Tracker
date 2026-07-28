@@ -107,7 +107,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
                       ? Icons.live_help_outlined
                       : Icons.live_help_rounded,
                   action: () {
-                    openUrl("https://cashewapp.web.app/faq.html");
+                    openUrl("https://spendwiseapp.web.app/faq.html");
                   },
                 ),
             ],
@@ -182,7 +182,7 @@ class MorePages extends StatelessWidget {
               //     padding: EdgeInsetsDirectional.symmetric(vertical: 5, horizontal: 4),
               //     child: SettingsContainer(
               //       onTap: () {
-              //         openUrl("https://github.com/jameskokoska/Cashew");
+              //         openUrl("https://github.com/spendwise/Spendwise");
               //       },
               //       title: "open-source".tr(),
               //       icon: MoreIcons.github,

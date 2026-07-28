@@ -1,6 +1,6 @@
 {
-    "name": "Cashew",
-    "short_name": "Cashew",
+    "name": "Spendwise: Expense Tracker",
+    "short_name": "Spendwise",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",

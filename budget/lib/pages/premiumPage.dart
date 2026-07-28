@@ -32,14 +32,14 @@ StreamSubscription<List<PurchaseDetails>>? purchaseListener;
 Map<String, ProductDetails> storeProducts = {};
 Map<String, String> productIDs = {
   'yearly': getPlatform(ignoreEmulation: true) == PlatformOS.isIOS
-      ? 'cashew.pro.yearly' //iOS
-      : 'cashew.pro.yearly', //Android
+      ? 'spendwise.pro.yearly' //iOS
+      : 'spendwise.pro.yearly', //Android
   'monthly': getPlatform(ignoreEmulation: true) == PlatformOS.isIOS
-      ? 'cashew.pro.monthly' //iOS
-      : 'cashew.pro.monthly', //Android
+      ? 'spendwise.pro.monthly' //iOS
+      : 'spendwise.pro.monthly', //Android
   'lifetime': getPlatform(ignoreEmulation: true) == PlatformOS.isIOS
-      ? 'cashew.pro.life' //iOS
-      : 'cashew.pro.lifetime', //Android
+      ? 'spendwise.pro.life' //iOS
+      : 'spendwise.pro.lifetime', //Android
 };
 
 // A user has paid is appStateSettings["purchaseID"] is not null
@@ -84,7 +84,7 @@ class PremiumPage extends StatelessWidget {
                               ),
                               Column(
                                 children: [
-                                  CashewProBanner(large: true),
+                                  SpendwiseProBanner(large: true),
                                   SizedBox(height: 4),
                                   TextFont(
                                     text: "budget-like-a-pro".tr() +
@@ -427,8 +427,8 @@ class _FreePremiumMessageState extends State<FreePremiumMessage> {
   }
 }
 
-class CashewProBanner extends StatelessWidget {
-  const CashewProBanner({this.large = false, this.fontColor, super.key});
+class SpendwiseProBanner extends StatelessWidget {
+  const SpendwiseProBanner({this.large = false, this.fontColor, super.key});
   final bool large;
   final Color? fontColor;
 
@@ -483,10 +483,10 @@ openManagePurchase() {
     openUrl("https://apps.apple.com/account/subscriptions");
   } else if (appStateSettings["purchaseID"] == productIDs["monthly"]) {
     openUrl(
-        "https://play.google.com/store/account/subscriptions?sku=cashew.pro.monthly&package=com.budget.tracker_app");
+        "https://play.google.com/store/account/subscriptions?sku=spendwise.pro.monthly&package=com.budget.tracker_app");
   } else if (appStateSettings["purchaseID"] == productIDs["yearly"]) {
     openUrl(
-        "https://play.google.com/store/account/subscriptions?sku=cashew.pro.yearly&package=com.budget.tracker_app");
+        "https://play.google.com/store/account/subscriptions?sku=spendwise.pro.yearly&package=com.budget.tracker_app");
   } else {
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid)
       openUrl("https://play.google.com/store/account/subscriptions");
@@ -531,7 +531,7 @@ class ManageSubscription extends StatelessWidget {
                     fontSize: 16,
                   ),
             SizedBox(height: 10),
-            CashewProBanner(fontColor: getColor(context, "black")),
+            SpendwiseProBanner(fontColor: getColor(context, "black")),
             TextFont(
               text: currentPlanName ?? "",
               fontSize: 23,
@@ -709,7 +709,7 @@ showHelpRestorePopup(BuildContext context) {
       if (openResult == false) copyToClipboard("dapperappdeveloper@gmail.com");
     },
     onExtra: () =>
-        openUrl("https://cashewapp.web.app/faq.html#restoring-purchases"),
+        openUrl("https://spendwiseapp.web.app/faq.html#restoring-purchases"),
     onExtraLabel: "FAQ".tr(),
   );
 }
@@ -1297,7 +1297,7 @@ class _FadeOutAndLockFeatureState extends State<FadeOutAndLockFeature> {
                   fontSize: 15,
                 ),
                 SizedBox(height: 5),
-                CashewProBanner(fontColor: getColor(context, "black")),
+                SpendwiseProBanner(fontColor: getColor(context, "black")),
                 SizedBox(height: 15),
                 LowKeyButton(
                   onTap: openPremiumPopup,
@@ -1459,7 +1459,7 @@ class PremiumBanner extends StatelessWidget {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    CashewProBanner(),
+                                    SpendwiseProBanner(),
                                     purchased
                                         ? Container(
                                             margin:
