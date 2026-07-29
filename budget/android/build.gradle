@@ -24,7 +24,7 @@ subprojects { p ->
     p.buildDir = "${rootProject.buildDir}/${p.name}"
     p.plugins.withId('com.android.library') {
         if (p.android.namespace == null) {
-            p.android.namespace = "com.budget.tracker_app.${p.name.replace('-', '_')}"
+            p.android.namespace = "com.spendwise.expense_tracker.${p.name.replace('-', '_')}"
         }
         p.afterEvaluate { proj ->
             def javaVer = proj.android.compileOptions.sourceCompatibility.toString()
@@ -43,7 +43,7 @@ subprojects { p ->
     }
     p.plugins.withId('com.android.application') {
         if (p.android.namespace == null) {
-            p.android.namespace = "com.budget.tracker_app.${p.name.replace('-', '_')}"
+            p.android.namespace = "com.spendwise.expense_tracker.${p.name.replace('-', '_')}"
         }
         p.afterEvaluate { proj ->
             def javaVer = proj.android.compileOptions.sourceCompatibility.toString()
