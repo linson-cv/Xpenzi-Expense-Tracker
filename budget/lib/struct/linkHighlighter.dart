@@ -21,7 +21,7 @@ class LinkHighlighter extends TextEditingController {
 
   LinkHighlighter({String? initialText})
       : pattern = RegExp(r'https?:\/\/(?:www\.)?\S+(?=\s)') {
-    this.text = initialText ?? '';
+    text = initialText ?? '';
   }
   @override
   TextSpan buildTextSpan({
@@ -37,12 +37,12 @@ class LinkHighlighter extends TextEditingController {
         children.add(
           TextSpan(
             text:
-                addInvisibleSpace(match[0] ?? "", " " + websiteNameClean + " "),
+                addInvisibleSpace(match[0] ?? "", " $websiteNameClean "),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onPrimary,
               backgroundColor: dynamicPastel(
                 context,
-                Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                 inverse: true,
                 amountDark: 0.1,
                 amountLight: 0.25,

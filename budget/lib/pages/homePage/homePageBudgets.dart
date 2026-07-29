@@ -39,7 +39,7 @@ class _HomePageBudgetsState extends State<HomePageBudgets> {
                 onTap: () {
                   openBottomSheet(
                     context,
-                    EditHomePagePinnedBudgetsPopup(
+                    const EditHomePagePinnedBudgetsPopup(
                       showBudgetsTotalLabelSetting: false,
                     ),
                     useCustomController: true,
@@ -80,7 +80,7 @@ class _HomePageBudgetsState extends State<HomePageBudgets> {
                   onTap: () {
                     openBottomSheet(
                       context,
-                      EditHomePagePinnedBudgetsPopup(
+                      const EditHomePagePinnedBudgetsPopup(
                         showBudgetsTotalLabelSetting: false,
                       ),
                       useCustomController: true,
@@ -88,7 +88,7 @@ class _HomePageBudgetsState extends State<HomePageBudgets> {
                   },
                   height: null,
                   width: null,
-                  margin: EdgeInsetsDirectional.all(0),
+                  margin: const EdgeInsetsDirectional.all(0),
                   labelUnder: "budget".tr(),
                   icon: Icons.format_list_bulleted_add,
                 ),
@@ -125,6 +125,9 @@ class _HomePageBudgetsState extends State<HomePageBudgets> {
                             addAutomaticKeepAlives: true,
                             clipBehavior: Clip.none,
                             scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsetsDirectional.symmetric(
+                              horizontal: 10,
+                            ),
                             children: [
                               for (Widget widget in budgetItems)
                                 Padding(
@@ -136,9 +139,6 @@ class _HomePageBudgetsState extends State<HomePageBudgets> {
                                   ),
                                 )
                             ],
-                            padding: EdgeInsetsDirectional.symmetric(
-                              horizontal: 10,
-                            ),
                           ),
                         )
                       : CarouselSlider(
@@ -163,7 +163,7 @@ class _HomePageBudgetsState extends State<HomePageBudgets> {
               ],
             );
           } else {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
         },
       ),
@@ -189,7 +189,7 @@ class EditHomePagePinnedBudgetsPopup extends StatelessWidget {
                   ? Icons.edit_outlined
                   : Icons.edit_rounded,
               onPressed: () async {
-                pushRoute(context, EditBudgetPage());
+                pushRoute(context, const EditBudgetPage());
               },
             ),
             child: Column(
@@ -197,13 +197,13 @@ class EditHomePagePinnedBudgetsPopup extends StatelessWidget {
                 if (showBudgetsTotalLabelSetting)
                   ClipRRect(
                     borderRadius: BorderRadiusDirectional.circular(15),
-                    child: TotalSpentToggle(),
+                    child: const TotalSpentToggle(),
                   ),
-                if (allBudgets.length <= 0)
+                if (allBudgets.isEmpty)
                   NoResultsCreate(
                     message: "no-budgets-found".tr(),
                     buttonLabel: "create-budget".tr(),
-                    route: AddBudgetPage(
+                    route: const AddBudgetPage(
                       routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                     ),
                   ),
@@ -215,20 +215,22 @@ class EditHomePagePinnedBudgetsPopup extends StatelessWidget {
                     for (Budget budget in allBudgets) budget.budgetPk.toString()
                   ],
                   getColor: (budgetPk, selected) {
-                    for (Budget budget in allBudgets)
+                    for (Budget budget in allBudgets) {
                       if (budget.budgetPk.toString() == budgetPk.toString()) {
                         return HexColor(budget.colour,
                                 defaultColor:
                                     Theme.of(context).colorScheme.primary)
-                            .withOpacity(selected == true ? 0.7 : 0.5);
+                            .withValues(alpha: selected == true ? 0.7 : 0.5);
                       }
+                    }
                     return null;
                   },
                   displayFilter: (budgetPk) {
-                    for (Budget budget in allBudgets)
+                    for (Budget budget in allBudgets) {
                       if (budget.budgetPk.toString() == budgetPk.toString()) {
                         return budget.name;
                       }
+                    }
                     return "";
                   },
                   initialItems: [
@@ -256,7 +258,7 @@ class EditHomePagePinnedBudgetsPopup extends StatelessWidget {
                     );
                   },
                 ),
-                if (allBudgets.length > 0)
+                if (allBudgets.isNotEmpty)
                   AddButton(
                     onTap: () {},
                     height: 50,
@@ -267,11 +269,11 @@ class EditHomePagePinnedBudgetsPopup extends StatelessWidget {
                       bottom: 13,
                       top: 13,
                     ),
-                    openPage: AddBudgetPage(
+                    openPage: const AddBudgetPage(
                       routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                     ),
                     afterOpenPage: () {
-                      Future.delayed(Duration(milliseconds: 100), () {
+                      Future.delayed(const Duration(milliseconds: 100), () {
                         bottomSheetControllerGlobalCustomAssigned
                             ?.snapToExtent(0);
                       });

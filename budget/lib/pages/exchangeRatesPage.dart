@@ -75,7 +75,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
       currencyExchange[key] = null;
     }
     currencyExchange.addAll(appStateSettings["cachedCurrencyExchange"]);
-    if (currencyExchange.keys.length <= 0) {
+    if (currencyExchange.keys.isEmpty) {
       for (String key in currenciesJSON.keys) {
         currencyExchange[key] = 1;
       }
@@ -116,15 +116,13 @@ class _ExchangeRatesState extends State<ExchangeRates> {
       title: "exchange-rates".tr(),
       actions: [
         IconButton(
-          padding: EdgeInsetsDirectional.all(15),
+          padding: const EdgeInsetsDirectional.all(15),
           tooltip: "info".tr(),
           onPressed: () {
             openPopup(
               context,
               title: "exchange-rate-notice".tr(),
-              description: "exchange-rate-notice-description".tr() +
-                  "\n\n" +
-                  "select-an-entry-to-set-custom-exchange-rate".tr(),
+              description: "${"exchange-rate-notice-description".tr()}\n\n${"select-an-entry-to-set-custom-exchange-rate".tr()}",
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.info_outlined
                   : Icons.info_outline_rounded,
@@ -153,7 +151,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
             padding: const EdgeInsetsDirectional.only(top: 5),
             child: Row(
               children: [
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 Expanded(
                   child: TextInput(
                     labelText: "search-currencies-placeholder".tr(),
@@ -169,7 +167,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                     padding: EdgeInsetsDirectional.zero,
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 ButtonIcon(
                   onTap: () {
                     openBottomSheet(
@@ -197,14 +195,14 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                       ? Icons.add_outlined
                       : Icons.add_rounded,
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
               ],
             ),
           ),
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsetsDirectional.only(top: 5),
+            padding: const EdgeInsetsDirectional.only(top: 5),
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(horizontal: 17),
               child: TextFont(
@@ -219,17 +217,16 @@ class _ExchangeRatesState extends State<ExchangeRates> {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsetsDirectional.only(top: 7),
+            padding: const EdgeInsetsDirectional.only(top: 7),
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(
                   horizontal: 17, vertical: 5),
               child: TextFont(
-                text: "1 " +
-                    Provider.of<AllWallets>(context)
+                text: "1 ${Provider.of<AllWallets>(context)
                         .indexedByPk[appStateSettings["selectedWalletPk"]]!
                         .currency
                         .toString()
-                        .allCaps,
+                        .allCaps}",
                 maxLines: 2,
                 fontSize: 27,
                 fontWeight: FontWeight.bold,
@@ -237,7 +234,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
             ),
           ),
         ),
-        currencyExchangeFiltered.keys.length == 0
+        currencyExchangeFiltered.keys.isEmpty
             ? SliverToBoxAdapter(
                 child: NoResults(message: "no-currencies-found".tr()),
               )
@@ -282,7 +279,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                                   .secondaryContainer,
                           child: Padding(
                             padding:
-                                EdgeInsetsDirectional.symmetric(horizontal: 8),
+                                const EdgeInsetsDirectional.symmetric(horizontal: 8),
                             child: OutlinedContainer(
                               enabled: isCustomCurrency,
                               filled: appStateSettings["customCurrencyAmounts"]
@@ -299,26 +296,24 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                                         maxLines: 3,
                                         richTextSpan: [
                                           TextSpan(
-                                            text: (isUnsetCustomCurrency
-                                                    ? " " + "1 USD"
-                                                    : "") +
-                                                " = " +
-                                                calculatedExchangeRateString,
+                                            text: "${isUnsetCustomCurrency
+                                                    ? " " "1 USD"
+                                                    : ""} = $calculatedExchangeRateString",
                                             style: TextStyle(
                                               color: getColor(context, "black"),
                                               fontFamily:
                                                   appStateSettings["font"],
-                                              fontFamilyFallback: ['Inter'],
+                                              fontFamilyFallback: const ['Inter'],
                                               fontSize: 16,
                                             ),
                                           ),
                                           TextSpan(
-                                            text: " " + key.allCaps,
+                                            text: " ${key.allCaps}",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontFamily:
                                                   appStateSettings["font"],
-                                              fontFamilyFallback: ['Inter'],
+                                              fontFamilyFallback: const ['Inter'],
                                               color: getColor(context, "black"),
                                               fontSize: 16,
                                             ),
@@ -328,7 +323,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                                     ),
                                     if (isCustomCurrency)
                                       IconButton(
-                                        padding: EdgeInsetsDirectional.all(15),
+                                        padding: const EdgeInsetsDirectional.all(15),
                                         tooltip: "delete-currency".tr(),
                                         onPressed: () {
                                           deleteCustomCurrency(key);
@@ -423,7 +418,7 @@ class _SetCustomCurrencyState extends State<SetCustomCurrency> {
                         ?[widget.currencyKey]
                     .toString() ??
                 "0"),
-        suffix: " " + widget.currencyKey.allCaps,
+        suffix: " ${widget.currencyKey.allCaps}",
         nextLabel: "set-amount".tr(),
         next: () {
           popRoute(context);

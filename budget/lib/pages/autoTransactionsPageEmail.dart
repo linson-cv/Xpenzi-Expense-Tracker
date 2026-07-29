@@ -123,10 +123,8 @@ Future queueTransactionFromMessage(String messageString,
       (await database.getSimilarAssociatedTitles(title: title, limit: 1))
           .firstOrNull;
   category = foundTitle?.category;
-  if (category == null) {
-    category = await database
+  category ??= await database
         .getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
-  }
 
   TransactionWallet? wallet = templateFound.walletFk == "-1"
       ? null
@@ -159,17 +157,17 @@ Future queueTransactionFromMessage(String messageString,
 
 String getNotificationMessage(ServiceNotificationEvent event) {
   String output = "";
-  output = output + "Package name: " + event.packageName.toString() + "\n";
+  output = "${output}Package name: ${event.packageName}\n";
   output =
-      output + "Notification removed: " + event.hasRemoved.toString() + "\n";
-  output = output + "\n----\n\n";
-  output = output + "Notification Title: " + event.title.toString() + "\n\n";
-  output = output + "Notification Content: " + event.content.toString();
+      "${output}Notification removed: ${event.hasRemoved}\n";
+  output = "$output\n----\n\n";
+  output = "${output}Notification Title: ${event.title}\n\n";
+  output = "${output}Notification Content: ${event.content}";
   return output;
 }
 
 class AutoTransactionsPageNotifications extends StatefulWidget {
-  const AutoTransactionsPageNotifications({Key? key}) : super(key: key);
+  const AutoTransactionsPageNotifications({super.key});
 
   @override
   State<AutoTransactionsPageNotifications> createState() =>
@@ -201,9 +199,9 @@ class _AutoTransactionsPageNotificationsState
         ),
       ],
       listWidgets: [
-        Padding(
+        const Padding(
           padding:
-              const EdgeInsetsDirectional.only(bottom: 5, start: 20, end: 20),
+              EdgeInsetsDirectional.only(bottom: 5, start: 20, end: 20),
           child: TextFont(
             text:
                 "Transactions can be created automatically based on your notifications.",
@@ -236,7 +234,7 @@ class _AutoTransactionsPageNotificationsState
           stream: database.watchAllScannerTemplates(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              if (snapshot.data!.length <= 0) {
+              if (snapshot.data!.isEmpty) {
                 return Padding(
                   padding: const EdgeInsetsDirectional.all(5),
                   child: StatusBox(
@@ -273,7 +271,7 @@ class _AutoTransactionsPageNotificationsState
               children: [
                 Expanded(
                   child: AddButton(
-                    margin: EdgeInsetsDirectional.only(
+                    margin: const EdgeInsetsDirectional.only(
                       start: 15,
                       end: 15,
                       bottom: 9,
@@ -295,7 +293,7 @@ class _AutoTransactionsPageNotificationsState
 }
 
 class AutoTransactionsPageEmail extends StatefulWidget {
-  const AutoTransactionsPageEmail({Key? key}) : super(key: key);
+  const AutoTransactionsPageEmail({super.key});
 
   @override
   State<AutoTransactionsPageEmail> createState() =>
@@ -334,9 +332,9 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
         }),
       ],
       listWidgets: [
-        Padding(
+        const Padding(
           padding:
-              const EdgeInsetsDirectional.only(bottom: 5, start: 20, end: 20),
+              EdgeInsetsDirectional.only(bottom: 5, start: 20, end: 20),
           child: TextFont(
             text:
                 "Transactions can be created automatically based on your emails. This can be useful when you get emails from your bank, and you want to automatically add these transactions.",
@@ -378,9 +376,9 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
         IgnorePointer(
           ignoring: !canReadEmails,
           child: AnimatedOpacity(
-            duration: Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 300),
             opacity: canReadEmails ? 1 : 0.4,
-            child: GmailApiScreen(),
+            child: const GmailApiScreen(),
           ),
         )
       ],
@@ -400,7 +398,7 @@ Future<void> parseEmailsInBackground(context,
   if (entireAppLoaded == false || forceParse) {
     if (appStateSettings["AutoTransactions-canReadEmails"] == true) {
       List<Transaction> transactionsToAdd = [];
-      Stopwatch stopwatch = new Stopwatch()..start();
+      Stopwatch stopwatch = Stopwatch()..start();
       print("Scanning emails");
 
       bool hasSignedIn = false;
@@ -433,7 +431,7 @@ Future<void> parseEmailsInBackground(context,
 
       List<ScannerTemplate> scannerTemplates =
           await database.getAllScannerTemplates();
-      if (scannerTemplates.length <= 0) {
+      if (scannerTemplates.isEmpty) {
         openSnackbar(
           SnackbarMessage(
             title:
@@ -441,7 +439,7 @@ Future<void> parseEmailsInBackground(context,
             onTap: () {
               pushRoute(
                 context,
-                AutoTransactionsPageEmail(),
+                const AutoTransactionsPageEmail(),
               );
             },
           ),
@@ -503,7 +501,7 @@ Future<void> parseEmailsInBackground(context,
               onTap: () {
                 pushRoute(
                   context,
-                  AutoTransactionsPageEmail(),
+                  const AutoTransactionsPageEmail(),
                 );
               },
             ),
@@ -518,7 +516,7 @@ Future<void> parseEmailsInBackground(context,
               onTap: () {
                 pushRoute(
                   context,
-                  AutoTransactionsPageEmail(),
+                  const AutoTransactionsPageEmail(),
                 );
               },
             ),
@@ -556,7 +554,7 @@ Future<void> parseEmailsInBackground(context,
         transactionsToAdd.add(transactionToAdd);
         openSnackbar(
           SnackbarMessage(
-            title: templateFound!.templateName + ": " + "From Email",
+            title: "${templateFound!.templateName}: From Email",
             description: title,
             icon: appStateSettings["outlinedIcons"]
                 ? Icons.payments_outlined
@@ -573,11 +571,10 @@ Future<void> parseEmailsInBackground(context,
         emailsParsed.insert(0, message.id!);
       }
       // wait for intro animation to finish
-      if (Duration(milliseconds: 2500) > stopwatch.elapsed) {
-        print("waited extra" +
-            (Duration(milliseconds: 2500) - stopwatch.elapsed).toString());
+      if (const Duration(milliseconds: 2500) > stopwatch.elapsed) {
+        print("waited extra${const Duration(milliseconds: 2500) - stopwatch.elapsed}");
         await Future.delayed(
-            Duration(milliseconds: 2500) - stopwatch.elapsed, () {});
+            const Duration(milliseconds: 2500) - stopwatch.elapsed, () {});
       }
       for (Transaction transaction in transactionsToAdd) {
         await database.createOrUpdateTransaction(insert: true, transaction);
@@ -591,20 +588,21 @@ Future<void> parseEmailsInBackground(context,
         emails, // Keep 10 extra in case maybe the user deleted some emails recently
         updateGlobalState: false,
       );
-      if (newEmailCount > 0 || sayUpdates == true)
+      if (newEmailCount > 0 || sayUpdates == true) {
         openSnackbar(
           SnackbarMessage(
-            title: "Scanned " + results.messages!.length.toString() + " emails",
+            title: "Scanned ${results.messages!.length} emails",
             description: newEmailCount.toString() +
                 pluralString(newEmailCount == 1, " new email"),
             icon: appStateSettings["outlinedIcons"]
                 ? Icons.mark_email_unread_outlined
                 : Icons.mark_email_unread_rounded,
             onTap: () {
-              pushRoute(context, AutoTransactionsPageEmail());
+              pushRoute(context, const AutoTransactionsPageEmail());
             },
           ),
         );
+      }
     }
   }
 }
@@ -638,6 +636,8 @@ double? getTransactionAmountFromEmail(String messageString,
 }
 
 class GmailApiScreen extends StatefulWidget {
+  const GmailApiScreen({super.key});
+
   @override
   _GmailApiScreenState createState() => _GmailApiScreenState();
 }
@@ -701,7 +701,7 @@ class _GmailApiScreenState extends State<GmailApiScreen> {
   @override
   Widget build(BuildContext context) {
     if (googleUser == null) {
-      return SizedBox();
+      return const SizedBox();
     } else if (error != "" || (loaded == false && loading == false)) {
       init();
     }
@@ -733,7 +733,7 @@ class _GmailApiScreenState extends State<GmailApiScreen> {
             description:
                 "The number of recent emails to check to add transactions.",
             initial: (amountOfEmails).toString(),
-            items: ["5", "10", "15", "20", "25"],
+            items: const ["5", "10", "15", "20", "25"],
             onChanged: (value) {
               updateSettings(
                 "EmailAutoTransactions-amountOfEmails",
@@ -745,21 +745,21 @@ class _GmailApiScreenState extends State<GmailApiScreen> {
                 ? Icons.format_list_numbered_outlined
                 : Icons.format_list_numbered_rounded,
           ),
-          Padding(
+          const Padding(
             padding:
-                const EdgeInsetsDirectional.only(top: 13, bottom: 4, start: 15),
+                EdgeInsetsDirectional.only(top: 13, bottom: 4, start: 15),
             child: TextFont(
               text: "Configure",
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           StreamBuilder<List<ScannerTemplate>>(
             stream: database.watchAllScannerTemplates(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                if (snapshot.data!.length <= 0) {
+                if (snapshot.data!.isEmpty) {
                   return Padding(
                     padding: const EdgeInsetsDirectional.all(5),
                     child: StatusBox(
@@ -796,7 +796,7 @@ class _GmailApiScreenState extends State<GmailApiScreen> {
                 children: [
                   Expanded(
                     child: AddButton(
-                      margin: EdgeInsetsDirectional.only(
+                      margin: const EdgeInsetsDirectional.only(
                         start: 15,
                         end: 15,
                         bottom: 9,
@@ -813,8 +813,8 @@ class _GmailApiScreenState extends State<GmailApiScreen> {
         ],
       );
     } else {
-      return Padding(
-        padding: const EdgeInsetsDirectional.only(top: 28.0),
+      return const Padding(
+        padding: EdgeInsetsDirectional.only(top: 28.0),
         child: Center(child: CircularProgressIndicator()),
       );
     }
@@ -860,7 +860,7 @@ class ScannerTemplateEntry extends StatelessWidget {
                       CategoryIcon(
                           categoryPk: scannerTemplate.defaultCategoryFk,
                           size: 25),
-                      SizedBox(width: 7),
+                      const SizedBox(width: 7),
                       TextFont(
                         text: scannerTemplate.templateName,
                         fontWeight: FontWeight.bold,
@@ -880,7 +880,7 @@ class ScannerTemplateEntry extends StatelessWidget {
                         popRoute(context);
                         openSnackbar(
                           SnackbarMessage(
-                            title: "Deleted " + scannerTemplate.templateName,
+                            title: "Deleted ${scannerTemplate.templateName}",
                             icon: Icons.delete,
                           ),
                         );
@@ -959,18 +959,19 @@ class EmailsList extends StatelessWidget {
                       ? Theme.of(context)
                           .colorScheme
                           .selectableColorRed
-                          .withOpacity(0.5)
+                          .withValues(alpha: 0.5)
                       : doesEmailContain
                           ? Theme.of(context)
                               .colorScheme
                               .selectableColorGreen
-                              .withOpacity(0.5)
+                              .withValues(alpha: 0.5)
                           : backgroundColor ??
                               getColor(context, "lightDarkAccent"),
                   onTap: () {
                     if (onTap != null) onTap!(messageString);
-                    if (onTap == null)
+                    if (onTap == null) {
                       queueTransactionFromMessage(messageString);
+                    }
                   },
                   child: Row(
                     children: [
@@ -983,8 +984,8 @@ class EmailsList extends StatelessWidget {
                             children: [
                               doesEmailContain &&
                                       (title == null || amountDouble == null)
-                                  ? Padding(
-                                      padding: const EdgeInsetsDirectional.only(
+                                  ? const Padding(
+                                      padding: EdgeInsetsDirectional.only(
                                           bottom: 5),
                                       child: TextFont(
                                         text: "Parsing failed.",
@@ -992,10 +993,10 @@ class EmailsList extends StatelessWidget {
                                         fontSize: 17,
                                       ),
                                     )
-                                  : SizedBox(),
+                                  : const SizedBox(),
                               doesEmailContain
                                   ? templateFound == null
-                                      ? TextFont(
+                                      ? const TextFont(
                                           fontSize: 19,
                                           text: "Template Not found.",
                                           maxLines: 10,
@@ -1007,10 +1008,10 @@ class EmailsList extends StatelessWidget {
                                           maxLines: 10,
                                           fontWeight: FontWeight.bold,
                                         )
-                                  : SizedBox(),
+                                  : const SizedBox(),
                               doesEmailContain
                                   ? title == null
-                                      ? TextFont(
+                                      ? const TextFont(
                                           fontSize: 15,
                                           text: "Title: Not found.",
                                           maxLines: 10,
@@ -1018,16 +1019,16 @@ class EmailsList extends StatelessWidget {
                                         )
                                       : TextFont(
                                           fontSize: 15,
-                                          text: "Title: " + title,
+                                          text: "Title: $title",
                                           maxLines: 10,
                                           fontWeight: FontWeight.bold,
                                         )
-                                  : SizedBox(),
+                                  : const SizedBox(),
                               doesEmailContain
                                   ? amountDouble == null
-                                      ? Padding(
+                                      ? const Padding(
                                           padding:
-                                              const EdgeInsetsDirectional.only(
+                                              EdgeInsetsDirectional.only(
                                                   bottom: 8.0),
                                           child: TextFont(
                                             fontSize: 15,
@@ -1043,16 +1044,15 @@ class EmailsList extends StatelessWidget {
                                                   bottom: 8.0),
                                           child: TextFont(
                                             fontSize: 15,
-                                            text: "Amount: " +
-                                                convertToMoney(
+                                            text: "Amount: ${convertToMoney(
                                                     Provider.of<AllWallets>(
                                                         context),
-                                                    amountDouble),
+                                                    amountDouble)}",
                                             maxLines: 10,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         )
-                                  : SizedBox(),
+                                  : const SizedBox(),
                               TextFont(
                                 fontSize: 13,
                                 text: messageString,
@@ -1091,9 +1091,7 @@ String getEmailMessage(gMail.Message messageData) {
       String parsedString = parseHtmlString(htmlString);
       messageString = parsedString;
     } catch (e) {
-      messageString = (messageData.snippet ?? "") +
-          "\n\n" +
-          "There was an error getting the rest of the email";
+      messageString = "${messageData.snippet ?? ""}\n\nThere was an error getting the rest of the email";
     }
   } else {
     messageString = parseHtmlString(utf8.decode(base64.decode(messageEncoded)));
@@ -1101,6 +1099,6 @@ String getEmailMessage(gMail.Message messageData) {
   return messageString
       .split(RegExp(r"[ \t\r\f\v]+"))
       .join(" ")
-      .replaceAll(new RegExp(r'(?:[\t ]*(?:\r?\n|\r))+'), '\n\n')
+      .replaceAll(RegExp(r'(?:[\t ]*(?:\r?\n|\r))+'), '\n\n')
       .replaceAll(RegExp(r"(?<=\n) +"), "");
 }

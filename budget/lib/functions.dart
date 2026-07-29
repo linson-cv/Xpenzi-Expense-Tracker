@@ -29,10 +29,9 @@ import 'package:budget/struct/randomConstants.dart';
 
 extension CapExtension on String {
   String get capitalizeFirst =>
-      this.length > 0 ? '${this[0].toUpperCase()}${this.substring(1)}' : '';
-  String get allCaps => this.toUpperCase();
-  String get capitalizeFirstofEach => this
-      .replaceAll(RegExp(' +'), ' ')
+      isNotEmpty ? '${this[0].toUpperCase()}${substring(1)}' : '';
+  String get allCaps => toUpperCase();
+  String get capitalizeFirstofEach => replaceAll(RegExp(' +'), ' ')
       .split(" ")
       .map((str) => str.capitalizeFirst)
       .join(" ");
@@ -64,11 +63,11 @@ extension DateUtils on DateTime {
   DateTime justDay(
       {int yearOffset = 0, int monthOffset = 0, int dayOffset = 0}) {
     return DateTime(
-        this.year + yearOffset, this.month + monthOffset, this.day + dayOffset);
+        year + yearOffset, month + monthOffset, day + dayOffset);
   }
 
   DateTime firstDayOfMonth() {
-    return DateTime(this.year, this.month, 1);
+    return DateTime(year, month, 1);
   }
 }
 
@@ -82,9 +81,7 @@ String convertToPercent(double amount,
 
   if (amount.isNaN || amount == 0 || finalNumber == 0) return "0%";
 
-  int numberDecimalsGet = numberDecimals != null
-      ? numberDecimals
-      : (int.tryParse(appStateSettings["percentagePrecision"].toString()) ?? 0);
+  int numberDecimalsGet = numberDecimals ?? (int.tryParse(appStateSettings["percentagePrecision"].toString()) ?? 0);
 
   String roundedAmount = amount.toStringAsFixed(numberDecimalsGet);
 
@@ -127,7 +124,7 @@ String convertToPercent(double amount,
     }
   }
 
-  return absoluteZeroString(roundedAmount) + "%";
+  return "${absoluteZeroString(roundedAmount)}%";
 }
 
 String removeLastCharacter(String text) {
@@ -253,13 +250,12 @@ String convertToMoney(AllWallets allWallets, double amount,
   String formatOutput = formatter.format(amount).trim();
   String? currencyName;
   if (addCurrencyName == true && currencyKey != null) {
-    currencyName = " " + currencyKey.toUpperCase();
+    currencyName = " ${currencyKey.toUpperCase()}";
   } else if (addCurrencyName == true) {
-    currencyName = " " +
-        (allWallets.indexedByPk[appStateSettings["selectedWalletPk"]]
+    currencyName = " ${(allWallets.indexedByPk[appStateSettings["selectedWalletPk"]]
                     ?.currency ??
                 "")
-            .toUpperCase();
+            .toUpperCase()}";
   }
 
   if (useCustomNumberFormat) {
@@ -323,7 +319,7 @@ String formatOutputWithNewDelimiterAndDecimal({
   if (appStateSettings["numberFormatCurrencyFirst"] == false) {
     return negativeSign +
         input +
-        (symbol.length > 0 ? "  " : "") +
+        (symbol.isNotEmpty ? "  " : "") +
         symbol +
         (currencyName ?? "");
   } else {
@@ -340,7 +336,7 @@ initializeLocalizedMonthNames() {
     final String monthName = DateFormat.MMMM(locale).format(date).toLowerCase();
     localizedMonthNames.add(monthName);
   }
-  print("Initializing local months: " + localizedMonthNames.toString());
+  print("Initializing local months: $localizedMonthNames");
 }
 
 String getMonth(DateTime dateTime, {bool includeYear = false}) {
@@ -434,15 +430,9 @@ String getWordedDateShortMore(
     }
   }
   if (includeYear) {
-    return DateFormat.MMMMd(locale).format(date) +
-        ", " +
-        DateFormat.y(locale).format(date);
+    return "${DateFormat.MMMMd(locale).format(date)}, ${DateFormat.y(locale).format(date)}";
   } else if (includeTime) {
-    return DateFormat.MMMMd(locale).format(date) +
-        ", " +
-        DateFormat.y(locale).format(date) +
-        " - " +
-        getWordedTime(locale, date);
+    return "${DateFormat.MMMMd(locale).format(date)}, ${DateFormat.y(locale).format(date)} - ${getWordedTime(locale, date)}";
   }
   return DateFormat.MMMMd(locale).format(date);
 }
@@ -481,17 +471,14 @@ getWordedDate(DateTime date,
 
   String extraYear = "";
   if (includeYearIfNotCurrentYear && now.year != date.year) {
-    extraYear = ", " + date.year.toString();
+    extraYear = ", ${date.year}";
   }
 
   if (checkYesterdayTodayTomorrow(date) != false) {
     return checkYesterdayTodayTomorrow(date) +
         (includeMonthDate
-            ? ", " +
-                DateFormat.MMMMd(navigatorKey.currentContext?.locale.toString())
-                    .format(date)
-                    .toString() +
-                extraYear
+            ? ", ${DateFormat.MMMMd(navigatorKey.currentContext?.locale.toString())
+                    .format(date)}$extraYear"
             : "");
   }
 
@@ -546,9 +533,10 @@ DateTime getDatePastToDetermineBudgetDate(int index, Budget budget,
   if (isChecking && reoccurrence == BudgetReoccurence.monthly) {
     DateTimeRange budgetRange = getBudgetDate(
         budget, getDatePastToDetermineBudgetDate(0, budget, isChecking: false));
-    if (budgetRange.end.isBefore(DateTime.now().subtract(Duration(days: 1))))
+    if (budgetRange.end.isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
       return getDatePastToDetermineBudgetDate(index - 1, budget,
           isChecking: false);
+    }
   }
 
   return DateTime(year, month, day, 0, 0, 1);
@@ -687,7 +675,7 @@ DateTimeRange getBudgetDate(Budget budget, DateTime currentDate) {
 String getWordedNumber(
     BuildContext context, AllWallets allWallets, double value) {
   if (removeTrailingZeroes(value.toStringAsFixed(10)) == "0") {
-    return getCurrencyString(allWallets) + "0";
+    return "${getCurrencyString(allWallets)}0";
   }
   return convertToMoney(
     allWallets,
@@ -716,7 +704,7 @@ String getWordedNumber(
 double getPercentBetweenDates(DateTimeRange timeRange, DateTime currentTime) {
   int millisecondDifference = timeRange.end.millisecondsSinceEpoch -
       timeRange.start.millisecondsSinceEpoch +
-      Duration(days: 1).inMilliseconds;
+      const Duration(days: 1).inMilliseconds;
   double percent = (currentTime.millisecondsSinceEpoch -
           timeRange.start.millisecondsSinceEpoch) /
       millisecondDifference;
@@ -754,9 +742,9 @@ String getWelcomeMessage() {
     "greetings-late-2".tr()
   ];
   if (randomInt[0] % 2 == 0) {
-    if (h24 <= 12 && h24 >= 6)
+    if (h24 <= 12 && h24 >= 6) {
       return greetingsMorning[randomInt[0] % (greetingsMorning.length)];
-    else if (h24 <= 16 && h24 >= 13)
+    } else if (h24 <= 16 && h24 >= 13)
       return greetingsAfternoon[randomInt[0] % (greetingsAfternoon.length)];
     else if (h24 <= 22 && h24 >= 19)
       return greetingsEvening[randomInt[0] % (greetingsEvening.length)];
@@ -867,7 +855,7 @@ List<BoxShadow> boxShadowGeneral(context) {
     BoxShadow(
       color: getColor(context, "shadowColorLight").withAlpha(30),
       blurRadius: 20,
-      offset: Offset(0, 0),
+      offset: const Offset(0, 0),
       spreadRadius: 8,
     ),
   ];
@@ -879,7 +867,7 @@ List<BoxShadow> boxShadowSharp(context) {
     BoxShadow(
       color: getColor(context, "shadowColorLight").withAlpha(30),
       blurRadius: 2,
-      offset: Offset(0, 0),
+      offset: const Offset(0, 0),
       spreadRadius: 2,
     ),
   ];
@@ -889,9 +877,9 @@ List<BoxShadow> boxShadowCategoryPercent(context) {
   if (appStateSettings["disableShadows"] == true) return [];
   return [
     BoxShadow(
-      color: getColor(context, "shadowColor").withOpacity(0.4),
+      color: getColor(context, "shadowColor").withValues(alpha: 0.4),
       blurRadius: 3,
-      offset: Offset(0, 0),
+      offset: const Offset(0, 0),
       spreadRadius: 2,
     ),
   ];
@@ -904,10 +892,11 @@ List<BoxShadow>? boxShadowCheck(list) {
 }
 
 String pluralString(bool condition, String string) {
-  if (condition)
+  if (condition) {
     return string;
-  else
-    return string + "s";
+  } else {
+    return "${string}s";
+  }
 }
 
 // String? getOSInsideWeb() {
@@ -954,7 +943,7 @@ void restartAppPopup(context,
     // Pop all routes, select home tab
     RestartApp.restartApp(context);
     popAllRoutes(context);
-    Future.delayed(Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       PageNavigationFramework.changePage(context, 0, switchNavbar: true);
     });
   }
@@ -969,22 +958,18 @@ String filterEmailTitle(string) {
 }
 
 class CustomMaterialPageRoute extends MaterialPageRoute {
+  @override
   @protected
   bool get hasScopedWillPopCallback {
     return false;
   }
 
   CustomMaterialPageRoute({
-    required WidgetBuilder builder,
-    RouteSettings? settings,
-    bool maintainState = true,
-    bool fullscreenDialog = false,
-  }) : super(
-          builder: builder,
-          settings: settings,
-          maintainState: maintainState,
-          fullscreenDialog: fullscreenDialog,
-        );
+    required super.builder,
+    super.settings,
+    super.maintainState,
+    super.fullscreenDialog,
+  });
 }
 
 popRoute<T extends Object?>(BuildContext? context, [T? result]) {
@@ -1038,10 +1023,10 @@ Future<dynamic> pushRoute(BuildContext? context, Widget page,
     contextToPush,
     PageRouteBuilder(
       opaque: true,
-      transitionDuration: Duration(milliseconds: 300),
-      reverseTransitionDuration: Duration(milliseconds: 125),
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 125),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        final tween = Tween(begin: Offset(0, 0.05), end: Offset.zero)
+        final tween = Tween(begin: const Offset(0, 0.05), end: Offset.zero)
             .chain(CurveTween(curve: Curves.easeOut));
         return SlideTransition(
           position: animation.drive(tween),
@@ -1169,20 +1154,22 @@ String cleanupNoteStringWithURLs(String text) {
   String modifiedText = text;
 
   for (Match match in matches) {
-    if (match.group(0) != null)
+    if (match.group(0) != null) {
       modifiedText = modifiedText.replaceFirst(
           match.group(0)!, getDomainNameFromURL(match.group(0)!));
+    }
   }
 
   return modifiedText.trim();
 }
 
 Future<bool> openUrl(String link) async {
-  if (await canLaunchUrl(Uri.parse(link)))
+  if (await canLaunchUrl(Uri.parse(link))) {
     return await launchUrl(
       Uri.parse(link),
       mode: LaunchMode.externalApplication,
     );
+  }
   return false;
 }
 
@@ -1217,7 +1204,7 @@ String getDevicesDefaultCurrencyCode() {
       }
     }
   } catch (e) {
-    print("Error getting default currency " + e.toString());
+    print("Error getting default currency $e");
   }
   return popularCurrencies[0];
 }
@@ -1226,7 +1213,7 @@ void copyToClipboard(String text,
     {bool showSnackbar = true, String? customSnackbarDescription}) async {
   HapticFeedback.mediumImpact();
   await Clipboard.setData(ClipboardData(text: text));
-  if (showSnackbar)
+  if (showSnackbar) {
     openSnackbar(
       SnackbarMessage(
         title: "copied-to-clipboard".tr(),
@@ -1234,9 +1221,10 @@ void copyToClipboard(String text,
         icon: appStateSettings["outlinedIcons"]
             ? Icons.copy_outlined
             : Icons.copy_rounded,
-        timeout: Duration(milliseconds: 2500),
+        timeout: const Duration(milliseconds: 2500),
       ),
     );
+  }
 }
 
 Future shareToClipboard(String text, {required BuildContext context}) async {
@@ -1247,7 +1235,7 @@ Future shareToClipboard(String text, {required BuildContext context}) async {
       sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
     );
   } catch (e) {
-    print("There was an error sharing: " + e.toString());
+    print("There was an error sharing: $e");
     copyToClipboard(text);
   }
 }
@@ -1256,16 +1244,17 @@ Future<String?> readClipboard({bool showSnackbar = true}) async {
   HapticFeedback.mediumImpact();
   final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
   String? clipboardText = clipboardData?.text;
-  if (showSnackbar)
+  if (showSnackbar) {
     openSnackbar(
       SnackbarMessage(
         title: "pasted-from-clipboard".tr(),
         icon: appStateSettings["outlinedIcons"]
             ? Icons.paste_outlined
             : Icons.paste_rounded,
-        timeout: Duration(milliseconds: 2500),
+        timeout: const Duration(milliseconds: 2500),
       ),
     );
+  }
   return clipboardText;
 }
 
@@ -1280,7 +1269,7 @@ Future<double?> readAmountFromClipboard({bool showSnackbar = true}) async {
           icon: appStateSettings["outlinedIcons"]
               ? Icons.paste_outlined
               : Icons.paste_rounded,
-          timeout: Duration(milliseconds: 2500),
+          timeout: const Duration(milliseconds: 2500),
         ),
       );
     } else {
@@ -1374,7 +1363,7 @@ Future<int?> getAndroidVersion() async {
       String androidVersionString = androidInfo.version.release;
       androidVersion = int.tryParse(androidVersionString);
     } catch (e) {
-      print("Error parsing Android version" + e.toString());
+      print("Error parsing Android version$e");
     }
   }
   return androidVersion;
@@ -1382,11 +1371,12 @@ Future<int?> getAndroidVersion() async {
 
 Future<bool> setHighRefreshRate() async {
   try {
-    if (getPlatform() == PlatformOS.isAndroid)
+    if (getPlatform() == PlatformOS.isAndroid) {
       await FlutterDisplayMode.setHighRefreshRate();
+    }
     return true;
   } catch (e) {
-    print("Error setting high refresh rate: " + e.toString());
+    print("Error setting high refresh rate: $e");
   }
   return false;
 }
@@ -1422,10 +1412,7 @@ String getWalletStringName(AllWallets allWallets, TransactionWallet? wallet) {
     bool showCurrencyLabel = appStateSettings["showCurrencyLabel"] == true &&
         allWallets.allContainSameCurrency() == false;
     if (showCurrencyLabel) {
-      return wallet.name +
-          " (" +
-          wallet.currency.toString().toUpperCase() +
-          ")";
+      return "${wallet.name} (${wallet.currency.toString().toUpperCase()})";
     } else {
       return wallet.name;
     }
@@ -1434,14 +1421,9 @@ String getWalletStringName(AllWallets allWallets, TransactionWallet? wallet) {
 
 String addAmountToString(String string, int amount,
     {String? extraText, bool addCommaWithExtraText = true}) {
-  return string +
-      " " +
-      "( ×" +
-      amount.toString() +
-      (extraText == null
+  return "$string ( ×$amount${extraText == null
           ? ""
-          : (addCommaWithExtraText ? ", " : " ") + (extraText)) +
-      " )";
+          : (addCommaWithExtraText ? ", " : " ") + (extraText)} )";
 }
 
 int directionalityReverse(BuildContext context) {

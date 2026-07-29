@@ -362,14 +362,13 @@ class ReorderableListState extends State<ReorderableList> {
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
-      scrollDirection: widget.scrollDirection,
+      cacheExtent: widget.cacheExtent, scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
       controller: widget.controller,
       primary: widget.primary,
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
       anchor: widget.anchor,
-      cacheExtent: widget.cacheExtent,
       dragStartBehavior: widget.dragStartBehavior,
       keyboardDismissBehavior: widget.keyboardDismissBehavior,
       restorationId: widget.restorationId,
@@ -1305,7 +1304,7 @@ class _DragInfo extends Drag {
   Widget createProxy(BuildContext context) {
     return capturedThemes.wrap(
       _proxyAnimation == null
-          ? SizedBox.shrink()
+          ? const SizedBox.shrink()
           : _DragItemProxy(
               listState: listState,
               index: index,

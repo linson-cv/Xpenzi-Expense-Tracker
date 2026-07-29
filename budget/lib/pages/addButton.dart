@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 class AddButton extends StatelessWidget {
   const AddButton({
-    Key? key,
+    super.key,
     required this.onTap,
     this.margin = EdgeInsetsDirectional.zero,
     this.padding = EdgeInsetsDirectional.zero,
@@ -19,7 +19,7 @@ class AddButton extends StatelessWidget {
     this.afterOpenPage,
     this.onOpenPage,
     this.labelUnder,
-  }) : super(key: key);
+  });
 
   final VoidCallback onTap;
   final EdgeInsetsDirectional margin;
@@ -36,7 +36,7 @@ class AddButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = appStateSettings["materialYou"]
-        ? Theme.of(context).colorScheme.secondary.withOpacity(0.3)
+        ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3)
         : getColor(context, "lightDarkAccentHeavy");
     Widget getButton(onTap) {
       return Tappable(

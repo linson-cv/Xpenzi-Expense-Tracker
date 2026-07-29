@@ -73,19 +73,18 @@ class BudgetPage extends StatelessWidget {
               ),
             );
           }
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         });
   }
 }
 
 class _BudgetPageContent extends StatefulWidget {
   const _BudgetPageContent({
-    Key? key,
-    required Budget this.budget,
+    required this.budget,
     this.dateForRange,
     this.dateForRangeIndex = 0,
     this.openedFromHistory = false,
-  }) : super(key: key);
+  });
 
   final Budget budget;
   final DateTime? dateForRange;
@@ -97,11 +96,10 @@ class _BudgetPageContent extends StatefulWidget {
 }
 
 class _BudgetPageContentState extends State<_BudgetPageContent> {
-  String? selectedMember = null;
+  String? selectedMember;
   bool showAllSubcategories = appStateSettings["showAllSubcategories"] == true;
-  TransactionCategory? selectedCategory =
-      null; //We shouldn't always rely on this, if for example the user changes the category and we are still on this page. But for less important info and O(1) we can reference it quickly.
-  GlobalKey<PieChartDisplayState> _pieChartDisplayStateKey = GlobalKey();
+  TransactionCategory? selectedCategory; //We shouldn't always rely on this, if for example the user changes the category and we are still on this page. But for less important info and O(1) we can reference it quickly.
+  final GlobalKey<PieChartDisplayState> _pieChartDisplayStateKey = GlobalKey();
   bool showAllCategoriesWithCategoryLimit =
       appStateSettings["expandAllCategoriesWithSpendingLimits"] == true;
   final scrollController = ScrollController();
@@ -123,8 +121,9 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
   void changeSelectedDateRange(int delta) async {
     int index = (dateForRangeIndex) - delta;
     if (index >= 0) {
-      if (budgetHistoryDismissedPremium == false)
+      if (budgetHistoryDismissedPremium == false) {
         budgetHistoryDismissedPremium = await premiumPopupPastBudgets(context);
+      }
       if (budgetHistoryDismissedPremium) {
         setState(() {
           dateForRangeIndex = index;
@@ -141,7 +140,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
     setState(() {
       showAllSubcategories = !showAllSubcategories;
     });
-    Future.delayed(Duration(milliseconds: 10), () {
+    Future.delayed(const Duration(milliseconds: 10), () {
       _pieChartDisplayStateKey.currentState!
           .setTouchedCategoryPk(selectedCategory?.categoryPk);
     });
@@ -258,11 +257,11 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
     String endDateString = getWordedDateShort(budgetRange.end);
     String timeRangeString = startDateString == endDateString
         ? startDateString
-        : startDateString + " – " + endDateString;
+        : "$startDateString – $endDateString";
     bool showingSelectedPeriodAppBar = widget.openedFromHistory == true;
     return WillPopScope(
       onWillPop: () async {
-        if ((globalSelectedID.value[pageId] ?? []).length > 0) {
+        if ((globalSelectedID.value[pageId] ?? []).isNotEmpty) {
           globalSelectedID.value[pageId] = [];
           globalSelectedID.notifyListeners();
           return false;
@@ -293,9 +292,9 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
           builder: (context, snapshot) {
             double totalSpent = 0;
             if (snapshot.hasData) {
-              snapshot.data!.forEach((category) {
+              for (var category in snapshot.data!) {
                 totalSpent = totalSpent + category.total;
-              });
+              }
               totalSpent = totalSpent * determineBudgetPolarity(widget.budget);
             }
 
@@ -305,7 +304,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                 totalSpent: totalSpent,
               );
             } else {
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             }
           },
         ),
@@ -552,9 +551,10 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                             allSelected: selectedCategory == null,
                           ),
                         );
-                        if (s.totalSpent != 0)
+                        if (s.totalSpent != 0) {
                           totalSpentPercent +=
                               category.total.abs() / s.totalSpent;
+                        }
                       },
                     );
                     // print(s.totalSpent);
@@ -650,7 +650,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                                     ),
                                   ),
                                   isPastBudget == true
-                                      ? SizedBox.shrink()
+                                      ? const SizedBox.shrink()
                                       : DaySpending(
                                           budget: widget.budget,
                                           totalAmount: s.totalSpent,
@@ -673,6 +673,13 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                                       Matrix4.translationValues(0, -1, 0),
                                   padding: const EdgeInsetsDirectional.only(
                                       bottom: 3, top: 3),
+                                  decoration: BoxDecoration(
+                                    boxShadow:
+                                        boxShadowCheck(boxShadowSharp(context)),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .secondaryContainer,
+                                  ),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -724,13 +731,6 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                                       ),
                                     ],
                                   ),
-                                  decoration: BoxDecoration(
-                                    boxShadow:
-                                        boxShadowCheck(boxShadowSharp(context)),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .secondaryContainer,
-                                  ),
                                 )
                               : Container(),
                         ),
@@ -749,11 +749,11 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                                         ?.setTouchedIndex(-1);
                                   },
                                 )
-                              : SizedBox.shrink(),
-                          if (categoryWithTotals.length > 0)
-                            SizedBox(height: 37),
+                              : const SizedBox.shrink(),
+                          if (categoryWithTotals.isNotEmpty)
+                            const SizedBox(height: 37),
 
-                          if (categoryWithTotals.length > 0)
+                          if (categoryWithTotals.isNotEmpty)
                             pieChart(
                               budgetRange: budgetRange,
                               totalSpent: s.totalSpent,
@@ -767,8 +767,8 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                           // if (snapshot.data!.length > 0)
                           //   SizedBox(height: 35),
                           ...categoryEntries,
-                          if (categoryWithTotals.length > 0)
-                            SizedBox(height: 15),
+                          if (categoryWithTotals.isNotEmpty)
+                            const SizedBox(height: 15),
                           AnimatedExpanded(
                             expand: selectedCategory == null &&
                                 extraCategoriesCountWithSpendingLimit > 0,
@@ -778,9 +778,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                               child: AnimatedSizeSwitcher(
                                 child: Center(
                                   key: ValueKey(
-                                      "showAllCategoriesWithCategoryLimit" +
-                                          showAllCategoriesWithCategoryLimit
-                                              .toString()),
+                                      "showAllCategoriesWithCategoryLimit$showAllCategoriesWithCategoryLimit"),
                                   child: LowKeyButton(
                                     onTap: () {
                                       toggleShowAllCategoriesWithCategoryLimit();
@@ -808,7 +806,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                                                       .arrow_drop_down_rounded,
                                           size: 15,
                                           color: getColor(context, "black")
-                                              .withOpacity(0.5),
+                                              .withValues(alpha: 0.5),
                                         ),
                                       ),
                                     ),
@@ -827,7 +825,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
             child: AnimatedExpanded(
               expand: selectedCategory != null,
               child: Padding(
-                key: ValueKey(1),
+                key: const ValueKey(1),
                 padding: const EdgeInsetsDirectional.only(
                     start: 13, end: 15, top: 5, bottom: 15),
                 child: Center(
@@ -847,10 +845,10 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
             child: Padding(
               padding: const EdgeInsetsDirectional.only(bottom: 13),
               child: Container(
-                margin: EdgeInsetsDirectional.symmetric(horizontal: 13),
+                margin: const EdgeInsetsDirectional.symmetric(horizontal: 13),
                 decoration: BoxDecoration(
                   borderRadius:
-                      BorderRadiusDirectional.all(Radius.circular(15)),
+                      const BorderRadiusDirectional.all(Radius.circular(15)),
                   color: appStateSettings["materialYou"]
                       ? dynamicPastel(context,
                           Theme.of(context).colorScheme.secondaryContainer,
@@ -932,7 +930,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
                               inverse: true),
                         ),
                       )
-                    : SizedBox.shrink(),
+                    : const SizedBox.shrink(),
             showTotalCashFlow: true,
             showExcludedBudgetTag: (Transaction transaction) =>
                 transaction.budgetFksExclude
@@ -945,19 +943,15 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
           ),
           SliverToBoxAdapter(
             child: widget.budget.sharedDateUpdated == null
-                ? SizedBox.shrink()
+                ? const SizedBox.shrink()
                 : Padding(
                     padding: const EdgeInsetsDirectional.only(
                         start: 10, end: 10, bottom: 0),
                     child: TextFont(
-                      text: "synced".tr() +
-                          " " +
-                          getTimeAgo(
+                      text: "${"synced".tr()} ${getTimeAgo(
                             widget.budget.sharedDateUpdated!,
-                          ).toLowerCase() +
-                          "\n Created by " +
-                          getMemberNickname(
-                              (widget.budget.sharedMembers ?? [""])[0]),
+                          ).toLowerCase()}\n Created by ${getMemberNickname(
+                              (widget.budget.sharedMembers ?? [""])[0])}",
                       fontSize: 13,
                       textColor: getColor(context, "textLight"),
                       textAlign: TextAlign.center,
@@ -969,7 +963,7 @@ class _BudgetPageContentState extends State<_BudgetPageContent> {
           SliverToBoxAdapter(
             child: Container(height: 1, color: pageBackgroundColor),
           ),
-          SliverToBoxAdapter(child: SizedBox(height: 45))
+          const SliverToBoxAdapter(child: SizedBox(height: 45))
         ],
         selectedTransactionsAppBar: SelectedTransactionsAppBar(
           pageID: pageId,
@@ -984,10 +978,10 @@ class WidgetPosition extends StatefulWidget {
   final Function(Offset position) onChange;
 
   const WidgetPosition({
-    Key? key,
+    super.key,
     required this.onChange,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   _WidgetPositionState createState() => _WidgetPositionState();
@@ -1052,12 +1046,14 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
   List<DateTimeRange> dateTimeRanges = [];
   int longestDateRange = 0;
 
+  @override
   void didUpdateWidget(oldWidget) {
     if (oldWidget != widget) {
       _init();
     }
   }
 
+  @override
   initState() {
     _init();
   }
@@ -1145,7 +1141,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
       stream: mergedStreamsPastSpendingTotals,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          if (snapshot.data!.length <= 0) return SizedBox.shrink();
+          if (snapshot.data!.isEmpty) return const SizedBox.shrink();
           DateTime budgetRangeEnd = widget.budgetRange.end;
           if (showCompressedView && budgetRangeEnd.isAfter(DateTime.now())) {
             budgetRangeEnd = DateTime.now();
@@ -1189,7 +1185,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
               ? HexColor(widget.selectedCategory!.colour,
                   defaultColor: Theme.of(context).colorScheme.primary)
               : Theme.of(context).colorScheme.primary;
-          if (widget.showIfNone == false && allZeroes) return SizedBox.shrink();
+          if (widget.showIfNone == false && allZeroes) return const SizedBox.shrink();
           return Stack(
             children: [
               Padding(
@@ -1216,7 +1212,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
                                       widget.selectedCategory != null
                                   ? lineColor
                                   : Theme.of(context).colorScheme.tertiary)
-                              .withOpacity((index) / snapshot.data!.length)
+                              .withValues(alpha: (index) / snapshot.data!.length)
                   ],
                   horizontalLineAt: widget.isPastBudget == true ||
                           (widget.budget.reoccurrence ==
@@ -1242,7 +1238,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
                   end: 0,
                   top: 0,
                   child: Transform.translate(
-                    offset: Offset(5, -5).withDirectionality(context),
+                    offset: const Offset(5, -5).withDirectionality(context),
                     child: Tooltip(
                       message: showCompressedView
                           ? "view-all-days".tr()
@@ -1252,7 +1248,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
                         icon: Transform.rotate(
                           angle: pi / 2,
                           child: ScaledAnimatedSwitcher(
-                            duration: Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 300),
                             keyToWatch: showCompressedView.toString(),
                             child: Icon(
                               showCompressedView
@@ -1266,7 +1262,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.8),
+                                  .withValues(alpha: 0.8),
                             ),
                           ),
                         ),
@@ -1285,7 +1281,7 @@ class _BudgetLineGraphState extends State<BudgetLineGraph> {
             ],
           );
         }
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
       },
     );
   }
@@ -1330,7 +1326,7 @@ class _TotalSpentState extends State<TotalSpent> {
         _swapTotalSpentDisplay();
       },
       child: AnimatedSwitcher(
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         child: IntrinsicWidth(
           child: budgetAmount - widget.totalSpent >= 0
               ? Row(
@@ -1342,7 +1338,7 @@ class _TotalSpentState extends State<TotalSpent> {
                         count: showTotalSpent
                             ? widget.totalSpent
                             : budgetAmount - widget.totalSpent,
-                        duration: Duration(milliseconds: 400),
+                        duration: const Duration(milliseconds: 400),
                         initialCount: (0),
                         textBuilder: (number) {
                           return TextFont(
@@ -1384,7 +1380,7 @@ class _TotalSpentState extends State<TotalSpent> {
                         count: showTotalSpent
                             ? widget.totalSpent
                             : widget.totalSpent - budgetAmount,
-                        duration: Duration(milliseconds: 400),
+                        duration: const Duration(milliseconds: 400),
                         initialCount: (0),
                         textBuilder: (number) {
                           return TextFont(
@@ -1426,24 +1422,24 @@ class _TotalSpentState extends State<TotalSpent> {
 String getBudgetSpentText(bool isIncome) {
   if (isIncome == false) {
     return (appStateSettings["showTotalSpentForBudget"]
-        ? " " + "spent-amount-of".tr() + " "
-        : " " + "remaining-amount-of".tr() + " ");
+        ? " ${"spent-amount-of".tr()} "
+        : " ${"remaining-amount-of".tr()} ");
   } else {
     return (appStateSettings["showTotalSpentForBudget"]
-        ? " " + "saved-amount-of".tr() + " "
-        : " " + "remaining-amount-of".tr() + " ");
+        ? " ${"saved-amount-of".tr()} "
+        : " ${"remaining-amount-of".tr()} ");
   }
 }
 
 String getBudgetOverSpentText(bool isIncome) {
   if (isIncome == false) {
     return (appStateSettings["showTotalSpentForBudget"]
-        ? " " + "spent-amount-of".tr() + " "
-        : " " + "overspent-amount-of".tr() + " ");
+        ? " ${"spent-amount-of".tr()} "
+        : " ${"overspent-amount-of".tr()} ");
   } else {
     return (appStateSettings["showTotalSpentForBudget"]
-        ? " " + "saved-amount-of".tr() + " "
-        : " " + "over-saved-amount-of".tr() + " ");
+        ? " ${"saved-amount-of".tr()} "
+        : " ${"over-saved-amount-of".tr()} ");
   }
 }
 

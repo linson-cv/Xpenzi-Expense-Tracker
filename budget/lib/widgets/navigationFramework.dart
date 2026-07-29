@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/database/initializeDefaultDatabase.dart';
 import 'package:budget/database/tables.dart';
@@ -38,17 +37,13 @@ import 'package:budget/struct/shareBudget.dart';
 import 'package:budget/struct/syncClient.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/bottomNavBar.dart';
-import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/categoryIcon.dart';
 import 'package:budget/widgets/fab.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/iconButtonScaled.dart';
-import 'package:budget/widgets/importDB.dart';
-import 'package:budget/widgets/moreIcons.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
 import 'package:budget/widgets/notificationsSettings.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
-import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
@@ -62,7 +57,6 @@ import 'package:budget/widgets/globalLoadingProgress.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/struct/upcomingTransactionsFunctions.dart';
-import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/transactionEntry/transactionEntry.dart';
 import 'package:budget/widgets/transactionEntry/transactionLabel.dart';
 import 'package:budget/widgets/util/checkWidgetLaunch.dart';
@@ -88,18 +82,18 @@ class InitialPageRouteNavigator extends StatelessWidget {
       onGenerateRoute: (settings) => PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             AnimatedSwitcher(
-          duration: Duration(milliseconds: 1200),
+          duration: const Duration(milliseconds: 1200),
           switchInCurve: Curves.easeInOutCubic,
           switchOutCurve: Curves.easeInOutCubic,
           transitionBuilder: (Widget child, Animation<double> animation) {
             final inAnimation =
-                Tween<Offset>(begin: Offset(-1.0, 0.0), end: Offset(0.0, 0.0))
+                Tween<Offset>(begin: const Offset(-1.0, 0.0), end: const Offset(0.0, 0.0))
                     .animate(animation);
             final outAnimation =
-                Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
+                Tween<Offset>(begin: const Offset(1.0, 0.0), end: const Offset(0.0, 0.0))
                     .animate(animation);
 
-            if (child.key == ValueKey("Onboarding")) {
+            if (child.key == const ValueKey("Onboarding")) {
               return ClipRect(
                 child: SlideTransition(
                   position: inAnimation,
@@ -113,7 +107,7 @@ class InitialPageRouteNavigator extends StatelessWidget {
             }
           },
           child: appStateSettings["hasOnboarded"] != true
-              ? OnBoardingPage(key: ValueKey("Onboarding"))
+              ? const OnBoardingPage(key: ValueKey("Onboarding"))
               : PageNavigationFrameworkSafeArea(
                   child: PageNavigationFramework(
                     key: pageNavigationFrameworkKey,
@@ -143,9 +137,9 @@ class PageNavigationFrameworkSafeArea extends StatelessWidget {
       children: [
         hasRightSafeArea || hasLeftSafeArea
             ? Container(
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.surface,
               )
-            : SizedBox.shrink(),
+            : const SizedBox.shrink(),
         hasRightSafeArea || hasLeftSafeArea
             ? Padding(
                 padding: EdgeInsets.only(
@@ -157,11 +151,11 @@ class PageNavigationFrameworkSafeArea extends StatelessWidget {
                       right: hasRightSafeArea
                           ? Radius.circular(
                               getPlatform() == PlatformOS.isIOS ? 10 : 20)
-                          : Radius.circular(0),
+                          : const Radius.circular(0),
                       left: hasLeftSafeArea
                           ? Radius.circular(
                               getPlatform() == PlatformOS.isIOS ? 10 : 20)
-                          : Radius.circular(0),
+                          : const Radius.circular(0),
                     ),
                     child: child),
               )
@@ -171,19 +165,19 @@ class PageNavigationFrameworkSafeArea extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Container(
                   width: rightPaddingSafeArea,
-                  color: Theme.of(context).colorScheme.background,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
               )
-            : SizedBox.shrink(),
+            : const SizedBox.shrink(),
         hasLeftSafeArea
             ? Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
                   width: leftPaddingSafeArea,
-                  color: Theme.of(context).colorScheme.background,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
               )
-            : SizedBox.shrink(),
+            : const SizedBox.shrink(),
         // Gradient fade to right overflow, disabled for now
         // because many pages have full screen elements/banners etc
         // hasRightSafeArea
@@ -257,8 +251,7 @@ class HandleWillPopScope extends StatelessWidget {
 
 class PageNavigationFramework extends StatefulWidget {
   const PageNavigationFramework(
-      {Key? key, required this.widthSideNavigationBar})
-      : super(key: key);
+      {super.key, required this.widthSideNavigationBar});
   final double widthSideNavigationBar;
 
   //PageNavigationFramework.changePage(context, 0);
@@ -325,7 +318,7 @@ Future<bool> runAllCloudFunctions(BuildContext context,
     loadingIndeterminateKey.currentState?.setVisibility(true);
     await getExchangeRates();
   } catch (e) {
-    print("Error running sync functions on load: " + e.toString());
+    print("Error running sync functions on load: $e");
     loadingIndeterminateKey.currentState?.setVisibility(false);
     runningCloudFunctions = false;
     canSyncData = true;
@@ -345,7 +338,7 @@ Future<bool> runAllCloudFunctions(BuildContext context,
     return false;
   }
   loadingIndeterminateKey.currentState?.setVisibility(false);
-  Future.delayed(Duration(milliseconds: 2000), () {
+  Future.delayed(const Duration(milliseconds: 2000), () {
     runningCloudFunctions = false;
   });
   errorSigningInDuringCloud = false;
@@ -360,19 +353,19 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
     MoreActionsPage(key: settingsPageStateKey), //3
   ];
   final List<Widget> pagesExtended = [
-    MoreActionsPage(), //4
+    const MoreActionsPage(), //4
     SubscriptionsPage(key: subscriptionsPageStateKey), //5
-    NotificationsPage(), //6
+    const NotificationsPage(), //6
     WalletDetailsPage(
         key: walletDetailsAllSpendingPageStateKey, wallet: null), //7
     AccountsPage(key: accountsPageStateKey), // 8
-    EditWalletsPage(), //9
-    EditBudgetPage(), //10
-    EditCategoriesPage(), //11
-    EditAssociatedTitlesPage(), //12
-    AboutPage(), //13
+    const EditWalletsPage(), //9
+    const EditBudgetPage(), //10
+    const EditCategoriesPage(), //11
+    const EditAssociatedTitlesPage(), //12
+    const AboutPage(), //13
     ObjectivesListPage(key: objectivesListPageStateKey, backButton: false), //14
-    EditObjectivesPage(objectiveType: ObjectiveType.goal), //15
+    const EditObjectivesPage(objectiveType: ObjectiveType.goal), //15
     UpcomingOverdueTransactions(
         key: upcomingOverdueTransactionsStateKey,
         overdueTransactions: null), //16
@@ -492,13 +485,13 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       Scaffold(
         resizeToAvoidBottomInset: false,
         body: FadeIndexedStack(
-          children: [...pages, ...pagesExtended],
           index: currentPage,
           duration: !kIsWeb
               ? Duration.zero
               : appStateSettings["batterySaver"]
                   ? Duration.zero
-                  : Duration(milliseconds: 300),
+                  : const Duration(milliseconds: 300),
+          children: [...pages, ...pagesExtended],
         ),
         extendBody: false,
         bottomNavigationBar: BottomNavBar(
@@ -516,10 +509,10 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
             end: 15,
           ),
           child: AnimateFAB(
-            key: ValueKey(1),
+            key: const ValueKey(1),
             fab: AddFAB(
               tooltip: "add-transaction".tr(),
-              openPage: AddTransactionPage(
+              openPage: const AddTransactionPage(
                 routesToPopAfterDelete: RoutesToPopAfterDelete.None,
               ),
             ),
@@ -564,15 +557,15 @@ class AddMoreThingsPopup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         AddThing(
           iconData: navBarIconsData["accountDetails"]!.iconData,
           title: "account".tr(),
-          openPage: AddWalletPage(
+          openPage: const AddWalletPage(
             routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           ),
           widgetAfter: SelectChips(
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 13),
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 13),
             items: [
               if (Provider.of<AllWallets>(context).list.length > 1)
                 "transfer-balance",
@@ -646,11 +639,11 @@ class AddMoreThingsPopup extends StatelessWidget {
               builder: (context, snapshot) {
                 List<TransactionWithCount> commonTransactions =
                     snapshot.data ?? [];
-                if (commonTransactions.length <= 0) {
+                if (commonTransactions.isEmpty) {
                   return AddThing(
                     iconData: navBarIconsData["transactions"]!.iconData,
                     title: "transaction".tr(),
-                    openPage: AddTransactionPage(
+                    openPage: const AddTransactionPage(
                         routesToPopAfterDelete: RoutesToPopAfterDelete.None),
                   );
                 }
@@ -661,7 +654,7 @@ class AddMoreThingsPopup extends StatelessWidget {
                         : Icons.info_outline_rounded,
                     iconSize: 14,
                     scale: 1.8,
-                    padding: EdgeInsetsDirectional.all(5),
+                    padding: const EdgeInsetsDirectional.all(5),
                     onTap: () {
                       openPopup(
                         context,
@@ -680,10 +673,10 @@ class AddMoreThingsPopup extends StatelessWidget {
                   ),
                   iconData: navBarIconsData["transactions"]!.iconData,
                   title: "transaction".tr(),
-                  openPage: AddTransactionPage(
+                  openPage: const AddTransactionPage(
                       routesToPopAfterDelete: RoutesToPopAfterDelete.None),
                   widgetAfter: SelectChips(
-                    padding: EdgeInsetsDirectional.symmetric(horizontal: 13),
+                    padding: const EdgeInsetsDirectional.symmetric(horizontal: 13),
                     items: commonTransactions,
                     getSelected: (_) {
                       return false;
@@ -737,22 +730,18 @@ class AddMoreThingsPopup extends StatelessWidget {
                       //               transactionWithCount.transaction.walletFk]
                       //           ?.currency,
                       //     )
-                      return getTransactionLabelSync(
+                      return "${getTransactionLabelSync(
                             transactionWithCount.transaction,
                             categoriesIndexed[
                                 transactionWithCount.transaction.categoryFk],
-                          ) +
-                          " " +
-                          "(" +
-                          convertToMoney(
+                          )} (${convertToMoney(
                             Provider.of<AllWallets>(context),
                             transactionWithCount.transaction.amount,
                             currencyKey: Provider.of<AllWallets>(context)
                                 .indexedByPk[
                                     transactionWithCount.transaction.walletFk]
                                 ?.currency,
-                          ) +
-                          ")";
+                          )})";
                     },
                     getCustomBorderColor:
                         (TransactionWithCount transactionWithCount) {
@@ -795,13 +784,13 @@ class AddMoreThingsPopup extends StatelessWidget {
         AddThing(
           iconData: navBarIconsData["loans"]!.iconData,
           title: navBarIconsData["loans"]!.label.tr(),
-          openPage: AddObjectivePage(
+          openPage: const AddObjectivePage(
             routesToPopAfterDelete: RoutesToPopAfterDelete.None,
             objectiveType: ObjectiveType.loan,
           ),
           widgetAfter: SelectChips(
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 13),
-            items: ["long-term", "one-time"],
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 13),
+            items: const ["long-term", "one-time"],
             getSelected: (_) {
               return false;
             },
@@ -818,7 +807,7 @@ class AddMoreThingsPopup extends StatelessWidget {
               if (selection == "long-term") {
                 pushRoute(
                   context,
-                  AddObjectivePage(
+                  const AddObjectivePage(
                     routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                     objectiveType: ObjectiveType.loan,
                   ),
@@ -826,7 +815,7 @@ class AddMoreThingsPopup extends StatelessWidget {
               } else {
                 pushRoute(
                   context,
-                  AddTransactionPage(
+                  const AddTransactionPage(
                     routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                     selectedType: TransactionSpecialType.credit,
                   ),
@@ -856,12 +845,12 @@ class AddMoreThingsPopup extends StatelessWidget {
         AddThing(
           iconData: navBarIconsData["goals"]!.iconData,
           title: "goal".tr(),
-          openPage: AddObjectivePage(
+          openPage: const AddObjectivePage(
             routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           ),
           widgetAfter: SelectChips(
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 13),
-            items: ["installment"],
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 13),
+            items: const ["installment"],
             getSelected: (_) {
               return false;
             },
@@ -900,7 +889,7 @@ class AddMoreThingsPopup extends StatelessWidget {
         AddThing(
           iconData: navBarIconsData["budgets"]!.iconData,
           title: "budget".tr(),
-          openPage: AddBudgetPage(
+          openPage: const AddBudgetPage(
             routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           ),
           iconScale: navBarIconsData["budgets"]!.iconScale,
@@ -908,7 +897,7 @@ class AddMoreThingsPopup extends StatelessWidget {
         AddThing(
           iconData: navBarIconsData["categoriesDetails"]!.iconData,
           title: "category".tr(),
-          openPage: AddCategoryPage(
+          openPage: const AddCategoryPage(
             routesToPopAfterDelete: RoutesToPopAfterDelete.None,
           ),
         ),
@@ -952,9 +941,9 @@ class AddThing extends StatelessWidget {
               alignStart: true,
               alignBeside: true,
               padding: widgetAfter != null
-                  ? EdgeInsetsDirectional.only(
+                  ? const EdgeInsetsDirectional.only(
                       start: 20, end: 20, top: 20, bottom: 5)
-                  : EdgeInsetsDirectional.symmetric(
+                  : const EdgeInsetsDirectional.symmetric(
                       horizontal: 20, vertical: 20),
               text: title.capitalizeFirst,
               iconData: iconData,
@@ -969,7 +958,7 @@ class AddThing extends StatelessWidget {
               },
               afterWidget: widgetAfter,
               afterWidgetPadding: widgetAfter != null
-                  ? EdgeInsetsDirectional.only(bottom: 8)
+                  ? const EdgeInsetsDirectional.only(bottom: 8)
                   : EdgeInsetsDirectional.zero,
               infoButton: infoButton,
             ),
@@ -988,8 +977,9 @@ class AnimateFAB extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (appStateSettings["appAnimations"] != AppAnimations.all.index)
-      return condition ? fab : SizedBox.shrink();
+    if (appStateSettings["appAnimations"] != AppAnimations.all.index) {
+      return condition ? fab : const SizedBox.shrink();
+    }
     // return AnimatedOpacity(
     //   duration: Duration(milliseconds: 400),
     //   opacity: condition ? 1 : 0,
@@ -1002,19 +992,19 @@ class AnimateFAB extends StatelessWidget {
     //   ),
     // );
     return AnimatedSwitcher(
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
       switchInCurve: Curves.easeInOutCubicEmphasized,
       switchOutCurve: Curves.ease,
       transitionBuilder: (Widget child, Animation<double> animation) {
         return FadeScaleTransitionButton(
           animation: animation,
+          alignment: const Alignment(0.7, 0.7),
           child: child,
-          alignment: Alignment(0.7, 0.7),
         );
       },
       child: condition
           ? fab
-          : Container(
+          : const SizedBox(
               key: ValueKey(1),
               width: 50,
               height: 50,
@@ -1025,11 +1015,11 @@ class AnimateFAB extends StatelessWidget {
 
 class FadeScaleTransitionButton extends StatelessWidget {
   const FadeScaleTransitionButton({
-    Key? key,
+    super.key,
     required this.animation,
     required this.alignment,
     this.child,
-  }) : super(key: key);
+  });
 
   final Animation<double> animation;
   final Widget? child;
@@ -1064,8 +1054,8 @@ class FadeScaleTransitionButton extends StatelessWidget {
           opacity: _fadeInTransition.animate(animation),
           child: ScaleTransition(
             scale: _scaleInTransition.animate(animation),
-            child: child,
             alignment: alignment,
+            child: child,
           ),
         );
       },
@@ -1078,8 +1068,8 @@ class FadeScaleTransitionButton extends StatelessWidget {
           opacity: _fadeOutTransition.animate(animation),
           child: ScaleTransition(
             scale: _scaleOutTransition.animate(animation),
-            child: child,
             alignment: alignment,
+            child: child,
           ),
         );
       },

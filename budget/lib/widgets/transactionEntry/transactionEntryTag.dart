@@ -35,8 +35,9 @@ class TransactionEntryTag extends StatelessWidget {
     bool showObjectivePercentageCheck = showObjectivePercentage;
     if (transaction.sharedReferenceBudgetPk != null ||
         transaction.subCategoryFk != null ||
-        (objective != null && getIsDifferenceOnlyLoan(objective!)))
+        (objective != null && getIsDifferenceOnlyLoan(objective!))) {
       showObjectivePercentageCheck = false;
+    }
 
     bool showExcludedBudgetTagCheck = false;
     if (transaction.budgetFksExclude != null && showExcludedBudgetTag != null) {
@@ -85,7 +86,7 @@ class TransactionEntryTag extends StatelessWidget {
                       TransactionCategory? category = snapshot.data!;
                       return SubCategoryTag(category: category);
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 );
               }
@@ -207,7 +208,7 @@ class SubCategoryTag extends StatelessWidget {
       color: HexColor(category.colour,
           defaultColor: Theme.of(context).colorScheme.primary),
       name: (category.emojiIconName != null
-              ? ((category.emojiIconName ?? "") + " ")
+              ? ("${category.emojiIconName ?? ""} ")
               : "") +
           category.name,
       leading: category.emojiIconName != null
@@ -252,10 +253,8 @@ class ObjectivePercentTag extends StatelessWidget {
         return TransactionTag(
           color: HexColor(objective.colour,
               defaultColor: Theme.of(context).colorScheme.primary),
-          name: objective.name +
-              ": " +
-              convertToPercent(percentageTowardsGoal * 100,
-                  numberDecimals: 0, useLessThanZero: true),
+          name: "${objective.name}: ${convertToPercent(percentageTowardsGoal * 100,
+                  numberDecimals: 0, useLessThanZero: true)}",
           progress: percentageTowardsGoal,
         );
       },
@@ -271,7 +270,7 @@ class TransactionTag extends StatelessWidget {
   final Widget? leading;
   final double? progress;
 
-  TransactionTag({
+  const TransactionTag({super.key, 
     required this.color,
     required this.name,
     this.margin = const EdgeInsetsDirectional.only(start: 3),
@@ -285,19 +284,19 @@ class TransactionTag extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget tagWidget = Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(progress != null ? 0.15 : 0.25),
+        color: color.withValues(alpha: progress != null ? 0.15 : 0.25),
         borderRadius: BorderRadiusDirectional.circular(6),
       ),
       padding: padding,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          leading ?? SizedBox.shrink(),
+          leading ?? const SizedBox.shrink(),
           Flexible(
             child: TextFont(
               text: name,
               fontSize: 11.5,
-              textColor: getColor(context, "black").withOpacity(0.7),
+              textColor: getColor(context, "black").withValues(alpha: 0.7),
               maxLines:
                   appStateSettings["fadeTransactionNameOverflows"] == false
                       ? null
@@ -315,7 +314,7 @@ class TransactionTag extends StatelessWidget {
         ],
       ),
     );
-    if (progress != null)
+    if (progress != null) {
       return LayoutBuilder(builder: (context, constraints) {
         return ConstrainedBox(
           constraints: BoxConstraints(maxWidth: constraints.maxWidth),
@@ -338,7 +337,7 @@ class TransactionTag extends StatelessWidget {
                           heightFactor: 1,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.2),
+                              color: color.withValues(alpha: 0.2),
                               borderRadius: BorderRadiusDirectional.circular(6),
                             ),
                           ),
@@ -352,6 +351,7 @@ class TransactionTag extends StatelessWidget {
           ),
         );
       });
+    }
     return Padding(padding: margin, child: tagWidget);
   }
 }
@@ -370,7 +370,7 @@ class SharedBudgetLabel extends StatelessWidget {
               ? Padding(
                   padding: const EdgeInsetsDirectional.only(top: 2.0),
                   child: InfiniteRotationAnimation(
-                    duration: Duration(milliseconds: 5000),
+                    duration: const Duration(milliseconds: 5000),
                     child: Icon(
                       transaction.sharedStatus == SharedStatus.waiting
                           ? appStateSettings["outlinedIcons"]
@@ -385,7 +385,7 @@ class SharedBudgetLabel extends StatelessWidget {
                                   ? Icons.arrow_circle_up_outlined
                                   : Icons.arrow_circle_up_rounded,
                       size: 14,
-                      color: getColor(context, "black").withOpacity(0.7),
+                      color: getColor(context, "black").withValues(alpha: 0.7),
                     ),
                   ),
                 )
@@ -401,15 +401,15 @@ class SharedBudgetLabel extends StatelessWidget {
                             ? Icons.arrow_circle_up_outlined
                             : Icons.arrow_circle_up_rounded,
                     size: 14,
-                    color: getColor(context, "black").withOpacity(0.7),
+                    color: getColor(context, "black").withValues(alpha: 0.7),
                   ),
                 ),
-          SizedBox(width: 2),
+          const SizedBox(width: 2),
           Expanded(
             child: Row(
               children: [
                 transaction.sharedReferenceBudgetPk == null
-                    ? SizedBox.shrink()
+                    ? const SizedBox.shrink()
                     : Expanded(
                         child: StreamBuilder<Budget>(
                           stream: database
@@ -418,7 +418,7 @@ class SharedBudgetLabel extends StatelessWidget {
                             if (snapshot.hasData) {
                               return TextFont(
                                 overflow: TextOverflow.ellipsis,
-                                text: (transaction.transactionOwnerEmail
+                                text: "${transaction.transactionOwnerEmail
                                                 .toString() ==
                                             appStateSettings["currentUserEmail"]
                                         ? getMemberNickname(appStateSettings[
@@ -436,12 +436,10 @@ class SharedBudgetLabel extends StatelessWidget {
                                                     "currentUserEmail"])
                                             : getMemberNickname(transaction
                                                 .transactionOwnerEmail
-                                                .toString())) +
-                                    " for " +
-                                    snapshot.data!.name,
+                                                .toString())} for ${snapshot.data!.name}",
                                 fontSize: 12.5,
                                 textColor:
-                                    getColor(context, "black").withOpacity(0.7),
+                                    getColor(context, "black").withValues(alpha: 0.7),
                               );
                             }
                             return Container();

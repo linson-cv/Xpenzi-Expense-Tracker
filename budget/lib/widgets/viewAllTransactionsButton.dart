@@ -15,15 +15,16 @@ class ViewAllTransactionsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return LowKeyButton(
       onTap: () {
-        if (onPress != null)
+        if (onPress != null) {
           onPress!();
-        else
+        } else {
           PageNavigationFramework.changePage(
             context,
             1,
             switchNavbar:
                 appStateSettings["customNavBarShortcut1"] == "transactions",
           );
+        }
       },
       text: "view-all-transactions".tr(),
     );
@@ -54,32 +55,32 @@ class LowKeyButton extends StatelessWidget {
       child: Tappable(
         color: color ??
             (appStateSettings["materialYou"]
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
                 : getColor(context, "lightDarkAccent")),
+        onTap: onTap,
+        borderRadius: getPlatform() == PlatformOS.isIOS ? 8 : 13,
         child: Padding(
           padding: const EdgeInsetsDirectional.symmetric(
               horizontal: 15, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (extraWidgetAtBeginning) extraWidget ?? SizedBox.shrink(),
+              if (extraWidgetAtBeginning) extraWidget ?? const SizedBox.shrink(),
               Flexible(
                 child: TextFont(
                   text: text,
                   textAlign: TextAlign.center,
                   fontSize: 14,
                   textColor:
-                      textColor ?? getColor(context, "black").withOpacity(0.5),
+                      textColor ?? getColor(context, "black").withValues(alpha: 0.5),
                   maxLines: 5,
                 ),
               ),
               if (extraWidgetAtBeginning == false)
-                extraWidget ?? SizedBox.shrink(),
+                extraWidget ?? const SizedBox.shrink(),
             ],
           ),
         ),
-        onTap: onTap,
-        borderRadius: getPlatform() == PlatformOS.isIOS ? 8 : 13,
       ),
     );
   }

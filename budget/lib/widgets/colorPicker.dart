@@ -42,7 +42,7 @@ class ColorPicker extends StatefulWidget {
   final double? shadeSliderPosition;
   final Color? initialColor;
   final Function(Color, double, double) onChange;
-  ColorPicker({
+  const ColorPicker({super.key, 
     required this.width,
     required this.ringColor,
     required this.ringSize,
@@ -57,20 +57,20 @@ class ColorPicker extends StatefulWidget {
 
 class _ColorPickerState extends State<ColorPicker> {
   final List<Color> _colors = [
-    Color.fromARGB(255, 255, 255, 255),
-    Color.fromARGB(255, 255, 0, 0),
-    Color.fromARGB(255, 255, 128, 0),
-    Color.fromARGB(255, 255, 255, 0),
-    Color.fromARGB(255, 128, 255, 0),
-    Color.fromARGB(255, 0, 255, 0),
-    Color.fromARGB(255, 0, 219, 110),
-    Color.fromARGB(255, 0, 255, 255),
-    Color.fromARGB(255, 0, 128, 255),
-    Color.fromARGB(255, 0, 0, 255),
-    Color.fromARGB(255, 127, 0, 255),
-    Color.fromARGB(255, 255, 0, 255),
-    Color.fromARGB(255, 255, 0, 127),
-    Color.fromARGB(255, 255, 0, 0),
+    const Color.fromARGB(255, 255, 255, 255),
+    const Color.fromARGB(255, 255, 0, 0),
+    const Color.fromARGB(255, 255, 128, 0),
+    const Color.fromARGB(255, 255, 255, 0),
+    const Color.fromARGB(255, 128, 255, 0),
+    const Color.fromARGB(255, 0, 255, 0),
+    const Color.fromARGB(255, 0, 219, 110),
+    const Color.fromARGB(255, 0, 255, 255),
+    const Color.fromARGB(255, 0, 128, 255),
+    const Color.fromARGB(255, 0, 0, 255),
+    const Color.fromARGB(255, 127, 0, 255),
+    const Color.fromARGB(255, 255, 0, 255),
+    const Color.fromARGB(255, 255, 0, 127),
+    const Color.fromARGB(255, 255, 0, 0),
   ];
 
   double _colorSliderPosition = 0;
@@ -102,14 +102,13 @@ class _ColorPickerState extends State<ColorPicker> {
             ));
     _shadedColor = _calculateShadedColor(_shadeSliderPosition);
     Future.delayed(Duration.zero, () {
-      print("Distance to predicted color: " +
-          colorDistance(widget.initialColor ?? Colors.red, _shadedColor)
-              .toString());
+      print("Distance to predicted color: ${colorDistance(widget.initialColor ?? Colors.red, _shadedColor)}");
 
       if (widget.colorSliderPosition == null &&
-          widget.shadeSliderPosition == null)
+          widget.shadeSliderPosition == null) {
         widget.onChange(widget.initialColor ?? _shadedColor,
             _colorSliderPosition, _shadeSliderPosition);
+      }
     });
   }
 
@@ -233,7 +232,7 @@ class _ColorPickerState extends State<ColorPicker> {
             color: _shadedColor,
             shape: BoxShape.circle,
           ),
-          margin: EdgeInsetsDirectional.only(bottom: 5),
+          margin: const EdgeInsetsDirectional.only(bottom: 5),
         ),
         Center(
           child: GestureDetector(
@@ -263,7 +262,7 @@ class _ColorPickerState extends State<ColorPicker> {
             //This outside padding makes it much easier to grab the   slider because the gesture detector has
             // the extra padding to recognize gestures inside of
             child: Padding(
-              padding: EdgeInsetsDirectional.all(15),
+              padding: const EdgeInsetsDirectional.all(15),
               child: Container(
                 width: widget.width,
                 height: 15,
@@ -274,8 +273,8 @@ class _ColorPickerState extends State<ColorPicker> {
                 child: AnimatedScale(
                   alignment:
                       Alignment(_colorSliderPosition / widget.width * 2 - 1, 0),
-                  duration: Duration(milliseconds: 1000),
-                  curve: ElasticOutCurve(0.5),
+                  duration: const Duration(milliseconds: 1000),
+                  curve: const ElasticOutCurve(0.5),
                   scale: _tapDownColor ? 1.5 : 1,
                   child: CustomPaint(
                     painter: _SliderIndicatorPainter(_colorSliderPosition,
@@ -314,7 +313,7 @@ class _ColorPickerState extends State<ColorPicker> {
             //This outside padding makes it much easier to grab the slider because the gesture detector has
             // the extra padding to recognize gestures inside of
             child: Padding(
-              padding: EdgeInsetsDirectional.all(15),
+              padding: const EdgeInsetsDirectional.all(15),
               child: Container(
                 width: widget.width,
                 height: 15,
@@ -326,8 +325,8 @@ class _ColorPickerState extends State<ColorPicker> {
                 child: AnimatedScale(
                   alignment:
                       Alignment(_shadeSliderPosition / widget.width * 2 - 1, 0),
-                  duration: Duration(milliseconds: 1000),
-                  curve: ElasticOutCurve(0.5),
+                  duration: const Duration(milliseconds: 1000),
+                  curve: const ElasticOutCurve(0.5),
                   scale: _tapDownShade ? 1.5 : 1,
                   child: CustomPaint(
                     painter: _SliderIndicatorPainter(_shadeSliderPosition,
@@ -426,7 +425,7 @@ double findClosestColorPosition(
 
 class RingColorPicker extends StatefulWidget {
   const RingColorPicker({
-    Key? key,
+    super.key,
     required this.pickerColor,
     required this.onColorChanged,
     this.colorPickerHeight = 250.0,
@@ -434,7 +433,7 @@ class RingColorPicker extends StatefulWidget {
     this.pickerAreaBorderRadius = const BorderRadius.all(Radius.zero),
     this.onSelect,
     this.previewBuilder,
-  }) : super(key: key);
+  });
 
   final Color pickerColor;
   final ValueChanged<Color> onColorChanged;
@@ -450,7 +449,7 @@ class RingColorPicker extends StatefulWidget {
 
 class _RingColorPickerState extends State<RingColorPicker> {
   HSVColor currentHsvColor = const HSVColor.fromAHSV(0.0, 0.0, 0.0, 0.0);
-  Widget? previewWidget = null;
+  Widget? previewWidget;
 
   @override
   void initState() {
@@ -466,19 +465,19 @@ class _RingColorPickerState extends State<RingColorPicker> {
 
   void onColorChanging(HSVColor color) {
     setState(() => currentHsvColor = color);
-    widget.onColorChanged(currentHsvColor.toColor().withOpacity(1));
+    widget.onColorChanged(currentHsvColor.toColor().withValues(alpha: 1));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: widget.colorPickerHeight,
       child: Stack(alignment: AlignmentDirectional.center, children: <Widget>[
         widget.previewBuilder != null
             ? Align(
                 alignment: Alignment.topRight,
                 child: widget
-                    .previewBuilder!(currentHsvColor.toColor().withOpacity(1)),
+                    .previewBuilder!(currentHsvColor.toColor().withValues(alpha: 1)),
               )
             : Align(
                 alignment: Alignment.topRight,
@@ -492,8 +491,8 @@ class _RingColorPickerState extends State<RingColorPicker> {
                   child: Tappable(
                     onTap: widget.onSelect,
                     borderRadius: 100,
-                    color: currentHsvColor.toColor().withOpacity(1),
-                    child: SizedBox(),
+                    color: currentHsvColor.toColor().withValues(alpha: 1),
+                    child: const SizedBox(),
                   ),
                 ),
               ),

@@ -27,17 +27,17 @@ class TotalSpentCategoriesSummary {
     this.hasSubCategories = false,
   }) {
     subCategorySpendingIndexedByMainCategoryPk =
-        this.subCategorySpendingIndexedByMainCategoryPk.isEmpty
+        subCategorySpendingIndexedByMainCategoryPk.isEmpty
             ? {}
-            : this.subCategorySpendingIndexedByMainCategoryPk;
+            : subCategorySpendingIndexedByMainCategoryPk;
     totalSpentOfCategoriesRemoveUnassignedTransactions =
-        this.totalSpentOfCategoriesRemoveUnassignedTransactions.isEmpty
+        totalSpentOfCategoriesRemoveUnassignedTransactions.isEmpty
             ? {}
-            : this.totalSpentOfCategoriesRemoveUnassignedTransactions;
+            : totalSpentOfCategoriesRemoveUnassignedTransactions;
     dataFilterUnassignedTransactions =
-        this.dataFilterUnassignedTransactions.isEmpty == true
+        dataFilterUnassignedTransactions.isEmpty == true
             ? []
-            : this.dataFilterUnassignedTransactions;
+            : dataFilterUnassignedTransactions;
   }
 }
 
@@ -48,8 +48,7 @@ TotalSpentCategoriesSummary watchTotalSpentInTimeRangeHelper(
     bool absoluteTotal = false}) {
   TotalSpentCategoriesSummary s = TotalSpentCategoriesSummary();
 
-  dataInput.forEach(
-    (CategoryWithTotal categoryWithTotal) {
+  for (var categoryWithTotal in dataInput) {
       // Don't re-add the subcategory total, since the main category total includes this already
       if (categoryWithTotal.category.mainCategoryPk == null) {
         s.totalSpent = s.totalSpent +
@@ -102,17 +101,17 @@ TotalSpentCategoriesSummary watchTotalSpentInTimeRangeHelper(
                   categoryWithTotal.total;
         }
       }
-    },
-  );
+    }
 
-  dataInput.forEach((CategoryWithTotal categoryWithTotal) {
+  for (var categoryWithTotal in dataInput) {
     double? newTotal = s.totalSpentOfCategoriesRemoveUnassignedTransactions[
         categoryWithTotal.category.categoryPk];
-    if (newTotal != null)
+    if (newTotal != null) {
       s.dataFilterUnassignedTransactions.add(
         categoryWithTotal.copyWith(total: newTotal),
       );
-  });
+    }
+  }
 
   s.hasSubCategories = s.subCategorySpendingIndexedByMainCategoryPk.isNotEmpty;
 
@@ -150,7 +149,7 @@ class PieChartOptions extends StatelessWidget {
                   enabled: useHorizontalPaddingConstrained) +
               2),
       child: Transform.translate(
-        offset: Offset(0, 5),
+        offset: const Offset(0, 5),
         child: Align(
           alignment: AlignmentDirectional.bottomEnd,
           child: Builder(builder: (context) {
@@ -164,7 +163,7 @@ class PieChartOptions extends StatelessWidget {
                   child: Tooltip(
                     message: "clear-selection".tr(),
                     child: IconButton(
-                      padding: EdgeInsetsDirectional.all(15),
+                      padding: const EdgeInsetsDirectional.all(15),
                       onPressed: onClearSelection,
                       icon: Icon(
                         appStateSettings["outlinedIcons"]
@@ -185,7 +184,7 @@ class PieChartOptions extends StatelessWidget {
                         child: Tooltip(
                           message: "view-subcategories".tr(),
                           child: IconButton(
-                            padding: EdgeInsetsDirectional.all(15),
+                            padding: const EdgeInsetsDirectional.all(15),
                             onPressed: toggleAllSubCategories,
                             icon: ScaledAnimatedSwitcher(
                               keyToWatch: showAllSubcategories.toString(),
@@ -209,7 +208,7 @@ class PieChartOptions extends StatelessWidget {
                             ? "edit-saving-goals".tr()
                             : "edit-spending-goals".tr(),
                         child: IconButton(
-                          padding: EdgeInsetsDirectional.all(15),
+                          padding: const EdgeInsetsDirectional.all(15),
                           onPressed: onEditSpendingGoals,
                           icon: Icon(
                             appStateSettings["outlinedIcons"]

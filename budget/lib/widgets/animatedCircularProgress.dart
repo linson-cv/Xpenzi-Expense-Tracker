@@ -12,8 +12,8 @@ class AnimatedCircularProgress extends StatefulWidget {
   final double valueStrokeWidth;
   final double rotationOffsetPercent;
 
-  AnimatedCircularProgress({
-    Key? key,
+  const AnimatedCircularProgress({
+    super.key,
     required this.percent,
     required this.backgroundColor,
     required this.foregroundColor,
@@ -22,7 +22,7 @@ class AnimatedCircularProgress extends StatefulWidget {
     this.strokeWidth = 3.5,
     this.valueStrokeWidth = 4,
     this.rotationOffsetPercent = 0,
-  }) : super(key: key);
+  });
 
   @override
   _AnimatedCircularProgressState createState() =>
@@ -37,8 +37,9 @@ class _AnimatedCircularProgressState extends State<AnimatedCircularProgress>
   double capPercentage(double percent) {
     if (percent > 3) {
       return 3;
-    } else
+    } else {
       return percent;
+    }
   }
 
   @override
@@ -46,10 +47,10 @@ class _AnimatedCircularProgressState extends State<AnimatedCircularProgress>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 2500),
+      duration: const Duration(milliseconds: 2500),
     );
     _animation = Tween<double>(begin: 0, end: capPercentage(widget.percent))
-        .animate(new CurvedAnimation(
+        .animate(CurvedAnimation(
             parent: _animationController,
             curve: Curves.easeInOutCubicEmphasized));
     _animationController.forward();
@@ -67,7 +68,7 @@ class _AnimatedCircularProgressState extends State<AnimatedCircularProgress>
       _animationController.forward(from: 0);
       _animation = Tween<double>(
               begin: oldWidget.percent, end: capPercentage(widget.percent))
-          .animate(new CurvedAnimation(
+          .animate(CurvedAnimation(
               parent: _animationController,
               curve: Curves.easeInOutCubicEmphasized));
     }
@@ -125,10 +126,10 @@ class _RoundedCircularProgressPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final radius = min(size.width, size.height) / 2;
-    final startAngle = -pi / 2;
+    const startAngle = -pi / 2;
     final progressSweepAngle = 2 * pi * value.clamp(0.0, 1.0);
     final overageSweepAngle = 2 * pi * (value - 1);
-    final backgroundSweepAngle = 2 * pi;
+    const backgroundSweepAngle = 2 * pi;
 
     final backgroundPaint = Paint()
       ..color = backgroundColor
@@ -150,18 +151,19 @@ class _RoundedCircularProgressPainter extends CustomPainter {
       ..strokeWidth = valueStrokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
-    final startAngleRadians = startAngle;
+    const startAngleRadians = startAngle;
     final rect = Rect.fromCircle(center: center, radius: radius);
     canvas.drawArc(
         rect, startAngleRadians, backgroundSweepAngle, false, backgroundPaint);
     canvas.drawArc(
         rect, startAngleRadians, progressSweepAngle, false, valuePaint);
     if (value > 1.0) {
-      if (value < 2.0)
+      if (value < 2.0) {
         canvas.drawArc(rect, progressSweepAngle - startAngleRadians * 3,
             overageSweepAngle, false, overagePaintShadow);
+      }
       canvas.drawArc(rect, progressSweepAngle - startAngleRadians * 3,
           overageSweepAngle, false, overagePaint);
     }

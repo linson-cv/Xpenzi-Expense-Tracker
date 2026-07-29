@@ -41,8 +41,7 @@ double getDifferenceOfLoan(
 }
 
 class ObjectivesListPage extends StatefulWidget {
-  const ObjectivesListPage({required this.backButton, Key? key})
-      : super(key: key);
+  const ObjectivesListPage({required this.backButton, super.key});
   final bool backButton;
 
   @override
@@ -66,12 +65,12 @@ class ObjectivesListPageState extends State<ObjectivesListPage> {
       horizontalPaddingConstrained: enableDoubleColumn(context) == false,
       actions: [
         IconButton(
-          padding: EdgeInsetsDirectional.all(15),
+          padding: const EdgeInsetsDirectional.all(15),
           tooltip: "edit-goals".tr(),
           onPressed: () {
             pushRoute(
               context,
-              EditObjectivesPage(objectiveType: ObjectiveType.goal),
+              const EditObjectivesPage(objectiveType: ObjectiveType.goal),
             );
           },
           icon: Icon(
@@ -83,12 +82,12 @@ class ObjectivesListPageState extends State<ObjectivesListPage> {
         ),
         if (getIsFullScreen(context))
           IconButton(
-            padding: EdgeInsetsDirectional.all(15),
+            padding: const EdgeInsetsDirectional.all(15),
             tooltip: "add-goal".tr(),
             onPressed: () {
               pushRoute(
                 context,
-                AddObjectivePage(
+                const AddObjectivePage(
                     routesToPopAfterDelete: RoutesToPopAfterDelete.None),
               );
             },
@@ -100,7 +99,7 @@ class ObjectivesListPageState extends State<ObjectivesListPage> {
             ),
           ),
       ],
-      slivers: [
+      slivers: const [
         ObjectiveList(
             showExamplesIfEmpty: true, objectiveType: ObjectiveType.goal),
         SliverToBoxAdapter(
@@ -141,7 +140,7 @@ class ObjectiveList extends StatelessWidget {
         List<Objective> objectivesList = [...(snapshot.data ?? [])];
         if (showExamplesIfEmpty &&
             (snapshot.hasData == false ||
-                (objectivesList.length <= 0 && snapshot.hasData))) {
+                (objectivesList.isEmpty && snapshot.hasData))) {
           showDemoObjectives = true;
           objectivesList.add(
             Objective(
@@ -149,7 +148,7 @@ class ObjectiveList extends StatelessWidget {
                 name: "example-goals-1".tr(),
                 amount: 1500,
                 order: 0,
-                dateCreated: DateTime.now().subtract(Duration(days: 40)),
+                dateCreated: DateTime.now().subtract(const Duration(days: 40)),
                 income: false,
                 pinned: false,
                 iconName: "coconut-tree.png",
@@ -164,7 +163,7 @@ class ObjectiveList extends StatelessWidget {
                 name: "example-goals-2".tr(),
                 amount: 2000,
                 order: 0,
-                dateCreated: DateTime.now().subtract(Duration(days: 10)),
+                dateCreated: DateTime.now().subtract(const Duration(days: 10)),
                 income: false,
                 pinned: false,
                 iconName: "car(1).png",
@@ -175,7 +174,7 @@ class ObjectiveList extends StatelessWidget {
           );
         }
         Widget addButton = showAddButton == false
-            ? SizedBox.shrink()
+            ? const SizedBox.shrink()
             : Column(
                 children: [
                   Row(
@@ -211,7 +210,7 @@ class ObjectiveList extends StatelessWidget {
                       padding: const EdgeInsetsDirectional.only(bottom: 8.0),
                       child: TextFont(
                         text: "example-goals".tr(),
-                        textColor: getColor(context, "black").withOpacity(0.25),
+                        textColor: getColor(context, "black").withValues(alpha: 0.25),
                         fontSize: 16,
                         textAlign: TextAlign.center,
                       ),
@@ -240,7 +239,7 @@ class ObjectiveList extends StatelessWidget {
                           (showDemoObjectives == false &&
                               index == objectivesList.length)) {
                         return showAddButton == false
-                            ? SizedBox.shrink()
+                            ? const SizedBox.shrink()
                             : AddButton(
                                 onTap: () {},
                                 openPage: AddObjectivePage(
@@ -320,10 +319,11 @@ class ObjectiveListDifferenceLoan extends StatelessWidget {
   final String? searchFor;
   @override
   Widget build(BuildContext context) {
-    if (appStateSettings["longTermLoansDifferenceFeature"] == false)
-      return SliverToBoxAdapter(
+    if (appStateSettings["longTermLoansDifferenceFeature"] == false) {
+      return const SliverToBoxAdapter(
         child: SizedBox.shrink(),
       );
+    }
     return StreamBuilder<List<Objective>>(
       stream: database.watchAllObjectives(
         objectiveType: ObjectiveType.loan,
@@ -334,10 +334,11 @@ class ObjectiveListDifferenceLoan extends StatelessWidget {
       ),
       builder: (context, snapshot) {
         List<Objective> objectivesList = snapshot.data ?? [];
-        if (objectivesList.length <= 0)
-          return SliverToBoxAdapter(
+        if (objectivesList.isEmpty) {
+          return const SliverToBoxAdapter(
             child: SizedBox.shrink(),
           );
+        }
         return SliverPadding(
           padding: EdgeInsetsDirectional.symmetric(
             vertical: getPlatform() == PlatformOS.isIOS ? 3 : 7,
@@ -397,7 +398,7 @@ class ObjectiveContainer extends StatelessWidget {
             : 20;
     Color containerColor =
         getPlatform() == PlatformOS.isIOS && forceAndroidBubbleDesign == false
-            ? Theme.of(context).colorScheme.background
+            ? Theme.of(context).colorScheme.surface
             : getColor(context, "lightDarkAccentHeavyLight");
     EdgeInsetsDirectional containerPadding = EdgeInsetsDirectional.only(
       start:
@@ -428,7 +429,7 @@ class ObjectiveContainer extends StatelessWidget {
             openPage: ObjectivePage(objectivePk: objective.objectivePk),
             borderRadius: borderRadius,
             closedColor: containerColor,
-            button: (openContainer()) {
+            button: (Function() openContainer) {
               return Tappable(
                 onLongPress: () {
                   pushRoute(
@@ -444,7 +445,7 @@ class ObjectiveContainer extends StatelessWidget {
                   openContainer();
                 },
                 child: Padding(
-                  padding: EdgeInsetsDirectional.only(
+                  padding: const EdgeInsetsDirectional.only(
                     top: 18,
                     bottom: 23,
                   ),
@@ -500,7 +501,7 @@ class ObjectiveContainer extends StatelessWidget {
                                                   fontSize: 15,
                                                   textColor:
                                                       getColor(context, "black")
-                                                          .withOpacity(0.65),
+                                                          .withValues(alpha: 0.65),
                                                   maxLines: 1,
                                                 );
                                               }),
@@ -512,7 +513,7 @@ class ObjectiveContainer extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 5),
                               CategoryIcon(
                                 categoryPk: "-1",
                                 category: TransactionCategory(
@@ -534,7 +535,7 @@ class ObjectiveContainer extends StatelessWidget {
                               ),
                             ],
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -543,7 +544,7 @@ class ObjectiveContainer extends StatelessWidget {
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
                                     if (constraints.maxWidth <= 73) {
-                                      return SizedBox.shrink();
+                                      return const SizedBox.shrink();
                                     }
                                     return StreamBuilder<int?>(
                                       stream: database
@@ -566,20 +567,17 @@ class ObjectiveContainer extends StatelessWidget {
                                                 ? (objective.income
                                                     ? "lent".tr()
                                                     : "borrowed".tr())
-                                                : (numberTransactions
-                                                        .toString() +
-                                                    " " +
-                                                    (numberTransactions == 1
+                                                : ("$numberTransactions ${numberTransactions == 1
                                                         ? "transaction"
                                                             .tr()
                                                             .toLowerCase()
                                                         : "transactions"
                                                             .tr()
-                                                            .toLowerCase()))),
+                                                            .toLowerCase()}")),
                                             fontSize: 15,
                                             textColor:
                                                 getColor(context, "black")
-                                                    .withOpacity(0.65),
+                                                    .withValues(alpha: 0.65),
                                           ),
                                         );
                                       },
@@ -629,7 +627,7 @@ class ObjectiveContainer extends StatelessWidget {
                                         ),
                                         fontSize: 15,
                                         textColor: getColor(context, "black")
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                       ),
                                     ),
                                   ],
@@ -637,7 +635,7 @@ class ObjectiveContainer extends StatelessWidget {
                               }),
                             ],
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                         ]),
                       ),
                       Padding(
@@ -661,7 +659,7 @@ class ObjectiveContainer extends StatelessWidget {
                                   ),
                                   fontSize: 12,
                                   textColor: getColor(context, "black")
-                                      .withOpacity(0.3),
+                                      .withValues(alpha: 0.3),
                                 ),
                               ),
                             Expanded(
@@ -702,7 +700,7 @@ class ObjectiveContainer extends StatelessWidget {
                                   ),
                                   fontSize: 12,
                                   textColor: getColor(context, "black")
-                                      .withOpacity(0.3),
+                                      .withValues(alpha: 0.3),
                                 ),
                               ),
                           ],
@@ -724,7 +722,7 @@ class ObjectiveContainer extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadiusDirectional.circular(borderRadius),
             child: ColorFiltered(
-              colorFilter: ColorFilter.mode(
+              colorFilter: const ColorFilter.mode(
                 Colors.grey,
                 BlendMode.saturation,
               ),
@@ -764,7 +762,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
         : 20;
     Color containerColor =
         getPlatform() == PlatformOS.isIOS && forceAndroidBubbleDesign == false
-            ? Theme.of(context).colorScheme.background
+            ? Theme.of(context).colorScheme.surface
             : getColor(context, "lightDarkAccentHeavyLight");
     Widget child = WatchTotalAndAmountOfObjective(
       objective: objective,
@@ -788,7 +786,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
             openPage: ObjectivePage(objectivePk: objective.objectivePk),
             borderRadius: borderRadius,
             closedColor: containerColor,
-            button: (openContainer()) {
+            button: (Function() openContainer) {
               return Tappable(
                 onLongPress: () {
                   pushRoute(
@@ -835,7 +833,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                               canEditByLongPress: false,
                               margin: EdgeInsetsDirectional.zero,
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Flexible(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -846,7 +844,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  SizedBox(height: 1),
+                                  const SizedBox(height: 1),
                                   StreamBuilder<int?>(
                                     stream: database
                                         .getTotalCountOfTransactionsInObjective(
@@ -857,18 +855,16 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                                           snapshot.data ?? 0;
                                       return TextFont(
                                         textAlign: TextAlign.start,
-                                        text: numberTransactions.toString() +
-                                            " " +
-                                            (numberTransactions == 1
+                                        text: "$numberTransactions ${numberTransactions == 1
                                                 ? "transaction"
                                                     .tr()
                                                     .toLowerCase()
                                                 : "transactions"
                                                     .tr()
-                                                    .toLowerCase()),
+                                                    .toLowerCase()}",
                                         fontSize: 14,
                                         textColor: getColor(context, "black")
-                                            .withOpacity(0.65),
+                                            .withValues(alpha: 0.65),
                                       );
                                     },
                                   ),
@@ -903,7 +899,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                                         "unPaidOverdue",
                                       ),
                           ),
-                          SizedBox(height: 1),
+                          const SizedBox(height: 1),
                           Padding(
                             padding:
                                 const EdgeInsetsDirectional.only(bottom: 2),
@@ -919,7 +915,7 @@ class ObjectiveContainerDifferenceLoan extends StatelessWidget {
                                       .capitalizeFirst,
                               fontSize: 14,
                               textColor:
-                                  getColor(context, "black").withOpacity(0.65),
+                                  getColor(context, "black").withValues(alpha: 0.65),
                             ),
                           ),
                         ],
@@ -954,26 +950,15 @@ String getObjectiveStatus(BuildContext context, Objective objective,
         ? "loan-overdue".tr()
         : "goal-overdue".tr();
   } else {
-    content = (addSpendingSavingIndication
+    content = "${addSpendingSavingIndication
             ? (objective.income
-                ? (objective.type == ObjectiveType.loan
+                ? "${objective.type == ObjectiveType.loan
                         ? "collect".tr()
-                        : "save".tr()) +
-                    " "
-                : (objective.type == ObjectiveType.loan
+                        : "save".tr()} "
+                : "${objective.type == ObjectiveType.loan
                         ? "pay".tr()
-                        : "spend".tr()) +
-                    " ")
-            : "") +
-        convertToMoney(Provider.of<AllWallets>(context), amount.abs()) +
-        "/" +
-        "day".tr() +
-        " " +
-        "for".tr() +
-        " " +
-        remainingDays.toString() +
-        " " +
-        (remainingDays == 1 ? "day".tr() : "days".tr());
+                        : "spend".tr()} ")
+            : ""}${convertToMoney(Provider.of<AllWallets>(context), amount.abs())}/${"day".tr()} ${"for".tr()} $remainingDays ${remainingDays == 1 ? "day".tr() : "days".tr()}";
   }
   return content;
 }
@@ -1046,10 +1031,11 @@ class WatchTotalAndAmountOfObjective extends StatelessWidget {
                             .toStringAsFixed(numberDecimals)) ==
                         0) &&
                     snapshot.hasData &&
-                    snapshotAmount.hasData)
+                    snapshotAmount.hasData) {
                   percentageTowardsGoal = 1;
-                else
+                } else {
                   percentageTowardsGoal = 0;
+                }
               }
               return builder(
                   objectiveAmount * (objective.income ? -1 : 1),

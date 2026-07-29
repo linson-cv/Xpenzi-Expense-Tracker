@@ -8,14 +8,14 @@ import 'package:flutter/material.dart';
 
 class SlidingSelectorIncomeExpense extends StatelessWidget {
   const SlidingSelectorIncomeExpense({
-    Key? key,
+    super.key,
     required this.onSelected,
     this.alternateTheme = false,
     this.useHorizontalPaddingConstrained = true,
     this.customPadding,
     this.options,
     this.initialIndex,
-  }) : super(key: key);
+  });
 
   final Function(int) onSelected;
   final bool alternateTheme;
@@ -55,7 +55,7 @@ class SlidingSelectorIncomeExpense extends StatelessWidget {
               child: Material(
                 borderRadius: borderRadius,
                 color: appStateSettings["materialYou"]
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
                     : getColor(context, "lightDarkAccentHeavyLight"),
                 child: TabBar(
                   splashFactory: getPlatform() == PlatformOS.isIOS
@@ -70,8 +70,8 @@ class SlidingSelectorIncomeExpense extends StatelessWidget {
                   indicatorSize: TabBarIndicatorSize.tab,
                   indicator: BoxDecoration(
                     color: appStateSettings["materialYou"]
-                        ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                        : getColor(context, "black").withOpacity(0.15),
+                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+                        : getColor(context, "black").withValues(alpha: 0.15),
                     borderRadius: borderRadius,
                   ),
                   labelColor: getColor(context, "black"),
@@ -89,7 +89,7 @@ class SlidingSelectorIncomeExpense extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontFamily: appStateSettings["font"],
-                                  fontFamilyFallback: ['Inter'],
+                                  fontFamilyFallback: const ['Inter'],
                                 ),
                               ),
                             ),
@@ -105,7 +105,7 @@ class SlidingSelectorIncomeExpense extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontFamily: appStateSettings["font"],
-                                  fontFamilyFallback: ['Inter'],
+                                  fontFamilyFallback: const ['Inter'],
                                 ),
                               ),
                             ),
@@ -121,7 +121,7 @@ class SlidingSelectorIncomeExpense extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontFamily: appStateSettings["font"],
-                                  fontFamilyFallback: ['Inter'],
+                                  fontFamilyFallback: const ['Inter'],
                                 ),
                               ),
                             ),
@@ -140,7 +140,7 @@ class SlidingSelectorIncomeExpense extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontFamily: appStateSettings["font"],
-                                    fontFamilyFallback: ['Inter'],
+                                    fontFamilyFallback: const ['Inter'],
                                   ),
                                 ),
                               ),

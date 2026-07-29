@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 
 class NoResults extends StatelessWidget {
   const NoResults({
-    Key? key,
+    super.key,
     required this.message,
     this.tintColor,
     this.padding,
     this.noSearchResultsVariation = false,
-  }) : super(key: key);
+  });
   final String message;
   final Color? tintColor;
   final EdgeInsetsDirectional? padding;
@@ -20,7 +20,7 @@ class NoResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FadeIn(
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       child: Opacity(
         opacity: Theme.of(context).brightness == Brightness.light ? 1 : 0.8,
         child: Center(
@@ -45,13 +45,13 @@ class NoResults extends StatelessWidget {
                       ? ColorFiltered(
                           colorFilter: ColorFilter.mode(
                             !appStateSettings["materialYou"]
-                                ? getColor(context, "black").withOpacity(0.1)
+                                ? getColor(context, "black").withValues(alpha: 0.1)
                                 : tintColor == null
                                     ? Theme.of(context)
                                         .colorScheme
                                         .primary
-                                        .withOpacity(0.7)
-                                    : tintColor!.withOpacity(0.7),
+                                        .withValues(alpha: 0.7)
+                                    : tintColor!.withValues(alpha: 0.7),
                             BlendMode.srcATop,
                           ),
                           child: ColorFiltered(
@@ -60,9 +60,9 @@ class NoResults extends StatelessWidget {
                               opacity: 1,
                               child: Image(
                                 image: noSearchResultsVariation
-                                    ? AssetImage(
+                                    ? const AssetImage(
                                         "assets/images/no-search-filter.png")
-                                    : AssetImage(
+                                    : const AssetImage(
                                         "assets/images/empty-filter.png"),
                               ),
                             ),
@@ -70,11 +70,11 @@ class NoResults extends StatelessWidget {
                         )
                       : Image(
                           image: noSearchResultsVariation
-                              ? AssetImage("assets/images/no-search.png")
-                              : AssetImage("assets/images/empty.png"),
+                              ? const AssetImage("assets/images/no-search.png")
+                              : const AssetImage("assets/images/empty.png"),
                         ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 TextFont(
                   maxLines: 4,
                   fontSize: 15,

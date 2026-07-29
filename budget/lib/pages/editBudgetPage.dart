@@ -2,18 +2,14 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addBudgetPage.dart';
-import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/struct/shareBudget.dart';
-import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/dropdownSelect.dart';
 import 'package:budget/widgets/fab.dart';
 import 'package:budget/widgets/fadeIn.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
-import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/noResults.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
@@ -62,9 +58,9 @@ bool hideIfSearching(String? searchTerm, bool isFocused, BuildContext context) {
 }
 
 class EditBudgetPage extends StatefulWidget {
-  EditBudgetPage({
-    Key? key,
-  }) : super(key: key);
+  const EditBudgetPage({
+    super.key,
+  });
 
   @override
   _EditBudgetPageState createState() => _EditBudgetPageState();
@@ -106,7 +102,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
         floatingActionButton: AnimateFABDelayed(
           fab: AddFAB(
             tooltip: "add-budget".tr(),
-            openPage: AddBudgetPage(
+            openPage: const AddBudgetPage(
               routesToPopAfterDelete: RoutesToPopAfterDelete.None,
             ),
           ),
@@ -124,7 +120,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                     : Icons.add_rounded,
                 action: () => pushRoute(
                   context,
-                  AddBudgetPage(
+                  const AddBudgetPage(
                     routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                   ),
                 ),
@@ -137,7 +133,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                     : Icons.more_vert_rounded,
                 action: () => openBottomSheet(
                   context,
-                  PopupFramework(hasPadding: false, child: BudgetSettings()),
+                  const PopupFramework(hasPadding: false, child: BudgetSettings()),
                 ),
               ),
             ],
@@ -183,14 +179,14 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
             stream: database.watchAllBudgets(
                 searchFor: searchValue == "" ? null : searchValue),
             builder: (context, snapshot) {
-              if (snapshot.hasData && (snapshot.data ?? []).length <= 0) {
+              if (snapshot.hasData && (snapshot.data ?? []).isEmpty) {
                 return SliverToBoxAdapter(
                   child: NoResults(
                     message: "no-budgets-found".tr(),
                   ),
                 );
               }
-              if (snapshot.hasData && (snapshot.data ?? []).length > 0) {
+              if (snapshot.hasData && (snapshot.data ?? []).isNotEmpty) {
                 return SliverReorderableList(
                   onReorderStart: (index) {
                     HapticFeedback.heavyImpact();
@@ -276,7 +272,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
                                   ),
-                                  TextFont(
+                                  const TextFont(
                                     text: " / ",
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -306,9 +302,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                 ],
                               ),
                               TextFont(
-                                text: getWordedDateShort(budgetRange.start) +
-                                    " – " +
-                                    getWordedDateShort(budgetRange.end),
+                                text: "${getWordedDateShort(budgetRange.start)} – ${getWordedDateShort(budgetRange.end)}",
                                 fontSize: 15,
                               ),
                               Container(height: 2),
@@ -316,12 +310,9 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                       !budget.addedTransactionsOnly
                                   ? TextFont(
                                       text: budget.categoryFks == null ||
-                                              budget.categoryFks!.length == 0
+                                              budget.categoryFks!.isEmpty
                                           ? "all-categories-budget".tr()
-                                          : budget.categoryFks!.length
-                                                  .toString() +
-                                              " " +
-                                              "category-budget".tr(),
+                                          : "${budget.categoryFks!.length} ${"category-budget".tr()}",
                                       fontSize: 14,
                                     )
                                   : FutureBuilder<int?>(
@@ -333,29 +324,27 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                             snapshot.data != null) {
                                           return TextFont(
                                             textAlign: TextAlign.start,
-                                            text: snapshot.data!.toString() +
-                                                " " +
-                                                (snapshot.data! == 1
+                                            text: "${snapshot.data!} ${snapshot.data! == 1
                                                     ? "transaction"
                                                         .tr()
                                                         .toLowerCase()
                                                     : "transactions"
                                                         .tr()
-                                                        .toLowerCase()),
+                                                        .toLowerCase()}",
                                             fontSize: 14,
                                             textColor:
                                                 getColor(context, "black")
-                                                    .withOpacity(0.65),
+                                                    .withValues(alpha: 0.65),
                                           );
                                         } else {
                                           return TextFont(
                                             textAlign: TextAlign.start,
                                             text:
-                                                "/" + " " + "transactions".tr(),
+                                                "/ ${"transactions".tr()}",
                                             fontSize: 14,
                                             textColor:
                                                 getColor(context, "black")
-                                                    .withOpacity(0.65),
+                                                    .withValues(alpha: 0.65),
                                           );
                                         }
                                       },
@@ -426,23 +415,23 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                                   ),
                                 ),
                               )
-                            : SizedBox.shrink(),
+                            : const SizedBox.shrink(),
                       ],
                     );
                   },
                   itemCount: snapshot.data!.length,
-                  onReorder: (_intPrevious, _intNew) async {
-                    Budget oldBudget = snapshot.data![_intPrevious];
+                  onReorder: (intPrevious, intNew) async {
+                    Budget oldBudget = snapshot.data![intPrevious];
 
                     // print(oldBudget.name);
                     // print(oldBudget.order);
 
-                    if (_intNew > _intPrevious) {
+                    if (intNew > intPrevious) {
                       await database.moveBudget(
-                          oldBudget.budgetPk, _intNew - 1, oldBudget.order);
+                          oldBudget.budgetPk, intNew - 1, oldBudget.order);
                     } else {
                       await database.moveBudget(
-                          oldBudget.budgetPk, _intNew, oldBudget.order);
+                          oldBudget.budgetPk, intNew, oldBudget.order);
                     }
                     return true;
                   },
@@ -453,7 +442,7 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
               );
             },
           ),
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: SizedBox(height: 75),
           ),
         ],
@@ -570,7 +559,7 @@ Future<dynamic> selectAddableBudgetPopup(BuildContext context,
         stream: database.watchAllAddableBudgets(),
         builder: (context, snapshot) {
           if (snapshot.hasData &&
-              (snapshot.data != null && snapshot.data!.length > 0)) {
+              (snapshot.data != null && snapshot.data!.isNotEmpty)) {
             List<Budget> addableBudgets = snapshot.data!;
             return RadioItems(
               ifNullSelectNone: true,
@@ -594,10 +583,11 @@ Future<dynamic> selectAddableBudgetPopup(BuildContext context,
               },
               initial: null,
               onChanged: (Budget? budget) async {
-                if (budget == null)
+                if (budget == null) {
                   popRoute(context, "none");
-                else
+                } else {
                   popRoute(context, budget);
+                }
               },
               onLongPress: (Budget? budget) {
                 pushRoute(
@@ -613,7 +603,7 @@ Future<dynamic> selectAddableBudgetPopup(BuildContext context,
             return NoResultsCreate(
               message: "no-addable-budgets".tr(),
               buttonLabel: "create-addable-budget".tr(),
-              route: AddBudgetPage(
+              route: const AddBudgetPage(
                 isAddedOnlyBudget: true,
                 routesToPopAfterDelete: RoutesToPopAfterDelete.None,
               ),
@@ -645,13 +635,13 @@ class NoResultsCreate extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Padding(
-              padding: EdgeInsetsDirectional.symmetric(horizontal: 10),
+              padding: const EdgeInsetsDirectional.symmetric(horizontal: 10),
               child: TextFont(
                 text: message.tr(),
                 fontSize: 15,
@@ -660,7 +650,7 @@ class NoResultsCreate extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
         IntrinsicWidth(
           child: Button(
             label: buttonLabel.tr(),
@@ -672,7 +662,7 @@ class NoResultsCreate extends StatelessWidget {
             },
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -683,12 +673,12 @@ class BudgetSettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TotalSpentToggle();
+    return const TotalSpentToggle();
   }
 }
 
 class TotalSpentToggle extends StatefulWidget {
-  const TotalSpentToggle({bool this.isForGoalTotal = false, super.key});
+  const TotalSpentToggle({this.isForGoalTotal = false, super.key});
   final bool isForGoalTotal; //Otherwise it's for the budget setting
 
   @override
@@ -715,7 +705,7 @@ class _TotalSpentToggleState extends State<TotalSpentToggle> {
           PopupFramework(
             title: titleLabel,
             child: RadioItems(
-              items: ["total-remaining", "total-spent"],
+              items: const ["total-remaining", "total-spent"],
               initial: appStateSettings[appSettingKey] == true
                   ? "total-spent"
                   : "total-remaining",
@@ -769,18 +759,18 @@ Future duplicateBudgetPopup(
     onSubmitLabel: "duplicate".tr(),
     onSubmit: () => Navigator.pop(context, true),
   );
-  if (result == true)
+  if (result == true) {
     openLoadingPopupTryCatch(
       () async {
         int? rowId = await database.createOrUpdateBudget(
           budget.copyWith(
             dateCreated: DateTime.now(),
-            name: budget.name + " (" + "copy".tr() + ")",
+            name: "${budget.name} (${"copy".tr()})",
           ),
           insert: true,
         );
 
-        Budget? budgetJustAdded = null;
+        Budget? budgetJustAdded;
         budgetJustAdded = await database.getBudgetFromRowId(rowId);
 
         List<CategoryBudgetLimit> categoryLimits = await database
@@ -815,4 +805,5 @@ Future duplicateBudgetPopup(
         }
       },
     );
+  }
 }

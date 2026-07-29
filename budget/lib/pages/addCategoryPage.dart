@@ -38,13 +38,13 @@ import 'package:budget/widgets/extraInfoBoxes.dart';
 import 'addButton.dart';
 
 class AddCategoryPage extends StatefulWidget {
-  AddCategoryPage({
-    Key? key,
+  const AddCategoryPage({
+    super.key,
     this.category,
     required this.routesToPopAfterDelete,
     this.mainCategoryPkWhenSubCategory,
     this.initiallyIsExpense = true,
-  }) : super(key: key);
+  });
 
   //When a category is passed in, we are editing that category
   final TransactionCategory? category;
@@ -70,10 +70,10 @@ class _AddCategoryPageState extends State<AddCategoryPage>
   bool? canAddCategory;
   TransactionCategory? widgetCategory;
   List<String>? selectedMembers;
-  TextEditingController _titleController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
   bool userAttemptedToChangeTitle = false;
-  FocusNode _titleFocusNode = FocusNode();
-  late TabController _incomeTabController =
+  final FocusNode _titleFocusNode = FocusNode();
+  late final TabController _incomeTabController =
       TabController(length: 2, vsync: this);
   late bool isSubCategory = widget.mainCategoryPkWhenSubCategory != null ||
       widget.category?.mainCategoryPk != null;
@@ -137,15 +137,17 @@ class _AddCategoryPageState extends State<AddCategoryPage>
 
   determineBottomButton() {
     if (selectedTitle != null) {
-      if (canAddCategory != true)
-        this.setState(() {
+      if (canAddCategory != true) {
+        setState(() {
           canAddCategory = true;
         });
+      }
     } else {
-      if (canAddCategory != false)
-        this.setState(() {
+      if (canAddCategory != false) {
+        setState(() {
           canAddCategory = false;
         });
+      }
     }
   }
 
@@ -165,7 +167,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
           icon: appStateSettings["outlinedIcons"]
               ? Icons.move_to_inbox_outlined
               : Icons.move_to_inbox_rounded,
-          description: (selectedTitle ?? "") + " → " + categoryMain.name,
+          description: "${selectedTitle ?? ""} → ${categoryMain.name}",
         ),
       );
     }
@@ -201,13 +203,11 @@ class _AddCategoryPageState extends State<AddCategoryPage>
       iconName: selectedImage,
       emojiIconName: selectedEmoji,
       methodAdded:
-          widget.category != null ? widget.category!.methodAdded : null,
+          widget.category?.methodAdded,
       mainCategoryPk: canSelectIfSubCategoryOrMainCategory() &&
               mainCategoryPkForSubcategoryWhenCreating != null
           ? mainCategoryPkForSubcategoryWhenCreating
-          : widget.mainCategoryPkWhenSubCategory != null
-              ? widget.mainCategoryPkWhenSubCategory
-              : widget.category?.mainCategoryPk,
+          : widget.mainCategoryPkWhenSubCategory ?? widget.category?.mainCategoryPk,
     );
   }
 
@@ -292,19 +292,19 @@ class _AddCategoryPageState extends State<AddCategoryPage>
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 15),
       child: Column(
         children: [
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           TipBox(
             onTap: () {},
             text: "balance-correction-category-info".tr(),
             settingsString: null,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
               color: Theme.of(context)
                   .colorScheme
                   .secondaryContainer
-                  .withOpacity(0.7),
+                  .withValues(alpha: 0.7),
               borderRadius: BorderRadiusDirectional.all(
                   Radius.circular(getPlatform() == PlatformOS.isIOS ? 10 : 15)),
             ),
@@ -317,7 +317,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                   enableBorderRadius: true,
                   title: "amount-color".tr(),
                   initial: appStateSettings["balanceTransferAmountColor"],
-                  items: ["green-or-red", "no-color"],
+                  items: const ["green-or-red", "no-color"],
                   getLabel: (item) {
                     return item.tr();
                   },
@@ -330,11 +330,11 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                   child: TransactionEntry(
                     useHorizontalPaddingConstrained: false,
                     customPadding:
-                        EdgeInsetsDirectional.symmetric(horizontal: 8),
+                        const EdgeInsetsDirectional.symmetric(horizontal: 8),
                     containerColor: Theme.of(context)
                         .colorScheme
                         .secondaryContainer
-                        .withOpacity(0.7),
+                        .withValues(alpha: 0.7),
                     openPage: Container(),
                     transaction: Transaction(
                       transactionPk: "-1",
@@ -350,7 +350,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                     ),
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
               ],
             ),
           ),
@@ -380,9 +380,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                     .watchCategory(widget.mainCategoryPkWhenSubCategory!),
                 builder: (context, snapshot) {
                   return TextFont(
-                    text: "for".tr().capitalizeFirst +
-                        " " +
-                        (snapshot.data?.name ?? ""),
+                    text: "${"for".tr().capitalizeFirst} ${snapshot.data?.name ?? ""}",
                     fontSize: getCenteredTitle(
                                     context: context,
                                     backButtonEnabled: true) ==
@@ -425,7 +423,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                   widget.routesToPopAfterDelete !=
                       RoutesToPopAfterDelete.PreventDelete
               ? IconButton(
-                  padding: EdgeInsetsDirectional.all(15),
+                  padding: const EdgeInsetsDirectional.all(15),
                   tooltip: "delete-category".tr(),
                   onPressed: () {
                     deleteCategoryPopup(
@@ -438,7 +436,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                       ? Icons.delete_outlined
                       : Icons.delete_rounded),
                 )
-              : SizedBox.shrink()
+              : const SizedBox.shrink()
         ],
         staticOverlay: Align(
           alignment: AlignmentDirectional.bottomCenter,
@@ -447,7 +445,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                   label: "set-name".tr(),
                   onTap: () async {
                     FocusScope.of(context).unfocus();
-                    Future.delayed(Duration(milliseconds: 100), () {
+                    Future.delayed(const Duration(milliseconds: 100), () {
                       _titleFocusNode.requestFocus();
                     });
                   },
@@ -521,16 +519,16 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                             child: SelectCategoryImage(
                               setSelectedImage: setSelectedImage,
                               setSelectedEmoji: setSelectedEmoji,
-                              selectedImage: "assets/categories/" +
-                                  selectedImage.toString(),
+                              selectedImage: "assets/categories/$selectedImage",
                               setSelectedTitle: (String? titleRecommendation) {
                                 if (titleRecommendation != null &&
                                     (userAttemptedToChangeTitle == false ||
                                         selectedTitle == "" ||
-                                        selectedTitle == null))
+                                        selectedTitle == null)) {
                                   setSelectedTitle(
                                       titleRecommendation.capitalizeFirstofEach,
                                       modifyControllerValue: true);
+                                }
                               },
                             ),
                           ),
@@ -567,7 +565,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                                   fontWeight: FontWeight.bold,
                                 ),
                                 if (widget.category?.categoryPk != "0")
-                                  SizedBox(height: 17),
+                                  const SizedBox(height: 17),
                                 if (widget.category?.categoryPk == "0")
                                   AnimatedOpacity(
                                     opacity: selectedTitle !=
@@ -578,7 +576,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                                                     .capitalizeFirstofEach
                                         ? 1
                                         : 0,
-                                    duration: Duration(milliseconds: 500),
+                                    duration: const Duration(milliseconds: 500),
                                     child: Padding(
                                       padding: const EdgeInsetsDirectional.only(
                                           start: 5),
@@ -598,7 +596,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                     ),
                   ],
                 ),
-                Container(
+                SizedBox(
                   height: 65,
                   child: SelectColor(
                     horizontalList: true,
@@ -619,9 +617,9 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                         widgetCategory == null ||
                         widget.routesToPopAfterDelete ==
                             RoutesToPopAfterDelete.PreventDelete
-                    ? SizedBox.shrink()
+                    ? const SizedBox.shrink()
                     : Padding(
-                        padding: EdgeInsetsDirectional.only(
+                        padding: const EdgeInsetsDirectional.only(
                           start: 20,
                           end: 20,
                           top: 20,
@@ -659,9 +657,9 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                         widget.routesToPopAfterDelete ==
                             RoutesToPopAfterDelete.PreventDelete ||
                         isSubCategory == false
-                    ? SizedBox.shrink()
+                    ? const SizedBox.shrink()
                     : Padding(
-                        padding: EdgeInsetsDirectional.only(
+                        padding: const EdgeInsetsDirectional.only(
                           start: 20,
                           end: 20,
                           top: 10,
@@ -683,12 +681,12 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                         ),
                       ),
                 widget.category?.categoryPk == "0" || widgetCategory == null
-                    ? SizedBox.shrink()
-                    : SizedBox(height: 20),
+                    ? const SizedBox.shrink()
+                    : const SizedBox(height: 20),
                 widget.category?.categoryPk == "0" ||
                         widgetCategory == null ||
                         isSubCategory
-                    ? SizedBox.shrink()
+                    ? const SizedBox.shrink()
                     : Padding(
                         padding: const EdgeInsetsDirectional.symmetric(
                             horizontal: 20),
@@ -699,8 +697,8 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                         ),
                       ),
                 widget.category?.categoryPk == "0" || widgetCategory == null
-                    ? SizedBox.shrink()
-                    : SizedBox(height: 5),
+                    ? const SizedBox.shrink()
+                    : const SizedBox(height: 5),
               ],
             ),
           ),
@@ -729,12 +727,12 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                   widget.category!.categoryPk),
               builder: (context, snapshot) {
                 List<TransactionCategory> subCategories = snapshot.data ?? [];
-                if (subCategories.length <= 0 &&
+                if (subCategories.isEmpty &&
                     widget.routesToPopAfterDelete !=
-                        RoutesToPopAfterDelete.PreventDelete)
+                        RoutesToPopAfterDelete.PreventDelete) {
                   return SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsetsDirectional.only(
+                      padding: const EdgeInsetsDirectional.only(
                         start: 20,
                         end: 20,
                         top: 10,
@@ -743,13 +741,14 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                       child: SettingsContainer(
                         isOutlined: true,
                         onTap: () async {
-                          if (widget.category != null)
+                          if (widget.category != null) {
                             makeSubCategoryPopup(
                               context,
                               categoryOriginal: widget.category!,
                               routesToPopAfterDelete:
                                   widget.routesToPopAfterDelete,
                             );
+                          }
                         },
                         title: "make-subcategory".tr(),
                         icon: appStateSettings["outlinedIcons"]
@@ -760,6 +759,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                       ),
                     ),
                   );
+                }
                 return SliverReorderableList(
                   onReorderStart: (index) {
                     HapticFeedback.heavyImpact();
@@ -795,7 +795,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                         content: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            SizedBox(width: 3),
+                            const SizedBox(width: 3),
                             CategoryIcon(
                               categoryPk: category.categoryPk,
                               size: 25,
@@ -807,7 +807,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                               onTap: null,
                               canEditByLongPress: false,
                             ),
-                            SizedBox(width: 15),
+                            const SizedBox(width: 15),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -831,18 +831,16 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                                           snapshot.data != null) {
                                         return TextFont(
                                           textAlign: TextAlign.start,
-                                          text: snapshot.data![0].toString() +
-                                              " " +
-                                              (snapshot.data![0] == 1
+                                          text: "${snapshot.data![0]} ${snapshot.data![0] == 1
                                                   ? "transaction"
                                                       .tr()
                                                       .toLowerCase()
                                                   : "transactions"
                                                       .tr()
-                                                      .toLowerCase()),
+                                                      .toLowerCase()}",
                                           fontSize: 14,
                                           textColor: getColor(context, "black")
-                                              .withOpacity(0.65),
+                                              .withValues(alpha: 0.65),
                                         );
                                       } else {
                                         return TextFont(
@@ -850,7 +848,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                                           text: "/ transactions",
                                           fontSize: 14,
                                           textColor: getColor(context, "black")
-                                              .withOpacity(0.65),
+                                              .withValues(alpha: 0.65),
                                         );
                                       }
                                     },
@@ -879,21 +877,21 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                     );
                   },
                   itemCount: subCategories.length,
-                  onReorder: (_intPrevious, _intNew) async {
+                  onReorder: (intPrevious, intNew) async {
                     TransactionCategory oldCategory =
-                        subCategories[_intPrevious];
+                        subCategories[intPrevious];
 
-                    if (_intNew > _intPrevious) {
+                    if (intNew > intPrevious) {
                       await database.moveCategory(
                         oldCategory.categoryPk,
-                        _intNew - 1,
+                        intNew - 1,
                         oldCategory.order,
                         mainCategoryPk: oldCategory.mainCategoryPk,
                       );
                     } else {
                       await database.moveCategory(
                         oldCategory.categoryPk,
-                        _intNew,
+                        intNew,
                         oldCategory.order,
                         mainCategoryPk: oldCategory.mainCategoryPk,
                       );
@@ -911,7 +909,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                 widget.category?.categoryPk == "0" ||
                         widgetCategory == null ||
                         isSubCategory
-                    ? SizedBox.shrink()
+                    ? const SizedBox.shrink()
                     : Row(
                         children: [
                           Expanded(
@@ -922,7 +920,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                                 mainCategoryPkWhenSubCategory:
                                     widget.category!.categoryPk,
                               ),
-                              margin: EdgeInsetsDirectional.only(
+                              margin: const EdgeInsetsDirectional.only(
                                 start: 13,
                                 end: 13,
                                 bottom: 6,
@@ -934,8 +932,8 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                         ],
                       ),
                 widgetCategory == null || isSubCategory
-                    ? SizedBox.shrink()
-                    : SizedBox(height: 20),
+                    ? const SizedBox.shrink()
+                    : const SizedBox(height: 20),
                 if (widget.category != null)
                   Padding(
                     padding:
@@ -946,7 +944,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                       fontSize: 16,
                     ),
                   ),
-                if (widget.category != null) SizedBox(height: 5),
+                if (widget.category != null) const SizedBox(height: 5),
                 if (widget.category != null)
                   Padding(
                     padding:
@@ -958,23 +956,24 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                       maxLines: 10,
                     ),
                   ),
-                if (widget.category != null) SizedBox(height: 10),
+                if (widget.category != null) const SizedBox(height: 10),
                 if (widget.category != null)
                   Row(
                     children: [
                       Expanded(
                         child: AddButton(
-                            margin: EdgeInsetsDirectional.only(
+                            margin: const EdgeInsetsDirectional.only(
                               start: 15,
                               end: 15,
                               bottom: 9,
                               top: 4,
                             ),
                             onTap: () {
-                              if (canAddCategory != true)
+                              if (canAddCategory != true) {
                                 setState(() {
                                   canAddCategory = true;
                                 });
+                              }
                               openBottomSheet(
                                 context,
                                 popupWithKeyboard: true,
@@ -995,7 +994,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                       builder: (context, snapshot) {
                         // print(snapshot.data);
                         if (snapshot.hasData &&
-                            (snapshot.data ?? []).length > 0) {
+                            (snapshot.data ?? []).isNotEmpty) {
                           return Column(
                             children: [
                               for (int i = 0; i < snapshot.data!.length; i++)
@@ -1032,9 +1031,9 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                             ],
                           );
                         }
-                        return SizedBox();
+                        return const SizedBox();
                       }),
-                SizedBox(height: 80),
+                const SizedBox(height: 80),
               ],
             ),
           ),
@@ -1058,7 +1057,7 @@ class _AddTitleState extends State<AddTitle> {
     return PopupFramework(
       title: "set-title".tr(),
       child: SelectText(
-        enableButton: selectedText.trim().length > 0,
+        enableButton: selectedText.trim().isNotEmpty,
         buttonLabel: "set-title".tr(),
         setSelectedText: (value) {
           setState(() {
@@ -1090,10 +1089,10 @@ class _AddTitleState extends State<AddTitle> {
 
 class AssociatedTitleContainer extends StatelessWidget {
   const AssociatedTitleContainer({
-    Key? key,
+    super.key,
     required this.title,
     required this.setTitle,
-  }) : super(key: key);
+  });
 
   final TransactionAssociatedTitle title;
   final Function(String) setTitle;
@@ -1233,7 +1232,7 @@ class SelectIsSubcategory extends StatelessWidget {
                   filled: isMainCategoryWhenCreating,
                   alignStart: true,
                   alignBeside: true,
-                  padding: EdgeInsetsDirectional.symmetric(
+                  padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: 20, vertical: 20),
                   text: "main-category".tr(),
                   iconData: appStateSettings["outlinedIcons"]
@@ -1246,7 +1245,7 @@ class SelectIsSubcategory extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 13),
+          const SizedBox(height: 13),
           Row(
             children: [
               Expanded(
@@ -1256,7 +1255,7 @@ class SelectIsSubcategory extends StatelessWidget {
                   alignStart: true,
                   alignBeside: true,
                   padding:
-                      EdgeInsetsDirectional.only(start: 20, end: 12, top: 15),
+                      const EdgeInsetsDirectional.only(start: 20, end: 12, top: 15),
                   text: "subcategory".tr(),
                   iconData: appStateSettings["outlinedIcons"]
                       ? Icons.move_to_inbox_outlined
@@ -1270,7 +1269,7 @@ class SelectIsSubcategory extends StatelessWidget {
                     onTap: () {
                       openBottomSheet(
                         context,
-                        SampleSubcategoriesPopup(),
+                        const SampleSubcategoriesPopup(),
                       );
                     },
                   ),
@@ -1288,7 +1287,7 @@ class SelectIsSubcategory extends StatelessWidget {
                           child: SelectCategory(
                             horizontalList: true,
                             listPadding:
-                                EdgeInsetsDirectional.symmetric(horizontal: 10),
+                                const EdgeInsetsDirectional.symmetric(horizontal: 10),
                             addButton: false,
                             setSelectedCategory: (category) {
                               setMainCategoryPkForSubcategoryWhenCreating(
@@ -1301,7 +1300,7 @@ class SelectIsSubcategory extends StatelessWidget {
                       )
                     ],
                   ),
-                  afterWidgetPadding: EdgeInsetsDirectional.only(bottom: 20),
+                  afterWidgetPadding: const EdgeInsetsDirectional.only(bottom: 20),
                 ),
               ),
             ],
@@ -1327,7 +1326,7 @@ class SampleSubcategoriesPopup extends StatelessWidget {
             fontSize: 16,
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           OutlinedContainer(
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -1363,7 +1362,7 @@ class SampleSubcategoriesPopup extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           OutlinedContainer(
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -1399,7 +1398,7 @@ class SampleSubcategoriesPopup extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           OutlinedContainer(
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -1435,7 +1434,7 @@ class SampleSubcategoriesPopup extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           OutlinedContainer(
             child: Padding(
               padding: const EdgeInsetsDirectional.symmetric(
@@ -1511,14 +1510,14 @@ class FakeCategoryEntryPlaceholder extends StatelessWidget {
     );
     if (showAsSubcategory) {
       return Padding(
-        padding: EdgeInsetsDirectional.only(
+        padding: const EdgeInsetsDirectional.only(
           bottom: 10,
           start: 5,
           end: 5,
         ),
         child: Tappable(
           color:
-              Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+              Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
           borderRadius: 10,
           onTap: () {},
           child: Padding(

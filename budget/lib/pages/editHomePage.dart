@@ -88,7 +88,7 @@ class _EditHomePageState extends State<EditHomePage> {
             onTap: () {
               openBottomSheet(
                 context,
-                EditHomePagePinnedWalletsPopup(
+                const EditHomePagePinnedWalletsPopup(
                   homePageWidgetDisplay: HomePageWidgetDisplay.WalletSwitcher,
                   showCyclePicker: true,
                 ),
@@ -108,7 +108,7 @@ class _EditHomePageState extends State<EditHomePage> {
             onTap: () {
               openBottomSheet(
                 context,
-                EditHomePagePinnedWalletsPopup(
+                const EditHomePagePinnedWalletsPopup(
                   homePageWidgetDisplay: HomePageWidgetDisplay.WalletList,
                   showCyclePicker: true,
                 ),
@@ -128,7 +128,7 @@ class _EditHomePageState extends State<EditHomePage> {
             onTap: () {
               openBottomSheet(
                 context,
-                EditHomePagePinnedBudgetsPopup(
+                const EditHomePagePinnedBudgetsPopup(
                   showBudgetsTotalLabelSetting: true,
                 ),
                 useCustomController: true,
@@ -147,7 +147,7 @@ class _EditHomePageState extends State<EditHomePage> {
             onTap: () async {
               openBottomSheet(
                 context,
-                EditHomePagePinnedGoalsPopup(
+                const EditHomePagePinnedGoalsPopup(
                     showGoalsTotalLabelSetting: true,
                     objectiveType: ObjectiveType.goal),
                 useCustomController: true,
@@ -191,7 +191,7 @@ class _EditHomePageState extends State<EditHomePage> {
             onTap: () async {
               openBottomSheet(
                 context,
-                EditHomePagePinnedGoalsPopup(
+                const EditHomePagePinnedGoalsPopup(
                   showGoalsTotalLabelSetting: true,
                   objectiveType: ObjectiveType.loan,
                 ),
@@ -257,7 +257,7 @@ class _EditHomePageState extends State<EditHomePage> {
                       ],
                     ],
                     colorFilter: (budgetPk) {
-                      for (Budget budget in allBudgets)
+                      for (Budget budget in allBudgets) {
                         if (budget.budgetPk.toString() == budgetPk.toString()) {
                           return dynamicPastel(
                             context,
@@ -272,15 +272,18 @@ class _EditHomePageState extends State<EditHomePage> {
                             amount: 0.1,
                           );
                         }
+                      }
                       return null;
                     },
                     displayFilter: (budgetPk) {
-                      for (Budget budget in allBudgets)
+                      for (Budget budget in allBudgets) {
                         if (budget.budgetPk.toString() == budgetPk.toString()) {
                           return budget.name;
                         }
-                      if (budgetPk == customLabel)
-                        return ('${customLabel} (${getWordedDateShortMore(DateTime.parse(appStateSettings["lineGraphStartDate"]), includeYear: true)})');
+                      }
+                      if (budgetPk == customLabel) {
+                        return ('$customLabel (${getWordedDateShortMore(DateTime.parse(appStateSettings["lineGraphStartDate"]), includeYear: true)})');
+                      }
                       return budgetPk;
                     },
                     initial: appStateSettings["lineGraphDisplayType"] ==
@@ -449,7 +452,7 @@ class _EditHomePageState extends State<EditHomePage> {
             appStateSettings["showExtraInfoText"] == false ? null : 10,
         slivers: [
           if (enableDoubleColumn(context))
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: PanelSectionSeparator(
                 orderKey: "ORDER:CENTER",
               ),
@@ -486,10 +489,11 @@ class _EditHomePageState extends State<EditHomePage> {
               });
             },
             itemBuilder: (context, index) {
-              if (keyOrder.length <= index)
+              if (keyOrder.length <= index) {
                 return Container(
                   key: ValueKey(index),
                 );
+              }
               String key = keyOrder[index];
 
               if (["ORDER:LEFT", "ORDER:RIGHT"].contains(key)) {
@@ -499,10 +503,11 @@ class _EditHomePageState extends State<EditHomePage> {
                 );
               }
 
-              if (editHomePageItems[key] == null)
+              if (editHomePageItems[key] == null) {
                 return Container(
                   key: ValueKey(index),
                 );
+              }
 
               return HomePageEditRowEntry(
                 key: ValueKey(key),
@@ -566,17 +571,17 @@ class HomePageEditRowEntry extends StatelessWidget {
       key: ValueKey(key),
       currentReorder: currentReorder,
       padding:
-          EdgeInsetsDirectional.only(start: 18, end: 0, top: 16, bottom: 16),
+          const EdgeInsetsDirectional.only(start: 18, end: 0, top: 16, bottom: 16),
       extraWidget: Row(
         children: [
           getPlatform() == PlatformOS.isIOS
               ? CupertinoSwitch(
-                  activeColor: Theme.of(context).colorScheme.primary,
+                  activeTrackColor: Theme.of(context).colorScheme.primary,
                   value: switchValue,
                   onChanged: (value) => toggleSwitch(),
                 )
               : Switch(
-                  activeColor: Theme.of(context).colorScheme.primary,
+                  activeThumbColor: Theme.of(context).colorScheme.primary,
                   value: switchValue,
                   onChanged: (value) => toggleSwitch(),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -590,7 +595,7 @@ class HomePageEditRowEntry extends StatelessWidget {
             iconData,
             color: Theme.of(context).colorScheme.primary,
           ),
-          SizedBox(width: 13),
+          const SizedBox(width: 13),
           Expanded(
             child: TextFont(
               text: text,
@@ -627,9 +632,9 @@ class PanelSectionSeparator extends StatelessWidget {
               fontSize: 16,
               textAlign: TextAlign.start,
             ),
-          Expanded(
+          const Expanded(
               child: HorizontalBreak(
-            padding: const EdgeInsetsDirectional.all(15),
+            padding: EdgeInsetsDirectional.all(15),
           )),
           if (orderKey == "ORDER:CENTER")
             TextFont(
@@ -638,9 +643,9 @@ class PanelSectionSeparator extends StatelessWidget {
               textAlign: TextAlign.end,
             ),
           if (orderKey == "ORDER:CENTER")
-            Expanded(
+            const Expanded(
                 child: HorizontalBreak(
-              padding: const EdgeInsetsDirectional.all(15),
+              padding: EdgeInsetsDirectional.all(15),
             )),
           if (orderKey == "ORDER:RIGHT")
             TextFont(
@@ -658,7 +663,7 @@ Future openTransactionsListHomePageBottomSheetSettings(
     BuildContext context) async {
   await openBottomSheet(
     context,
-    TransactionsListHomePageBottomSheetSettings(),
+    const TransactionsListHomePageBottomSheetSettings(),
   );
 }
 
@@ -678,20 +683,14 @@ class _TransactionsListHomePageBottomSheetSettingsState
   Widget build(BuildContext context) {
     return PopupFramework(
       title: "transaction-list".tr(),
-      subtitle: "transaction-list-home-description".tr() +
-          " " +
-          "and-any-transactions".tr() +
-          " " +
-          futureTransactionDaysHomePage.toString() +
-          " " +
-          (futureTransactionDaysHomePage == 1
+      subtitle: "${"transaction-list-home-description".tr()} ${"and-any-transactions".tr()} $futureTransactionDaysHomePage ${futureTransactionDaysHomePage == 1
               ? "day-ahead".tr()
-              : "days-ahead".tr()),
+              : "days-ahead".tr()}",
       child: Column(
         children: [
           SettingsContainerDropdown(
             enableBorderRadius: true,
-            items: ["0", "1", "4", "7", "14"],
+            items: const ["0", "1", "4", "7", "14"],
             onChanged: (value) {
               updateSettings("futureTransactionDaysHomePage", int.parse(value),
                   pagesNeedingRefresh: [], updateGlobalState: false);
@@ -708,7 +707,7 @@ class _TransactionsListHomePageBottomSheetSettingsState
                 : Symbols.event_upcoming_rounded,
           ),
           HorizontalBreakAbove(
-            padding: EdgeInsetsDirectional.symmetric(vertical: 15),
+            padding: const EdgeInsetsDirectional.symmetric(vertical: 15),
             child: Column(
               children: [
                 Padding(
@@ -724,7 +723,7 @@ class _TransactionsListHomePageBottomSheetSettingsState
                         : TextAlign.start,
                   ),
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 IncomeAndExpenseOnlyPicker(
                   initialValue: appStateSettings[
                           "homePageTransactionsListIncomeAndExpenseOnly"] ==
@@ -738,7 +737,7 @@ class _TransactionsListHomePageBottomSheetSettingsState
               ],
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
         ],
       ),
     );
@@ -753,13 +752,13 @@ Future openPieChartHomePageBottomSheetSettings(BuildContext context) async {
       subtitle: "applies-to-homepage".tr(),
       child: Column(
         children: [
-          WalletPickerPeriodCycle(
+          const WalletPickerPeriodCycle(
             allWalletsSettingKey: "pieChartAllWallets",
             cycleSettingsExtension: "PieChart",
             homePageWidgetDisplay: HomePageWidgetDisplay.PieChart,
           ),
           HorizontalBreakAbove(
-            padding: EdgeInsetsDirectional.symmetric(vertical: 15),
+            padding: const EdgeInsetsDirectional.symmetric(vertical: 15),
             child: IncomeAndExpenseOnlyPicker(
               initialValue:
                   appStateSettings["pieChartIncomeAndExpenseOnly"] == true,
@@ -769,7 +768,7 @@ Future openPieChartHomePageBottomSheetSettings(BuildContext context) async {
               },
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
         ],
       ),
       // Column(
@@ -806,7 +805,7 @@ Future openPieChartHomePageBottomSheetSettings(BuildContext context) async {
 Future openHeatMapHomePageBottomSheetSettings(BuildContext context) async {
   await openBottomSheet(
     context,
-    HomePageHeatMapSettings(),
+    const HomePageHeatMapSettings(),
   );
 }
 
@@ -831,7 +830,7 @@ class _IncomeAndExpenseOnlyPickerState
           children: [
             Expanded(
               child: AnimatedOpacity(
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
                 opacity: pieChartIncomeAndExpenseOnly ? 1 : 0.5,
                 child: OutlinedButtonStacked(
                   filled: pieChartIncomeAndExpenseOnly,
@@ -850,7 +849,7 @@ class _IncomeAndExpenseOnlyPickerState
                     ],
                   ),
                   text: "only-expense-income".tr(),
-                  padding: EdgeInsetsDirectional.only(
+                  padding: const EdgeInsetsDirectional.only(
                       start: 20, end: 15, top: 15, bottom: 15),
                   iconData: null,
                   onTap: () {
@@ -865,12 +864,12 @@ class _IncomeAndExpenseOnlyPickerState
             ),
           ],
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: AnimatedOpacity(
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
                 opacity: !pieChartIncomeAndExpenseOnly ? 1 : 0.5,
                 child: OutlinedButtonStacked(
                   filled: !pieChartIncomeAndExpenseOnly,
@@ -889,7 +888,7 @@ class _IncomeAndExpenseOnlyPickerState
                     ],
                   ),
                   text: "all-outgoing-incoming".tr(),
-                  padding: EdgeInsetsDirectional.only(
+                  padding: const EdgeInsetsDirectional.only(
                       start: 20, end: 15, top: 15, bottom: 15),
                   iconData: null,
                   onTap: () {
@@ -937,19 +936,19 @@ class _HomePageEditRowEntryUsernameState
       text: widget.name,
       iconData: widget.iconData,
       toggleSwitch: () {
-        bool newValue = !this.value;
+        bool newValue = !value;
         widget.onChanged(newValue);
         setState(() {
-          this.value = newValue;
+          value = newValue;
         });
       },
-      switchValue: this.value,
+      switchValue: value,
       currentReorder: false,
       onTap: () => openBottomSheet(
         context,
         PopupFramework(
           title: "homepage-banner".tr(),
-          child: HomePageBannerSettings(),
+          child: const HomePageBannerSettings(),
         ),
         useCustomController: true,
       ),
@@ -983,12 +982,13 @@ class _HomePageBannerSettingsState extends State<HomePageBannerSettings> {
           onTap: () async {
             dynamic result =
                 await enterNameBottomSheet(context, updatePageWhenSet: false);
-            if (result is String)
+            if (result is String) {
               setState(() {
                 username = result;
               });
+            }
             // Update the size of the bottom sheet
-            Future.delayed(Duration(milliseconds: 250), () {
+            Future.delayed(const Duration(milliseconds: 250), () {
               bottomSheetControllerGlobalCustomAssigned?.snapToExtent(0);
             });
           },
@@ -1016,7 +1016,7 @@ class _HomePageBannerSettingsState extends State<HomePageBannerSettings> {
 void switchHomeScreenSection(
     BuildContext context, String sectionSetting, bool value) {
   if (enableDoubleColumn(context)) {
-    updateSettings(sectionSetting + "FullScreen", value,
+    updateSettings("${sectionSetting}FullScreen", value,
         pagesNeedingRefresh: [], updateGlobalState: false);
   } else {
     updateSettings(sectionSetting, value,
@@ -1026,12 +1026,14 @@ void switchHomeScreenSection(
 
 bool isHomeScreenSectionEnabled(BuildContext context, String sectionSetting) {
   if (enableDoubleColumn(context)) {
-    if (appStateSettings[sectionSetting + "FullScreen"] != null)
-      return appStateSettings[sectionSetting + "FullScreen"];
+    if (appStateSettings["${sectionSetting}FullScreen"] != null) {
+      return appStateSettings["${sectionSetting}FullScreen"];
+    }
     return false;
   } else {
-    if (appStateSettings[sectionSetting] != null)
+    if (appStateSettings[sectionSetting] != null) {
       return appStateSettings[sectionSetting];
+    }
     return false;
   }
 }

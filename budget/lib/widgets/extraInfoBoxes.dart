@@ -43,7 +43,7 @@ class _TipBoxState extends State<TipBox> {
         child: Tappable(
           onTap: widget.onTap,
           color:
-              Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+              Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
           borderRadius: widget.borderRadius ??
               (getPlatform() == PlatformOS.isIOS ? 10 : 15),
           child: Padding(
@@ -80,7 +80,7 @@ class _TipBoxState extends State<TipBox> {
                 ),
                 if (widget.settingsString != null)
                   IconButton(
-                    padding: EdgeInsetsDirectional.all(15),
+                    padding: const EdgeInsetsDirectional.all(15),
                     tooltip: "remove-tip".tr(),
                     onPressed: () async {
                       setState(() {
@@ -144,7 +144,7 @@ class ExtraInfoButton extends StatelessWidget {
                 size: 38,
                 iconPadding: 18,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Flexible(
                 child: TextFont(
                   text: text,
@@ -152,7 +152,7 @@ class ExtraInfoButton extends StatelessWidget {
                   maxLines: 2,
                 ),
               ),
-              SizedBox(width: 3),
+              const SizedBox(width: 3),
             ],
           ),
         ),

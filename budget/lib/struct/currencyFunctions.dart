@@ -25,7 +25,7 @@ Future<bool> getExchangeRates() async {
       cachedCurrencyExchange = json.decode(response.body)?["usd"];
     }
   } catch (e) {
-    print("Error getting currency rates: " + e.toString());
+    print("Error getting currency rates: $e");
     return false;
   }
   // print(cachedCurrencyExchange);

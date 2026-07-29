@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 class LongPressListener extends StatefulWidget {
-  LongPressListener({
+  const LongPressListener({
     required this.child,
     required this.onLongPress,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final Widget child;
   final VoidCallback onLongPress;
@@ -53,8 +53,8 @@ class _LongPressListenerState extends State<LongPressListener> {
   void _handleLongPressTimer() {
     if (_longPressInProgress) {
       _longPressInProgress = false;
-      final dx = 0.0;
-      final dy = 0.0;
+      const dx = 0.0;
+      const dy = 0.0;
       final distance = sqrt(dx * dx + dy * dy);
       if (distance <= _maxDistanceForLongPress) {
         widget.onLongPress();

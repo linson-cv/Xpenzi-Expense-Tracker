@@ -33,8 +33,8 @@ bool isCurrentDeviceSyncBackupFile(String? backupFileName) {
 }
 
 String getCurrentDeviceSyncBackupFileName({String? clientIDForSync}) {
-  if (clientIDForSync == null) clientIDForSync = clientID;
-  return "sync-" + clientIDForSync + ".sqlite";
+  clientIDForSync ??= clientID;
+  return "sync-$clientIDForSync.sqlite";
 }
 
 String getDeviceFromSyncBackupFileName(String? backupFileName) {
@@ -55,7 +55,7 @@ Future<DateTime> getDateOfLastSyncedWithClient(String clientIDForSync) async {
   try {
     return DateTime.parse(lastTimeSynced);
   } catch (e) {
-    print("Error getting time of last sync " + e.toString());
+    print("Error getting time of last sync $e");
     return DateTime(0);
   }
 }
@@ -80,8 +80,9 @@ Future<bool> createSyncBackup(
   if (appStateSettings["hasSignedIn"] == false) return false;
   if (errorSigningInDuringCloud == true) return false;
   if (appStateSettings["backupSync"] == false) return false;
-  if (changeMadeSync == true && appStateSettings["syncEveryChange"] == false)
+  if (changeMadeSync == true && appStateSettings["syncEveryChange"] == false) {
     return false;
+  }
   // create the auto syncs after 10 seconds of no changes
   if (changeMadeSync == true &&
       (appStateSettings["syncEveryChange"] == true && kIsWeb) &&
@@ -94,15 +95,17 @@ Future<bool> createSyncBackup(
   }
 
   print("Creating sync backup");
-  if (changeMadeSync)
+  if (changeMadeSync) {
     loadingIndeterminateKey.currentState?.setVisibility(true, opacity: 0.4);
+  }
   if (syncTimeoutTimer?.isActive == true) {
     // openSnackbar(SnackbarMessage(title: "Please wait..."));
-    if (changeMadeSync)
+    if (changeMadeSync) {
       loadingIndeterminateKey.currentState?.setVisibility(false);
+    }
     return false;
   } else {
-    syncTimeoutTimer = Timer(Duration(milliseconds: 5000), () {
+    syncTimeoutTimer = Timer(const Duration(milliseconds: 5000), () {
       syncTimeoutTimer!.cancel();
     });
   }
@@ -118,19 +121,15 @@ Future<bool> createSyncBackup(
     hasSignedIn = true;
   }
   if (hasSignedIn == false) {
-    if (changeMadeSync)
+    if (changeMadeSync) {
       loadingIndeterminateKey.currentState?.setVisibility(false);
+    }
     return false;
   }
 
   final authHeaders = await googleUser!.authHeaders;
   final authenticateClient = GoogleAuthClient(authHeaders);
   drive.DriveApi driveApi = drive.DriveApi(authenticateClient);
-  if (driveApi == null) {
-    if (changeMadeSync)
-      loadingIndeterminateKey.currentState?.setVisibility(false);
-    throw "Failed to login to Google Drive";
-  }
 
   drive.FileList fileList = await driveApi.files.list(
       spaces: 'appDataFolder', $fields: 'files(id, name, modifiedTime, size)');
@@ -147,8 +146,9 @@ Future<bool> createSyncBackup(
   }
   await createBackup(null,
       silentBackup: true, deleteOldBackups: true, clientIDForSync: clientID);
-  if (changeMadeSync)
+  if (changeMadeSync) {
     loadingIndeterminateKey.currentState?.setVisibility(false);
+  }
   return true;
 }
 
@@ -225,7 +225,9 @@ Future<bool> _syncData(BuildContext context) async {
   // Prevent sign-in on web - background sign-in cannot access Google Drive etc.
   if (kIsWeb &&
       !entireAppLoaded &&
-      appStateSettings["webForceLoginPopupOnLaunch"] != true) return false;
+      appStateSettings["webForceLoginPopupOnLaunch"] != true) {
+    return false;
+  }
 
   canSyncData = false;
 
@@ -247,9 +249,6 @@ Future<bool> _syncData(BuildContext context) async {
   final authHeaders = await googleUser!.authHeaders;
   final authenticateClient = GoogleAuthClient(authHeaders);
   drive.DriveApi driveApi = drive.DriveApi(authenticateClient);
-  if (driveApi == null) {
-    throw "Failed to login to Google Drive";
-  }
 
   await createSyncBackup();
 
@@ -307,7 +306,7 @@ Future<bool> _syncData(BuildContext context) async {
 
     String? fileId = file.id;
     if (fileId == null) continue;
-    print("SYNCING WITH " + (file.name ?? ""));
+    print("SYNCING WITH ${file.name ?? ""}");
     filesSyncing.add(file);
 
     List<int> dataStore = [];
@@ -330,12 +329,7 @@ Future<bool> _syncData(BuildContext context) async {
         await openPopup(
           context,
           title: "syncing-failed".tr(),
-          description: e.toString() +
-              "\n\n" +
-              megabytes.toString() +
-              " MB in size" +
-              " when syncing with " +
-              file.name.toString(),
+          description: "$e\n\n$megabytes MB in size when syncing with ${file.name}",
           icon: appStateSettings["outlinedIcons"]
               ? Icons.sync_problem_outlined
               : Icons.sync_problem_rounded,
@@ -346,7 +340,7 @@ Future<bool> _syncData(BuildContext context) async {
         );
         // final html.Storage localStorage = html.window.localStorage;
         // localStorage["moor_db_str_syncdb"] = "";
-        throw (e);
+        rethrow;
       }
     } else {
       final dbFolder = await getApplicationDocumentsDirectory();
@@ -479,7 +473,7 @@ Future<bool> _syncData(BuildContext context) async {
       print("DELETE LOGS");
       print(deleteLogs);
     } catch (e) {
-      print("Syncing error and failed: " + e.toString());
+      print("Syncing error and failed: $e");
       filesSyncing.remove(file);
       await databaseSync.close();
       loadingProgressKey.currentState?.setProgressPercentage(1);
@@ -487,7 +481,7 @@ Future<bool> _syncData(BuildContext context) async {
       await openPopup(
         context,
         title: "syncing-failed".tr(),
-        description: "sync-fail-reason".tr() + "\n\n" + file.name.toString(),
+        description: "${"sync-fail-reason".tr()}\n\n${file.name}",
         descriptionWidget: Padding(
           padding: const EdgeInsetsDirectional.only(top: 8, bottom: 12),
           child: CodeBlock(text: e.toString()),
@@ -516,15 +510,16 @@ Future<bool> _syncData(BuildContext context) async {
   }
 
   await database.processSyncLogs(syncLogs);
-  for (drive.File file in filesSyncing)
+  for (drive.File file in filesSyncing) {
     setDateOfLastSyncedWithClient(getDeviceFromSyncBackupFileName(file.name),
         file.modifiedTime?.toLocal() ?? DateTime(0));
+  }
 
   try {
     print("UPDATED WALLET CURRENCY");
     await database.getWalletInstance(appStateSettings["selectedWalletPk"]);
   } catch (e) {
-    print("Selected wallet not found: " + e.toString());
+    print("Selected wallet not found: $e");
     await setPrimaryWallet((await database.getAllWallets())[0].walletPk);
   }
 
@@ -537,7 +532,7 @@ Future<bool> _syncData(BuildContext context) async {
 
   loadingProgressKey.currentState?.setProgressPercentage(0.999);
 
-  Future.delayed(Duration(milliseconds: 300), () {
+  Future.delayed(const Duration(milliseconds: 300), () {
     loadingProgressKey.currentState?.setProgressPercentage(1);
   });
 

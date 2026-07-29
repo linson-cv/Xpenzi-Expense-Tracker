@@ -29,7 +29,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "showExtraInfoText": true,
     "selectedWalletPk": "0",
     "selectedSubscriptionType": 0,
-    "accentColor": toHexString(Color(0xFF1B447A)),
+    "accentColor": toHexString(const Color(0xFF1B447A)),
     "accentSystemColor": await systemColorByDefault(),
     "widgetOpacity": 1,
     "widgetTheme": "system", //system, light, dark
@@ -133,7 +133,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "autoBackups": true,
     "autoBackupsFrequency": 3, //in days
     "hasSignedIn": false,
-    "lastBackup": DateTime.now().subtract(Duration(days: 1)).toString(),
+    "lastBackup": DateTime.now().subtract(const Duration(days: 1)).toString(),
     "lastLoginVersion": "",
     "numLogins": 0,
     "enableGoogleLoginFlyIn": false,
@@ -350,7 +350,7 @@ Future attemptToMigrateSetLongTermLoansAmountTo0() async {
     }
   } catch (e) {
     print(
-        "Error migrating setting long term loans amounts to 0 " + e.toString());
+        "Error migrating setting long term loans amounts to 0 $e");
   }
 }
 
@@ -383,7 +383,7 @@ attemptToMigrateCustomNumberFormattingSettings() {
     }
   } catch (e) {
     print(
-        "Error migrating setting long term loans amounts to 0 " + e.toString());
+        "Error migrating setting long term loans amounts to 0 $e");
   }
 }
 
@@ -397,17 +397,12 @@ Map<String, dynamic> attemptToMigrateCyclePreferences(
             currentUserSettings[key] == null &&
             // We have a current setting for the previous associated value
             currentUserSettings[migrateCyclePreferencesKeys[key]] != null) {
-      print("Migrating cycle setting " +
-          key.toString() +
-          " to the value of " +
-          currentUserSettings[migrateCyclePreferencesKeys[key]].toString() +
-          " from key " +
-          migrateCyclePreferencesKeys[key].toString());
+      print("Migrating cycle setting $key to the value of ${currentUserSettings[migrateCyclePreferencesKeys[key]]} from key ${migrateCyclePreferencesKeys[key]}");
       currentUserSettings[key] =
           currentUserSettings[migrateCyclePreferencesKeys[key]];
     }
   } catch (e) {
-    print("Error migrating cycle preferences " + e.toString());
+    print("Error migrating cycle preferences $e");
   }
 
   return currentUserSettings;

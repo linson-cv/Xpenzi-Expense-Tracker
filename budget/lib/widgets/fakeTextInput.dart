@@ -6,14 +6,14 @@ import 'package:budget/colors.dart';
 
 class FakeTextInput extends StatelessWidget {
   const FakeTextInput({
-    Key? key,
+    super.key,
     required this.onTap,
     required this.icon,
     this.label = "",
     this.EdgeInsetsDirectionalVertical = 13,
     this.backgroundColor,
     this.content,
-  }) : super(key: key);
+  });
 
   final VoidCallback onTap;
   final String label;
@@ -44,7 +44,7 @@ class FakeTextInput extends StatelessWidget {
                 ? TextFont(
                     text: label,
                     fontSize: 15,
-                    textColor: getColor(context, "black").withOpacity(0.6),
+                    textColor: getColor(context, "black").withValues(alpha: 0.6),
                   )
                 : TextFont(
                     text: content ?? "",
