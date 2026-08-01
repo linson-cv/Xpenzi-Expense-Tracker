@@ -1,4 +1,4 @@
-package com.spendwise.expense_tracker
+package com.navlin.xpenzi
 
 import android.appwidget.AppWidgetManager
 import android.content.Context

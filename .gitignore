@@ -50,8 +50,9 @@ app.*.map.json
 # Keys
 /android/key.properties
 /android/app/keystore.jks
+/android/app/release.jks
 key.properties
-keystore.jks
+*.jks
 
 /.firebase
 .firebase/

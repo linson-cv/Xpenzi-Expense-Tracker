@@ -1,6 +1,6 @@
 {
-    "name": "Spendwise: Expense Tracker",
-    "short_name": "Spendwise",
+    "name": "Xpenzi: Expense Tracker",
+    "short_name": "Xpenzi",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
