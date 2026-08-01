@@ -1,0 +1,68 @@
+buildscript {
+    ext.kotlin_version = '2.2.20'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.11.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects { p ->
+    p.buildDir = "${rootProject.buildDir}/${p.name}"
+    p.plugins.withId('com.android.library') {
+        if (p.android.namespace == null) {
+            p.android.namespace = "com.spendwise.expense_tracker.${p.name.replace('-', '_')}"
+        }
+        p.afterEvaluate { proj ->
+            def javaVer = proj.android.compileOptions.sourceCompatibility.toString()
+            def targetVer = '17'
+            if (javaVer.contains('1.8') || javaVer.endsWith('8')) {
+                targetVer = '1.8'
+            } else if (javaVer.contains('11')) {
+                targetVer = '11'
+            } else if (javaVer.contains('21')) {
+                targetVer = '21'
+            }
+            proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
+                task.kotlinOptions.jvmTarget = targetVer
+            }
+        }
+    }
+    p.plugins.withId('com.android.application') {
+        if (p.android.namespace == null) {
+            p.android.namespace = "com.spendwise.expense_tracker.${p.name.replace('-', '_')}"
+        }
+        p.afterEvaluate { proj ->
+            def javaVer = proj.android.compileOptions.sourceCompatibility.toString()
+            def targetVer = '17'
+            if (javaVer.contains('1.8') || javaVer.endsWith('8')) {
+                targetVer = '1.8'
+            } else if (javaVer.contains('11')) {
+                targetVer = '11'
+            } else if (javaVer.contains('21')) {
+                targetVer = '21'
+            }
+            proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
+                task.kotlinOptions.jvmTarget = targetVer
+            }
+        }
+    }
+    p.evaluationDependsOn(':app')
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
