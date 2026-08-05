@@ -15,3 +15,27 @@
 
 ## 3. Build & Compilation Execution Guidelines
 - **Do Not Build Automatically**: NEVER launch expensive build or compilation tasks (such as `flutter build apk`, `flutter build appbundle`, `flutter build ipa`, `flutter build web`, etc.) automatically after modifying code or configuration files **unless explicitly requested by the user**. Apply code/config edits and report changes cleanly without initiating unrequested build tasks.
+
+## 4. App Branding & Identity Context
+- **App Name**: Xpenzi
+- **Package ID**: `com.navlin.xpenzi`
+- **Baseline Version**: `1.0.0+1`
+- **Origin & Background**: Forked from open-source [Cashew](https://github.com/jameskokoska/Cashew). Maintained as an independent, feature-rich new application.
+- **Upstream Repository**: https://github.com/jameskokoska/Cashew
+- **Migration & Compatibility**: Maintain full backup/restore and import compatibility for Cashew `.json`/`.csv` files so migrating users can seamlessly transfer data to Xpenzi.
+
+## 5. Architectural & Technical Overview
+
+- **Database Architecture**: Built using **Drift (Moor)** with SQLite engine (`lib/database/tables.dart`). Schema Version: 46. Key tables: `Transactions`, `Wallets` (`TransactionWallet`), `Categories` (`TransactionCategory`), `Budgets`, `Objectives` (Goals/Loans), `DeleteLogs`.
+- **State Management & Global Settings**: Driven by `appStateSettings` (`lib/struct/settings.dart`), `sharedPreferences`, and `databaseGlobal.dart`.
+- **Localization**: Uses `easy_localization` with CSV/JSON translation dictionaries under `assets/translations/`.
+- **UI Framework & Design System**: Responsive Flutter layout with custom navigation sidebar/bar (`navigationFramework.dart`, `navigationSidebar.dart`), Material 3 dynamic color palette (`colors.dart`), and customizable home widgets (`homePageWidgetDisplay`).
+- **Core Feature Areas**:
+  - Multi-wallet & Multi-currency management with real-time conversion.
+  - Category & Subcategory spending limit tracking.
+  - Recurring, Scheduled, & Subscriptions auto-payment engine.
+  - Goals & Long-Term Loans (Lent / Borrowed tracking).
+  - Data Import/Export: Backup JSON & CSV import/export wizards supporting legacy Cashew format.
+
+
+
