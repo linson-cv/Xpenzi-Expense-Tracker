@@ -813,7 +813,7 @@ Future saveSampleCSV({required BuildContext boxContext}) async {
       "",
     ]);
     String csv = const ListToCsvConverter().convert(csvData);
-    String fileName = "spendwise-import-template${DateTime.now().millisecondsSinceEpoch}.csv";
+    String fileName = "xpenzi-import-template${DateTime.now().millisecondsSinceEpoch}.csv";
     return saveCSV(boxContext: boxContext, csv: csv, fileName: fileName);
   });
   return;

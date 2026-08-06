@@ -1,9 +1,64 @@
 # Legacy App Changelog (Pre-Rebrand History)
 
-This document contains all legacy release notes (v5.3.5 and earlier) prior to the v1.0.0 rebrand.
+This document contains all legacy release notes (v6.6.12 and earlier) prior to the v1.0.0 rebrand.
 
 ---
 
+## Release v6.6.12
+- Add new home page widgets (A) & improve resizing and layout of existing home page widgets
+- Improve popup button and content layout to fill space
+- Fix skipped transactions contributing toward upcoming percentage in budget progress
+- Fix custom time period budget date ranges and day metrics
+- Fix budget category saving/spending goal banner totals
+- Fix repetitive transactions with end date at end of month overflowing to next month
+- Add discard changes popup when editing titles
+- Improve bottom sheet behavior with keyboard focus
+- Enable scroll to top behavior when navigating to same page using sidebar
+- Improve app bar behavior in landscape / 2-column view
+
+## Release v6.6.0
+- Improve home screen page layout and resizing (A)
+- Improve sizing of category icons in grid layout based on screen zoom
+- Improve transaction type information popup & long-term loan / goal summary container
+- Tap "Today" in the budget page progress bar to view more information
+- Export selected transaction references with app links
+- Restore settings automatically on first device sync/login
+- Skip setting the time when bulk editing the date of selected transactions
+- Fix ordering of categories when setting category spending/saving goals
+- Fix issue with full screen sidebar navigation & action button position
+
+## Release v6.5.0
+- Significant home page performance improvements & unload heavy animations when not visible
+- Add subcategory selection for transfer and balance correction page
+- Improve keyboard autofocus when app initially launched (A)
+- Home screen widgets now always update when data changes (A)
+- Show check mark icon when long-term loan is fully paid
+- Improve Bill Splitter UI layout and global multiplier
+- Auto switch loan tabs based on loan creation action
+- Fix archived subcategories always defaulted to non-archived status
+- Fix homepage upcoming section filters to be "future days"
+- Fix starting value of home page spending graph to match all time net worth
+- Automatic backup date check every time app is resumed
+
+## Release v6.0.0
+- Significant UI and layout improvements & many bug fixes
+- Improved data sync algorithm and reliability
+- Revamp and organize settings page
+- Date format setting and Date selector type setting
+- Automatic decimal placement setting & number format settings
+- Biometrics auto lock after app closed & improved biometric unlocking flow
+- Amount totals colored style setting, haptic feedback, and custom font file support
+- New floating navigation bar layout option and bottom bar selection
+- Custom transaction layouts (compact and detailed) & row entry interactions
+- Custom add transaction flow and prompts (disable and reorder prompts)
+- Swipe between dates to quickly change when adding a transaction
+- Add bi-weekly and quarterly repeat options for recurring transactions
+- Search & filter transactions using logical operators (`&&`, `||`)
+- Export transactions directly in Search transactions page
+- Calendar page daily total, monthly total banner, and double-press to add transaction
+- Pinned transactions feature (long press + button) and home page section
+- Account summary statistics page & ability to group accounts by color
+- Experimental features: Cashew Intelligence (AI transaction parsing)
 
 ## Release v5.3.5 (Release Date: 2023/2024)
 - When All Spending page opened from other means, correct date range applied

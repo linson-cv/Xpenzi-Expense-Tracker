@@ -115,7 +115,7 @@ Future<String?> uploadFileToDrive({
   final authenticateClient = GoogleAuthClient(authHeaders);
   final driveApi = drive.DriveApi(authenticateClient);
 
-  String folderName = "Spendwise";
+  String folderName = "Xpenzi";
   drive.FileList list = await driveApi.files.list(
       q: "mimeType='application/vnd.google-apps.folder' and name='$folderName'");
   String? folderId;

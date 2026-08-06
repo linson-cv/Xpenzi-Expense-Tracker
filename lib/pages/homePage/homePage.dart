@@ -482,7 +482,7 @@ class _HomePageRatingBoxState extends State<HomePageRatingBox> {
                 child: Column(
                   children: [
                     TextFont(
-                      text: "enjoying-spendwise-question".tr(),
+                      text: "enjoying-xpenzi-question".tr(),
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       textAlign: TextAlign.center,

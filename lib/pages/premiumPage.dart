@@ -84,7 +84,7 @@ class PremiumPage extends StatelessWidget {
                               ),
                               Column(
                                 children: [
-                                  const SpendwiseProBanner(large: true),
+                                  const XpenziProBanner(large: true),
                                   const SizedBox(height: 4),
                                   TextFont(
                                     text: "${"budget-like-a-pro".tr()} $globalAppName Pro",
@@ -424,8 +424,8 @@ class _FreePremiumMessageState extends State<FreePremiumMessage> {
   }
 }
 
-class SpendwiseProBanner extends StatelessWidget {
-  const SpendwiseProBanner({this.large = false, this.fontColor, super.key});
+class XpenziProBanner extends StatelessWidget {
+  const XpenziProBanner({this.large = false, this.fontColor, super.key});
   final bool large;
   final Color? fontColor;
 
@@ -529,7 +529,7 @@ class ManageSubscription extends StatelessWidget {
                     fontSize: 16,
                   ),
             const SizedBox(height: 10),
-            SpendwiseProBanner(fontColor: getColor(context, "black")),
+            XpenziProBanner(fontColor: getColor(context, "black")),
             TextFont(
               text: currentPlanName ?? "",
               fontSize: 23,
@@ -1295,7 +1295,7 @@ class _FadeOutAndLockFeatureState extends State<FadeOutAndLockFeature> {
                   fontSize: 15,
                 ),
                 const SizedBox(height: 5),
-                SpendwiseProBanner(fontColor: getColor(context, "black")),
+                XpenziProBanner(fontColor: getColor(context, "black")),
                 const SizedBox(height: 15),
                 LowKeyButton(
                   onTap: openPremiumPopup,
@@ -1458,7 +1458,7 @@ class PremiumBanner extends StatelessWidget {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const SpendwiseProBanner(),
+                                    const XpenziProBanner(),
                                     purchased
                                         ? Container(
                                             margin:

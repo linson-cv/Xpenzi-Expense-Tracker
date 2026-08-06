@@ -39,7 +39,7 @@ Future saveDBFileToDevice({
 Future exportDB({required BuildContext boxContext}) async {
   await openLoadingPopupTryCatch(() async {
     String fileName =
-        "spendwise-${cleanFileNameString(DateTime.now().toString())}.sql";
+        "xpenzi-${cleanFileNameString(DateTime.now().toString())}.sql";
     await saveDBFileToDevice(boxContext: boxContext, fileName: fileName);
   });
 }
