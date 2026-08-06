@@ -51,14 +51,20 @@ Future<FirebaseFirestore?> firebaseGetDBInstance() async {
         idToken: googleAuth?.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(_credential!);
-      updateSettings(
-          "currentUserEmail", FirebaseAuth.instance.currentUser!.email,
-          updateGlobalState: true);
-      return FirebaseFirestore.instance;
+      if (googleUser?.email != null) {
+        updateSettings("currentUserEmail", googleUser!.email,
+            updateGlobalState: true);
+      }
+
+      try {
+        await FirebaseAuth.instance.signInWithCredential(_credential!);
+        return FirebaseFirestore.instance;
+      } catch (e) {
+        print("Firebase Auth optional sync skipped: $e");
+        return null;
+      }
     } catch (e) {
-      print("There was an error with firebase login and possibly google");
-      print(e.toString());
+      print("There was an error with google sign in: $e");
       return null;
     }
   }

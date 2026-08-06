@@ -44,9 +44,13 @@ bool allowDangerousDebugFlags = kDebugMode;
 void main() async {
   captureLogs(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      debugPrint("Firebase not configured or optional: $e");
+    }
     await EasyLocalization.ensureInitialized();
     sharedPreferences = await SharedPreferences.getInstance();
     database = await constructDb('db');
