@@ -26,6 +26,12 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.0.2 (2026-08-06)
+    (A) Added sleek floating navigation dock with configurable label visibility toggle in settings
+    (A) Fixed border color fallback eliminating red outlines around floating action elements
+    (A) Reorganized Settings into 6 intuitive cards: General, Theme & Style, Transactions, Localization & Formatting, Notifications, and Data
+    (A) Configured default Home Page layout order: Banner -> Account List -> Income & Expenses -> Overdue & Upcoming -> Loans -> Line Graph -> Transactions
+    (A) Regenerated native Android, iOS, and Web launcher icons from app branding assets
     < 1.0.1 (2026-08-06)
     (A) Added floating pill dock navigation bar with smooth selection animations
     (A) Enhanced pure AMOLED pitch-black dark theme engine with high-contrast outlines
