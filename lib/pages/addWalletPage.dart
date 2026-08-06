@@ -65,6 +65,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
   String selectedCurrency =
       getDevicesDefaultCurrencyCode(); //if no currency selected use empty string
   int selectedDecimals = 2;
+  String selectedAccountType = "Bank Account";
   final FocusNode _titleFocusNode = FocusNode();
 
   void setSelectedTitle(String title) {
@@ -451,6 +452,40 @@ class _AddWalletPageState extends State<AddWalletPage> {
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
                 topContentPadding: 20,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (var type in [
+                      {"name": "Bank Account", "icon": Icons.account_balance_rounded},
+                      {"name": "Credit Card", "icon": Icons.credit_card_rounded},
+                      {"name": "Meal Card", "icon": Icons.restaurant_rounded},
+                      {"name": "Cash", "icon": Icons.payments_rounded},
+                      {"name": "Savings", "icon": Icons.savings_rounded},
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          avatar: Icon(type["icon"] as IconData, size: 16),
+                          label: Text(type["name"] as String),
+                          selected: selectedAccountType == type["name"],
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                selectedAccountType = type["name"] as String;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

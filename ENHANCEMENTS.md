@@ -6,45 +6,23 @@ This document outlines active feature implementations, strategic UX simplificati
 
 ## 🎯 Active & Upcoming Features
 
-### 1. 💳 Account Types (Credit Card, Meal Card, Bank, Cash, Savings)
-- **Credit Card Accounts**:
-  - Track **Available Credit Limit**, **Statement Balance**, and **Due Date Alerts**.
-  - 1-Tap **"Pay Card Bill"** shortcut pre-filling a Transfer from Bank Account to Credit Card.
-- **Meal / Prepaid Cards**:
-  - Track monthly meal allowance with auto-category pre-selection (**Food & Dining** / **Groceries**) upon entry.
-- **Badges & Visuals**:
-  - Distinct type icons & badges on account cards in the Accounts page and Account Picker.
-- **Files**: `lib/database/tables.dart`, `lib/pages/addWalletPage.dart`, `lib/widgets/walletEntry.dart`, `lib/pages/accountsPage.dart`
-
----
-
-### 2. 🔄 Unified "Recurring Payments & Subscriptions" Hub
-- **Single Streamlined Interface**: Combines repetitive bills and active subscriptions into one unified list.
-- **Subscription Tagging**: Optional "Subscription" tag badge (e.g. *Netflix*, *Spotify*, *Cloud Storage*).
-- **Projections Banner**: Top summary showing monthly and annual recurring expense estimates.
-- **Files**: `lib/pages/recurringTransactionsPage.dart`, `lib/widgets/navigationFramework.dart`
-
----
-
-### 3. 🤖 AI Transaction Parsing (Xpenzi Intelligence)
-- **Notification & Receipt Parsing**: Auto-detect amount, category, and title from incoming payment notifications.
-- **Experimental Setting**: Disabled by default; toggleable in **Settings -> Experimental Features**.
-- **Files**: `lib/pages/autoTransactionsPageEmail.dart`, `lib/struct/settings.dart`
-
----
-
-### 4. 🗑️ UX Simplifications & Streamlined Workflows `[COMPLETED ✅]`
-- **Direct Screen Editing**: Replace separate "Edit Categories", "Edit Budgets", and "Edit Wallets" sub-pages with direct edit controls on main screens.
-- **User-Friendly Terminology**: Replace database term *"Objectives"* with clear **Savings Goals** and **Loans & Debts** ([`lib/pages/objectivesListPage.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/pages/objectivesListPage.dart)).
-- **1-Sheet Add Transaction View**: Replace sequential modal sheets with a unified transaction entry sheet.
+- All feature roadmap items are fully implemented!
 
 ---
 
 ## ✅ Completed Enhancements Archive
 
+- **⚡ Local NLP Notification Extraction & Permission Onboarding**: Zero-API offline natural language & regex engine parsing amount, merchant title, category, and account from bank SMS/notifications with an optional homepage permission onboarding banner ([`lib/struct/localNlpParser.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/struct/localNlpParser.dart), [`lib/widgets/notificationPermissionBanner.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/notificationPermissionBanner.dart)).
+- **🤖 Xpenzi Intelligence & Gemini AI Parsing**: Google Gemini API key configuration (`gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`), prompt extraction, notification/SMS auto-parsing, and privacy information toggles ([`lib/pages/aiSettingsPage.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/pages/aiSettingsPage.dart), [`lib/struct/geminiAi.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/struct/geminiAi.dart)).
+- **📥 Mailbox (Google Sheets Inbox & Drive Outbox)**: Google Sheets mailbox link & template integration with Google Drive Outbox CSV export ([`lib/pages/mailboxPage.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/pages/mailboxPage.dart)).
+
+- **💳 Enhanced Account Types & 1-Tap "Pay Bill"**: 1-Tap **"Pay Bill"** shortcut pre-filling a Transfer from Bank Account to Credit Card; credit card badge indicators ([`lib/widgets/walletEntry.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/walletEntry.dart)).
+- **🔄 Unified "Recurring Payments & Subscriptions" Hub**: Combined Subscriptions and Scheduled Bills into a single streamlined view with a top **Monthly & Annual Recurring Projections Banner** ([`lib/pages/recurringHubPage.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/pages/recurringHubPage.dart)).
+- **🎨 More Tab 2-Column & Grouped Settings Redesign**: Redesigned **More** tab with featured cards, 2-column quick tile grid, and 7 dedicated Group Settings sub-pages (`General`, `Theme & Style`, `Transactions`, `Localization`, `Notifications`, `Import & Export`, `About`) ([`lib/pages/settingsPage.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/pages/settingsPage.dart)).
+- **📱 Native Launcher Icons**: Generated updated Xpenzi launcher icons across Android (`mipmap` buckets), iOS (`AppIcon.appiconset`), and Web using `flutter_launcher_icons` (`pubspec.yaml`).
+- **🌊 Floating Dock Capsule Indicator**: Centered Material 3 stadium capsule active tab pill indicator (`width: 56`, `height: 32`, `borderRadius: 16`) with smooth animations ([`lib/widgets/floatingNavBar.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/floatingNavBar.dart)).
+- **📊 Home Summary Tile Indicators**: Redesigned summary tiles with type indicators (`▼ Expense`, `▲ Income`, `📅 Upcoming`, `📅 Overdue`, `↗ Lent`, `↙ Borrowed`) and formatted `×count` / `All Time` subtitles ([`lib/widgets/transactionsAmountBox.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/transactionsAmountBox.dart)).
 - **⚡ Home Screen Quick Action Dock**: Top 1-tap shortcut bar (`[ - Expense ]` `[ + Income ]` `[ ⇄ Transfer ]` `[ 💳 Pay Bill ]`) ([`lib/widgets/homeQuickActionDock.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/homeQuickActionDock.dart)).
-- **🗂️ Reorganized Settings Page**: Visual 6-category cards with AMOLED pitch-black support ([`lib/pages/settingsPage.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/pages/settingsPage.dart)).
-- **🌊 Floating Navigation Bar**: Modern 32px floating pill dock widget with haptic feedback ([`lib/widgets/floatingNavBar.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/floatingNavBar.dart)).
 - **🖤 AMOLED Pure Pitch-Black Mode**: True `#000000` dark theme with high-contrast `#262626` borders ([`lib/colors.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/colors.dart)).
 - **📌 Pinned Transactions**: Long-press `+` FAB for quick transaction templates ([`lib/widgets/fab.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/fab.dart)).
 - **📅 Calendar Quick-Add**: Double-press date cell pre-fills entry; added Bi-weekly & Quarterly frequencies ([`lib/widgets/util/showDatePicker.dart`](file:///d:/Projects/Android%20Apps/Spendwise-Expense-Tracker/lib/widgets/util/showDatePicker.dart)).

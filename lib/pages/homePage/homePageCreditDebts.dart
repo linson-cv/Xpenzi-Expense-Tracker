@@ -28,6 +28,7 @@ class HomePageCreditDebts extends StatelessWidget {
             Expanded(
               child: TransactionsAmountBox(
                 label: "lent".tr(),
+                icon: Icons.north_east_rounded,
                 absolute: false,
                 invertSign: true,
                 totalWithCountStream: database.watchTotalWithCountOfCreditDebt(
@@ -57,6 +58,7 @@ class HomePageCreditDebts extends StatelessWidget {
             Expanded(
               child: TransactionsAmountBox(
                 label: "borrowed".tr(),
+                icon: Icons.south_west_rounded,
                 absolute: false,
                 totalWithCountStream: database.watchTotalWithCountOfCreditDebt(
                   allWallets: Provider.of<AllWallets>(context),

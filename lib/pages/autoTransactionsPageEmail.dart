@@ -6,6 +6,8 @@ import 'package:budget/pages/addEmailTemplate.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/geminiAi.dart';
+import 'package:budget/struct/localNlpParser.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/button.dart';
@@ -111,11 +113,32 @@ Future queueTransactionFromMessage(String messageString,
     }
   }
 
-  if (templateFound == null) return false;
+  // Step 2. Local Natural Language Processing (Regex NLP Engine)
+  if (templateFound == null || amountDouble == null || title == null) {
+    BuildContext? ctx = navigatorKey.currentContext;
+    LocalNlpParsedTransaction? nlpParsed =
+        await parseTransactionFromNotificationText(messageString, ctx);
+    if (nlpParsed != null) {
+      title ??= nlpParsed.title;
+      amountDouble ??= nlpParsed.amount;
+    }
+  }
 
-  //if (amountDouble == null) amountDouble = getAmountFromString(title ?? "");
-  // We don't need this line, we can still queue up a transaction without these details,
-  // however maybe the user doesn't want to queue it up if its missing details?
+  // Step 3. Fallback to Gemini AI Parsing if template and local NLP returned no result
+  if ((amountDouble == null || title == null) &&
+      appStateSettings["geminiEnabled"] == true &&
+      (appStateSettings["geminiApiKey"] ?? "").toString().trim().isNotEmpty) {
+    BuildContext? ctx = navigatorKey.currentContext;
+    if (ctx != null) {
+      GeminiParsedTransaction? parsed =
+          await parseTransactionWithGemini(messageString, ctx);
+      if (parsed != null && parsed.title != null && parsed.amount != null) {
+        title = parsed.title;
+        amountDouble = parsed.amount;
+      }
+    }
+  }
+
   if (amountDouble == null || title == null) return false;
 
   TransactionCategory? category;
@@ -123,10 +146,12 @@ Future queueTransactionFromMessage(String messageString,
       (await database.getSimilarAssociatedTitles(title: title, limit: 1))
           .firstOrNull;
   category = foundTitle?.category;
-  category ??= await database
+  if (templateFound != null) {
+    category ??= await database
         .getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
+  }
 
-  TransactionWallet? wallet = templateFound.walletFk == "-1"
+  TransactionWallet? wallet = (templateFound == null || templateFound.walletFk == "-1")
       ? null
       : await database.getWalletInstanceOrNull(templateFound.walletFk);
 

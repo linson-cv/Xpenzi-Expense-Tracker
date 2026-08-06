@@ -48,6 +48,8 @@ class HomePageAllSpendingSummary extends StatelessWidget {
                         homePageStateKey.currentState?.refreshState();
                       },
                       label: "expense".tr(),
+                      icon: Icons.arrow_drop_down_rounded,
+                      iconColor: getColor(context, "expenseAmount"),
                       totalWithCountStream:
                           database.watchTotalWithCountOfWallet(
                         isIncome: false,
@@ -77,6 +79,8 @@ class HomePageAllSpendingSummary extends StatelessWidget {
                         homePageStateKey.currentState?.refreshState();
                       },
                       label: "income".tr(),
+                      icon: Icons.arrow_drop_up_rounded,
+                      iconColor: getColor(context, "incomeAmount"),
                       totalWithCountStream:
                           database.watchTotalWithCountOfWallet(
                         isIncome: true,

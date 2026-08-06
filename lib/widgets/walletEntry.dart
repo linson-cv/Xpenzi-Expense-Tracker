@@ -1,6 +1,7 @@
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addWalletPage.dart';
+import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/homePage/homePageWalletSwitcher.dart';
 import 'package:budget/pages/transactionFilters.dart';
 import 'package:budget/struct/settings.dart';
@@ -83,12 +84,54 @@ class WalletEntry extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Padding(
-                            padding: const EdgeInsetsDirectional.only(end: 17),
-                            child: TextFont(
-                              text: walletWithDetails.wallet.name,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsetsDirectional.only(end: 10),
+                                  child: TextFont(
+                                    text: walletWithDetails.wallet.name,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              if (walletWithDetails.wallet.name.toLowerCase().contains("cred") ||
+                                  walletWithDetails.wallet.name.toLowerCase().contains("card"))
+                                Tappable(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: 8,
+                                  onTap: () {
+                                    pushRoute(
+                                      context,
+                                      AddTransactionPage(
+                                        transferBalancePopup: true,
+                                        routesToPopAfterDelete: RoutesToPopAfterDelete.All,
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.credit_card_rounded,
+                                          size: 13,
+                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        TextFont(
+                                          text: "Pay Bill",
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           AmountAccount(
                             walletWithDetails: walletWithDetails,

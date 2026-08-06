@@ -435,6 +435,68 @@ class _EditHomePageState extends State<EditHomePage> {
         dragDownToDismiss: true,
         dragDownToDismissEnabled: dragDownToDismissEnabled,
         title: "edit-home".tr(),
+        actions: [
+          IconButton(
+            tooltip: "Reset Home Page Layout",
+            icon: Icon(
+              appStateSettings["outlinedIcons"]
+                  ? Icons.restart_alt_outlined
+                  : Icons.restart_alt_rounded,
+            ),
+            onPressed: () async {
+              await updateSettings(
+                "homePageOrder",
+                [
+                  "wallets",
+                  "walletsList",
+                  "allSpendingSummary",
+                  "overdueUpcoming",
+                  "creditDebts",
+                  "objectiveLoans",
+                  "spendingGraph",
+                  "transactionsList",
+                  "budgets",
+                  "objectives",
+                  "netWorth",
+                  "pieChart",
+                  "heatMap",
+                ],
+                updateGlobalState: false,
+              );
+              await updateSettings("showWalletSwitcher", true, updateGlobalState: false);
+              await updateSettings("showWalletList", true, updateGlobalState: false);
+              await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
+              await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
+              await updateSettings("showCreditDebt", true, updateGlobalState: false);
+              await updateSettings("showObjectiveLoans", true, updateGlobalState: false);
+              await updateSettings("showSpendingGraph", true, updateGlobalState: false);
+              await updateSettings("showTransactionsList", true, updateGlobalState: false);
+              await updateSettings("showPinnedBudgets", true, updateGlobalState: false);
+              await updateSettings("showObjectives", true, updateGlobalState: true);
+
+              if (mounted) {
+                setState(() {
+                  keyOrder = [
+                    "wallets",
+                    "walletsList",
+                    "allSpendingSummary",
+                    "overdueUpcoming",
+                    "creditDebts",
+                    "objectiveLoans",
+                    "spendingGraph",
+                    "transactionsList",
+                    "budgets",
+                    "objectives",
+                    "netWorth",
+                    "pieChart",
+                    "heatMap",
+                  ];
+                });
+              }
+              homePageStateKey.currentState?.refreshState();
+            },
+          ),
+        ],
         subtitle: appStateSettings["showExtraInfoText"] == false
             ? null
             : Padding(

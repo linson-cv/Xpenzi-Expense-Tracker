@@ -976,17 +976,9 @@ popRoute<T extends Object?>(BuildContext? context, [T? result]) {
   BuildContext? contextToPop = context;
   if (context == null) contextToPop = navigatorKey.currentContext;
   if (contextToPop == null) return;
-  Navigator.of(contextToPop, rootNavigator: false).pop(result);
-  // bool hasPopped = false;
-  // Navigator.of(contextToPop, rootNavigator: true).popUntil((route) {
-  //   if (route.isFirst) return true;
-  //   if (hasPopped == false) {
-  //     hasPopped = true;
-  //     return route.isFirst;
-  //   } else {
-  //     return true;
-  //   }
-  // });
+  if (Navigator.of(contextToPop, rootNavigator: false).canPop()) {
+    Navigator.of(contextToPop, rootNavigator: false).pop(result);
+  }
 }
 
 Future<bool> maybePopRoute<T extends Object?>(BuildContext? context,

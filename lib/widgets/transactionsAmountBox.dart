@@ -5,7 +5,6 @@ import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/widgets/countNumber.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +18,9 @@ class TransactionsAmountBox extends StatelessWidget {
     this.openPage,
     this.onLongPress,
     required this.label,
+    this.icon,
+    this.iconColor,
+    this.periodText,
     required this.totalWithCountStream,
     this.totalWithCountStream2,
     required this.textColor,
@@ -31,6 +33,9 @@ class TransactionsAmountBox extends StatelessWidget {
   final Widget? openPage;
   final Function? onLongPress;
   final String label;
+  final IconData? icon;
+  final Color? iconColor;
+  final String? periodText;
   final Stream<TotalWithCount?> totalWithCountStream;
   final Stream<TotalWithCount?>? totalWithCountStream2;
   final Color textColor;
@@ -57,76 +62,95 @@ class TransactionsAmountBox extends StatelessWidget {
             onLongPress: () {
               if (onLongPress != null) onLongPress!();
             },
-            child: Container(
-              child: Padding(
-                padding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: 15, vertical: 17),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFont(
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      text: label,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    const SizedBox(height: 6),
-                    DoubleTotalWithCountStreamBuilder(
-                      totalWithCountStream: totalWithCountStream,
-                      totalWithCountStream2: totalWithCountStream2,
-                      builder: (context, snapshot) {
-                        double totalSpent = snapshot.data?.total ?? 0;
-                        int totalCount = snapshot.data?.count ?? 0;
-                        double finalAmount = snapshot.hasData == false ||
-                                snapshot.data == null
-                            ? 0
-                            : absolute == true
-                                ? (totalSpent).abs()
-                                : totalSpent * (invertSign == true ? -1 : 1);
-                        return Column(
-                          children: [
-                            CountNumber(
-                              count: finalAmount,
-                              duration: const Duration(milliseconds: 1000),
-                              initialCount: (0),
-                              textBuilder: (number) {
-                                return TextFont(
-                                  text: convertToMoney(
-                                      Provider.of<AllWallets>(context), number,
-                                      currencyKey: currencyKey,
-                                      addCurrencyName: currencyKey != null,
-                                      finalNumber: finalAmount),
-                                  textColor: getTextColor != null
-                                      ? getTextColor!(totalSpent)
-                                      : textColor,
-                                  fontWeight: FontWeight.bold,
-                                  textAlign: TextAlign.center,
-                                  autoSizeText: true,
-                                  fontSize: 21,
-                                  maxFontSize: 21,
-                                  minFontSize: 10,
-                                  maxLines: 1,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 6),
-                            TextFont(
-                              maxLines: 2,
-                              text: "$totalCount ${totalCount == 1
-                                      ? "transaction".tr().toLowerCase()
-                                      : "transactions".tr().toLowerCase()}",
-                              fontSize: 13,
-                              textAlign: TextAlign.center,
-                              textColor: getColor(context, "textLight"),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.symmetric(
+                  horizontal: 14, vertical: 14),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(
+                          icon,
+                          size: 18,
+                          color: iconColor ?? textColor,
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Flexible(
+                        child: TextFont(
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          text: label,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  DoubleTotalWithCountStreamBuilder(
+                    totalWithCountStream: totalWithCountStream,
+                    totalWithCountStream2: totalWithCountStream2,
+                    builder: (context, snapshot) {
+                      double totalSpent = snapshot.data?.total ?? 0;
+                      int totalCount = snapshot.data?.count ?? 0;
+                      double finalAmount = snapshot.hasData == false ||
+                              snapshot.data == null
+                          ? 0
+                          : absolute == true
+                              ? (totalSpent).abs()
+                              : totalSpent * (invertSign == true ? -1 : 1);
+                      return Column(
+                        children: [
+                          CountNumber(
+                            count: finalAmount,
+                            duration: const Duration(milliseconds: 1000),
+                            initialCount: (0),
+                            textBuilder: (number) {
+                              return TextFont(
+                                text: convertToMoney(
+                                    Provider.of<AllWallets>(context), number,
+                                    currencyKey: currencyKey,
+                                    addCurrencyName: currencyKey != null,
+                                    finalNumber: finalAmount),
+                                textColor: getTextColor != null
+                                    ? getTextColor!(totalSpent)
+                                    : textColor,
+                                fontWeight: FontWeight.bold,
+                                textAlign: TextAlign.center,
+                                autoSizeText: true,
+                                fontSize: 20,
+                                maxFontSize: 20,
+                                minFontSize: 10,
+                                maxLines: 1,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextFont(
+                                text: "×$totalCount",
+                                fontSize: 12,
+                                textColor: getColor(context, "textLight"),
+                              ),
+                              TextFont(
+                                text: periodText ?? "All Time",
+                                fontSize: 12,
+                                textColor: getColor(context, "textLight"),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           );

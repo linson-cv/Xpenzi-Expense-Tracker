@@ -37,17 +37,17 @@ Map<String, NavBarIconData> getNavBarIconsData() {
     ),
     "transactions": NavBarIconData(
       iconData: appStateSettings["outlinedIcons"]
-          ? Icons.payments_outlined
-          : Icons.payments_rounded,
+          ? Icons.wallet_outlined
+          : Icons.wallet_rounded,
       label: "transactions",
       navigationIndexedStackIndex: 1,
     ),
     "budgets": NavBarIconData(
       iconData: appStateSettings["outlinedIcons"]
-          ? Icons.donut_small_outlined
-          : MoreIcons.chart_pie,
-      iconScale: appStateSettings["outlinedIcons"] ? 1 : 0.87,
-      iconSize: appStateSettings["outlinedIcons"] ? 24 : 20,
+          ? Icons.pie_chart_outline_rounded
+          : Icons.pie_chart_rounded,
+      iconScale: 1,
+      iconSize: 24,
       label: "budgets",
       navigationIndexedStackIndex: 2,
     ),

@@ -35,6 +35,7 @@ class HomePageUpcomingTransactions extends StatelessWidget {
                   openPage:
                       const UpcomingOverdueTransactions(overdueTransactions: false),
                   label: "upcoming".tr(),
+                  icon: Icons.event_outlined,
                   absolute: false,
                   totalWithCountStream:
                       database.watchTotalWithCountOfUpcomingOverdue(
@@ -58,6 +59,7 @@ class HomePageUpcomingTransactions extends StatelessWidget {
                   openPage:
                       const UpcomingOverdueTransactions(overdueTransactions: true),
                   label: "overdue".tr(),
+                  icon: Icons.event_busy_outlined,
                   absolute: false,
                   totalWithCountStream:
                       database.watchTotalWithCountOfUpcomingOverdue(

@@ -22,6 +22,7 @@ import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/navigationFramework.dart';
+import 'package:budget/widgets/notificationPermissionBanner.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/ratingPopup.dart';
 import 'package:budget/widgets/selectedTransactionsAppBar.dart';
@@ -331,6 +332,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         : const SizedBox(height: 5),
                     // Not full screen
                     if (enableDoubleColumn(context) != true) ...[
+                      const KeepAliveClientMixin(
+                          child: NotificationPermissionBanner()),
                       const KeepAliveClientMixin(child: HomePageRatingBox()),
                       for (String sectionKey
                           in appStateSettings["homePageOrder"])
