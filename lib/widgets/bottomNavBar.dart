@@ -19,6 +19,7 @@ import 'package:flutter/material.dart'
     hide NavigationDestination, NavigationBar;
 import 'package:budget/colors.dart';
 import 'package:flutter/services.dart';
+import 'package:budget/widgets/floatingNavBar.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar(
@@ -218,6 +219,14 @@ class BottomNavBarState extends State<BottomNavBar> {
         ),
       );
     }
+
+    if (appStateSettings["floatingNavBar"] == true) {
+      return FloatingNavBar(
+        selectedIndex: navigationBarIndex,
+        onItemTapped: onItemTapped,
+      );
+    }
+
     // Android navbar
     return Container(
       decoration: BoxDecoration(

@@ -1821,3 +1821,49 @@ List<String> getWeekdayNames() {
 
   return localizedWeekdayNames;
 }
+
+class ShowSubcategoryIconSetting extends StatelessWidget {
+  const ShowSubcategoryIconSetting({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "Show Subcategory Icons",
+      description: "Display subcategory icon instead of main category icon on transaction rows",
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.category_outlined
+          : Icons.category_rounded,
+      initialValue: appStateSettings["showSubcategoryIcon"] == true,
+      onSwitched: (value) async {
+        await updateSettings(
+          "showSubcategoryIcon",
+          value,
+          updateGlobalState: true,
+          pagesNeedingRefresh: [0, 1, 2],
+        );
+      },
+    );
+  }
+}
+
+class AnimatedBudgetContainersSetting extends StatelessWidget {
+  const AnimatedBudgetContainersSetting({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "Animated Budget Containers",
+      description: "Enable smooth animations for budget cards (disable to increase scrolling performance)",
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.animation_outlined
+          : Icons.animation_rounded,
+      initialValue: appStateSettings["animatedBudgetContainers"] == true,
+      onSwitched: (value) async {
+        await updateSettings(
+          "animatedBudgetContainers",
+          value,
+          updateGlobalState: true,
+          pagesNeedingRefresh: [0, 2],
+        );
+      },
+    );
+  }
+}

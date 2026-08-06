@@ -74,7 +74,6 @@ class NavigationBar extends StatelessWidget {
   ///
   /// The value of [destinations] must be a list of two or more
   /// [NavigationDestination] values.
-  // TODO(goderbauer): This class cannot be const constructed, https://github.com/dart-lang/linter/issues/3366.
   // ignore: prefer_const_constructors_in_immutables
   NavigationBar({
     super.key,
@@ -931,7 +930,6 @@ class _NavigationBarDestinationTooltip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: message,
-      // TODO(johnsonmh): Make this value configurable/themable.
       verticalOffset: 42,
       excludeFromSemantics: true,
       preferBelow: false,

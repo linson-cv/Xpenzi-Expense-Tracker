@@ -300,7 +300,6 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
       categoryFks: selectedCategoryPks,
       categoryFksExclude: selectedCategoryPksExclude,
       addedTransactionsOnly: selectedAddedTransactionsOnly,
-      // TODO make this work excludeAddedTransactions
       periodLength: selectedPeriodLength,
       reoccurrence: mapRecurrence(selectedRecurrence),
       dateCreated:

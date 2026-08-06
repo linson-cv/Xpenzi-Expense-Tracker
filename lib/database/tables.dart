@@ -503,7 +503,6 @@ class ScannerTemplates extends Table {
       text().references(Categories, #categoryPk)();
   TextColumn get walletFk =>
       text().references(Wallets, #walletPk).withDefault(const Constant("0"))();
-  // TODO: if it contains certain keyword ignore these emails
   BoolColumn get ignore => boolean().withDefault(const Constant(false))();
 
   @override

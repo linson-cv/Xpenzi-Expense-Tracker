@@ -68,10 +68,6 @@ import 'package:budget/widgets/listItem.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
 import 'package:budget/widgets/tappableTextEntry.dart';
 
-//TODO
-//only show the tags that correspond to selected category
-//put recent used tags at the top? when no category selected
-
 dynamic transactionTypeDisplayToEnum = {
   "Default": null,
   "Upcoming": TransactionSpecialType.upcoming,

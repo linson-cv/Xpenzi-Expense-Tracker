@@ -21,6 +21,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
+import 'package:budget/widgets/exportCSV.dart';
 
 int roundToNearestNextFifthYear(int year) {
   return (((year + 5) / 5).ceil()) * 5;
@@ -278,6 +279,7 @@ class TransactionsSearchPageState extends State<TransactionsSearchPage>
                             : Icons.filter_alt_rounded,
                       ),
                     ),
+                    const ExportCSV(),
                     const SizedBox(width: 20),
                   ],
                 ),

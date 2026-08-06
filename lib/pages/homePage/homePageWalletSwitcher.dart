@@ -21,83 +21,92 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/pages/addButton.dart';
 
+import 'package:budget/widgets/homeQuickActionDock.dart';
+
 class HomePageWalletSwitcher extends StatelessWidget {
   const HomePageWalletSwitcher({super.key});
 
   @override
   Widget build(BuildContext context) {
     return KeepAliveClientMixin(
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(bottom: 13.0),
-        child: StreamBuilder<List<WalletWithDetails>>(
-          stream: database.watchAllWalletsWithDetails(
-              homePageWidgetDisplay: HomePageWidgetDisplay.WalletSwitcher),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                clipBehavior: Clip.none,
-                padding: const EdgeInsetsDirectional.symmetric(horizontal: 7),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (WalletWithDetails walletDetails in snapshot.data!)
-                      WalletEntry(
-                        selected: Provider.of<SelectedWalletPk>(context)
-                                .selectedWalletPk ==
-                            walletDetails.wallet.walletPk,
-                        walletWithDetails: walletDetails,
-                      ),
-                    Stack(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(bottom: 5.0),
+            child: StreamBuilder<List<WalletWithDetails>>(
+              stream: database.watchAllWalletsWithDetails(
+                  homePageWidgetDisplay: HomePageWidgetDisplay.WalletSwitcher),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    padding: const EdgeInsetsDirectional.symmetric(horizontal: 7),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(
-                          width: 130,
-                          child: IgnorePointer(
-                            child: Visibility(
-                              maintainSize: true,
-                              maintainAnimation: true,
-                              maintainState: true,
-                              child: Opacity(
-                                opacity: 0,
-                                child: WalletEntry(
-                                  selected: false,
-                                  walletWithDetails: WalletWithDetails(
-                                    wallet: defaultWallet(),
+                        for (WalletWithDetails walletDetails in snapshot.data!)
+                          WalletEntry(
+                            selected: Provider.of<SelectedWalletPk>(context)
+                                    .selectedWalletPk ==
+                                walletDetails.wallet.walletPk,
+                            walletWithDetails: walletDetails,
+                          ),
+                        Stack(
+                          children: [
+                            SizedBox(
+                              width: 130,
+                              child: IgnorePointer(
+                                child: Visibility(
+                                  maintainSize: true,
+                                  maintainAnimation: true,
+                                  maintainState: true,
+                                  child: Opacity(
+                                    opacity: 0,
+                                    child: WalletEntry(
+                                      selected: false,
+                                      walletWithDetails: WalletWithDetails(
+                                        wallet: defaultWallet(),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                                start: 6, end: 6),
-                            child: AddButton(
-                              onTap: () {
-                                openBottomSheet(
-                                  context,
-                                  const EditHomePagePinnedWalletsPopup(
-                                    homePageWidgetDisplay:
-                                        HomePageWidgetDisplay.WalletSwitcher,
-                                  ),
-                                  useCustomController: true,
-                                );
-                              },
-                              labelUnder: "account".tr(),
-                              icon: Icons.format_list_bulleted_add,
+                            Positioned.fill(
+                              child: Padding(
+                                padding: const EdgeInsetsDirectional.only(
+                                    start: 6, end: 6),
+                                child: AddButton(
+                                  onTap: () {
+                                    openBottomSheet(
+                                      context,
+                                      const EditHomePagePinnedWalletsPopup(
+                                        homePageWidgetDisplay:
+                                            HomePageWidgetDisplay.WalletSwitcher,
+                                      ),
+                                      useCustomController: true,
+                                    );
+                                  },
+                                  labelUnder: "account".tr(),
+                                  icon: Icons.format_list_bulleted_add,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              );
-            }
-            return Container();
-          },
-        ),
+                  );
+                }
+                return Container();
+              },
+            ),
+          ),
+          if (appStateSettings["homeQuickActionDock"] == true)
+            const HomeQuickActionDock(),
+        ],
       ),
     );
   }

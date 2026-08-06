@@ -561,7 +561,6 @@ Future<void> parseEmailsInBackground(context,
                 : Icons.payments_rounded,
           ),
         );
-        // TODO have setting so they can choose if the emails are markes as read
         gmailApi.users.messages.modify(
           gMail.ModifyMessageRequest(removeLabelIds: ["UNREAD"]),
           googleUser!.id,

@@ -652,7 +652,6 @@ class SliverReorderableListState extends State<SliverReorderableList>
           ..addPointer(event);
         _recognizerPointer = event.pointer;
       } else {
-        // TODO(darrenaustin): Can we handle this better, maybe scroll to the item?
         throw Exception('Attempting to start a drag on a non-visible item');
       }
     });

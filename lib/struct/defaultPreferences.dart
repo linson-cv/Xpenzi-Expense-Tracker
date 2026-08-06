@@ -22,6 +22,9 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "devicesHaveBeenSynced": 1,
     "numBackups": 1,
     "theme": "system", //system, light, dark
+    "floatingNavBar": true,
+    "showSubcategoryIcon": false,
+    "animatedBudgetContainers": true,
     "use24HourFormat": "system", //system, 12-hour, 24-hour
     "numberCountUpAnimation": true,
     "appAnimations": AppAnimations.all.index,
@@ -40,6 +43,8 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "circularProgressRotation":
         false, // still in testing, offsets the circular progress to align with pie chart sections
     "forceFullDarkBackground": false,
+    "homeQuickActionDock": true,
+    "showHomeQuickActionDock": true,
     // FullScreen is added if the section has its own preference when full screen (double column)
     "futureTransactionDaysHomePage": 4,
     "homePageTransactionsListIncomeAndExpenseOnly": true,

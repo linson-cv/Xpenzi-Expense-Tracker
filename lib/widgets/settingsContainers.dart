@@ -715,3 +715,63 @@ class SettingsHeader extends StatelessWidget {
     );
   }
 }
+
+class SettingsGroupCard extends StatelessWidget {
+  const SettingsGroupCard({
+    required this.title,
+    required this.icon,
+    required this.children,
+    super.key,
+  });
+
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isAmoled = appStateSettings["forceFullDarkBackground"] == true && isDark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isAmoled
+              ? const Color(0xFF0F0F0F)
+              : getColor(context, "lightDarkAccent"),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isAmoled
+                ? const Color(0xFF262626)
+                : getColor(context, "border").withOpacity(0.4),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 18, right: 18, top: 14, bottom: 8),
+              child: Row(
+                children: [
+                  Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 10),
+                  TextFont(
+                    text: title,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    textColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, indent: 16, endIndent: 16),
+            ...children,
+            const SizedBox(height: 6),
+          ],
+        ),
+      ),
+    );
+  }
+}

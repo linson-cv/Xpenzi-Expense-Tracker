@@ -89,11 +89,17 @@ AppColors getAppColors(
                 : appStateSettings["materialYou"]
                     ? Colors.white.withValues(alpha: 0.25)
                     : const Color(0xFF494949),
-            "lightDarkAccent": appStateSettings["materialYou"]
-                ? darkenPastel(accentColor, amount: 0.83)
-                : const Color(0xFF161616),
-            "lightDarkAccentHeavyLight": lightDarkAccentHeavyLight,
-            "canvasContainer": const Color(0xFF242424),
+            "lightDarkAccent": appStateSettings["forceFullDarkBackground"] == true
+                ? Colors.black
+                : appStateSettings["materialYou"]
+                    ? darkenPastel(accentColor, amount: 0.83)
+                    : const Color(0xFF161616),
+            "lightDarkAccentHeavyLight": appStateSettings["forceFullDarkBackground"] == true
+                ? const Color(0xFF121212)
+                : lightDarkAccentHeavyLight,
+            "canvasContainer": appStateSettings["forceFullDarkBackground"] == true
+                ? const Color(0xFF0F0F0F)
+                : const Color(0xFF242424),
             "lightDarkAccentHeavy": const Color(0xFF444444),
             "shadowColor": const Color(0x69BDBDBD),
             "shadowColorLight": appStateSettings["materialYou"]

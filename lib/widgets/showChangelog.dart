@@ -26,6 +26,16 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.0.1 (2026-08-06)
+    (A) Added floating pill dock navigation bar with smooth selection animations
+    (A) Enhanced pure AMOLED pitch-black dark theme engine with high-contrast outlines
+    (A) Added Pinned Transactions quick actions on Floating Action Button (FAB)
+    (A) Added Calendar quick-add transaction pre-fill on date selection
+    (A) Added Category grid reordering and Subcategory icon display toggle setting
+    (A) Added direct CSV Export shortcut on Transactions Search header
+    (A) Added Animated Budget Containers performance toggle in Settings
+    (A) Added Home Screen Quick Action Dock for 1-tap Expense, Income, Transfer & Pay Bill entry
+    (A) Streamlined terminology & UX workflows for Savings Goals, Debts, and Accounts
     < 1.0.0 (Internal Release - 2026-08-06)
     Initial internal testing release
     Rebranded application baseline

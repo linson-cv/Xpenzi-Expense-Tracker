@@ -55,8 +55,8 @@ Map<String, NavBarIconData> getNavBarIconsData() {
       iconData: appStateSettings["outlinedIcons"]
           ? Icons.savings_outlined
           : Icons.savings_rounded,
-      label: "goals",
-      labelLong: "spending-and-savings-goals",
+      label: "savings-goals",
+      labelLong: "savings-goals",
       navigationIndexedStackIndex: 14,
     ),
     "subscriptions": NavBarIconData(
@@ -73,7 +73,8 @@ Map<String, NavBarIconData> getNavBarIconsData() {
     ),
     "loans": NavBarIconData(
       iconData: getTransactionTypeIcon(TransactionSpecialType.credit),
-      label: "loans",
+      label: "loans-and-debts",
+      labelLong: "loans-and-debts",
       navigationIndexedStackIndex: 17,
     ),
     "notifications": NavBarIconData(
