@@ -20,6 +20,8 @@ class FloatingNavBar extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final bool isAmoled = appStateSettings["forceFullDarkBackground"] == true && isDark;
 
+    final bool showLabels = appStateSettings["showFloatingNavBarLabels"] ?? true;
+
     Color navBgColor = isAmoled
         ? Colors.black
         : getBottomNavbarBackgroundColor(
@@ -42,8 +44,9 @@ class FloatingNavBar extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12, top: 4),
-        child: Container(
-          height: 64,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          height: showLabels ? 64 : 54,
           decoration: BoxDecoration(
             color: navBgColor,
             borderRadius: BorderRadius.circular(32),
@@ -82,7 +85,9 @@ class FloatingNavBar extends StatelessWidget {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
                         curve: Curves.easeOutCubic,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          vertical: showLabels ? 8 : 12,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
@@ -94,7 +99,7 @@ class FloatingNavBar extends StatelessWidget {
                           children: [
                             Icon(
                               iconData.iconData,
-                              size: 22,
+                              size: showLabels ? 22 : 24,
                               color: isSelected
                                   ? Theme.of(context).colorScheme.primary
                                   : Theme.of(context)
@@ -102,28 +107,30 @@ class FloatingNavBar extends StatelessWidget {
                                       .onSurface
                                       .withOpacity(0.6),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              iconData.label.tr().length > 12 &&
-                                      iconData.labelShort != null
-                                  ? (iconData.labelShort ?? "").tr()
-                                  : iconData.label.tr(),
-                              style: TextStyle(
-                                fontFamily: appStateSettings["font"],
-                                fontSize: 11,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.7),
+                            if (showLabels) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                iconData.label.tr().length > 12 &&
+                                        iconData.labelShort != null
+                                    ? (iconData.labelShort ?? "").tr()
+                                    : iconData.label.tr(),
+                                style: TextStyle(
+                                  fontFamily: appStateSettings["font"],
+                                  fontSize: 11,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.7),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            ],
                           ],
                         ),
                       ),
@@ -142,7 +149,9 @@ class FloatingNavBar extends StatelessWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: EdgeInsets.symmetric(
+                      vertical: showLabels ? 8 : 12,
+                    ),
                     decoration: BoxDecoration(
                       color: selectedIndex == 3
                           ? Theme.of(context).colorScheme.primary.withOpacity(0.18)
@@ -154,7 +163,7 @@ class FloatingNavBar extends StatelessWidget {
                       children: [
                         Icon(
                           navBarIconsData["more"]!.iconData,
-                          size: 22,
+                          size: showLabels ? 22 : 24,
                           color: selectedIndex == 3
                               ? Theme.of(context).colorScheme.primary
                               : Theme.of(context)
@@ -162,25 +171,27 @@ class FloatingNavBar extends StatelessWidget {
                                   .onSurface
                                   .withOpacity(0.6),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          navBarIconsData["more"]!.label.tr(),
-                          style: TextStyle(
-                            fontFamily: appStateSettings["font"],
-                            fontSize: 11,
-                            fontWeight: selectedIndex == 3
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: selectedIndex == 3
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.7),
+                        if (showLabels) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            navBarIconsData["more"]!.label.tr(),
+                            style: TextStyle(
+                              fontFamily: appStateSettings["font"],
+                              fontSize: 11,
+                              fontWeight: selectedIndex == 3
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: selectedIndex == 3
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.7),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                       ],
                     ),
                   ),

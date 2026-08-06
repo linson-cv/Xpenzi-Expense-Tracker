@@ -70,6 +70,9 @@ AppColors getAppColors(
             "dividerColor": appStateSettings["materialYou"]
                 ? const Color(0x0F000000)
                 : const Color(0xFFF0F0F0),
+            "border": appStateSettings["materialYou"]
+                ? const Color(0x1F000000)
+                : const Color(0x1F000000),
             "standardContainerColor": getPlatform() == PlatformOS.isIOS
                 ? themeData.colorScheme.surface
                 : appStateSettings["materialYou"]
@@ -114,6 +117,9 @@ AppColors getAppColors(
             "dividerColor": appStateSettings["materialYou"]
                 ? const Color(0x13FFFFFF)
                 : const Color(0x6F363636),
+            "border": appStateSettings["materialYou"]
+                ? const Color(0x28FFFFFF)
+                : const Color(0x28FFFFFF),
             "standardContainerColor": getPlatform() == PlatformOS.isIOS
                 ? themeData.colorScheme.surface
                 : appStateSettings["materialYou"]

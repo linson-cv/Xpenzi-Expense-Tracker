@@ -135,7 +135,9 @@ class MorePages extends StatelessWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SettingsHeader(title: "preferences".tr()),
           if (hasSideNavigation == false)
             Row(
               children: [
@@ -151,7 +153,6 @@ class MorePages extends StatelessWidget {
                         ? null
                         : "settings-and-customization-description".tr(),
                     isOutlined: true,
-                    // description: "Theme, Language, CSV Import",
                     isWideOutlined: true,
                   ),
                 ),
@@ -177,19 +178,6 @@ class MorePages extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Expanded(
-              //   child: Padding(
-              //     padding: EdgeInsetsDirectional.symmetric(vertical: 5, horizontal: 4),
-              //     child: SettingsContainer(
-              //       onTap: () {
-              //         openUrl("https://github.com/spendwise/Spendwise");
-              //       },
-              //       title: "open-source".tr(),
-              //       icon: MoreIcons.github,
-              //       isOutlined: true,
-              //     ),
-              //   ),
-              // ),
               Expanded(
                 child: SettingsContainerOpenPage(
                   openPage: const AboutPage(),
@@ -248,7 +236,8 @@ class MorePages extends StatelessWidget {
                 )),
             ],
           ),
-          if (hasSideNavigation == false)
+          if (hasSideNavigation == false) ...[
+            SettingsHeader(title: "tools-and-extras".tr()),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -271,7 +260,6 @@ class MorePages extends StatelessWidget {
                 ),
               ],
             ),
-          if (hasSideNavigation == false)
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -295,7 +283,7 @@ class MorePages extends StatelessWidget {
                 ),
               ],
             ),
-          if (hasSideNavigation == false)
+            SettingsHeader(title: "data".tr()),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -350,6 +338,7 @@ class MorePages extends StatelessWidget {
                 )
               ],
             ),
+          ],
           if (hasSideNavigation) const SettingsPageContent(),
         ],
       ),
@@ -432,195 +421,271 @@ class SettingsPageContent extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SettingsHeader(title: "theme".tr()),
-        Builder(
-          builder: (context) {
-            late Color? selectedColor =
-                HexColor(appStateSettings["accentColor"]);
+        // 1. General Settings Group
+        SettingsGroupCard(
+          title: "general".tr().capitalizeFirst,
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.tune_outlined
+              : Icons.tune_rounded,
+          children: [
+            const BiometricsSettingToggle(),
+            SettingsContainerOpenPage(
+              openPage: const EditHomePage(),
+              title: "edit-home-page".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.home_outlined
+                  : Icons.home_rounded,
+            ),
+            SettingsContainerSwitch(
+              title: "Floating Navigation Bar",
+              description: "Display floating dock at the bottom of the screen",
+              onSwitched: (value) {
+                updateSettings("floatingNavBar", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["floatingNavBar"] ?? true,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.dock_outlined
+                  : Icons.dock_rounded,
+            ),
+            if (appStateSettings["floatingNavBar"] == true)
+              SettingsContainerSwitch(
+                title: "Floating Bar Labels",
+                description: "Show text labels under icons on the floating bar",
+                onSwitched: (value) {
+                  updateSettings("showFloatingNavBarLabels", value, updateGlobalState: true);
+                },
+                initialValue: appStateSettings["showFloatingNavBarLabels"] ?? true,
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.label_outlined
+                    : Icons.label_rounded,
+              ),
+            SettingsContainerOpenPage(
+              openPage: const EditWalletsPage(),
+              title: navBarIconsData["accountDetails"]!.label.tr(),
+              icon: navBarIconsData["accountDetails"]!.iconData,
+            ),
+            SettingsContainerOpenPage(
+              openPage: const EditBudgetPage(),
+              title: navBarIconsData["budgetDetails"]!.label.tr(),
+              icon: navBarIconsData["budgetDetails"]!.iconData,
+              iconScale: navBarIconsData["budgetDetails"]!.iconScale,
+            ),
+            SettingsContainerOpenPage(
+              openPage: const EditCategoriesPage(),
+              title: navBarIconsData["categoriesDetails"]!.label.tr(),
+              icon: navBarIconsData["categoriesDetails"]!.iconData,
+            ),
+            SettingsContainerOpenPage(
+              openPage: const EditAssociatedTitlesPage(),
+              title: navBarIconsData["titlesDetails"]!.label.tr(),
+              icon: navBarIconsData["titlesDetails"]!.iconData,
+            ),
+          ],
+        ),
 
-            return SettingsContainer(
-              onTap: () {
-                openBottomSheet(
-                  context,
-                  useParentContextForTheme: false,
-                  PopupFramework(
-                    title: "select-color".tr(),
-                    child: Column(
-                      children: [
-                        getPlatform() == PlatformOS.isIOS
-                            ? Padding(
-                                padding: const EdgeInsetsDirectional.only(
-                                    bottom: 8.0),
-                                child: SettingsContainerSwitch(
-                                  title: "colorful-interface".tr(),
-                                  onSwitched: (value) {
-                                    updateSettings("materialYou", value,
-                                        updateGlobalState: true);
-                                  },
-                                  initialValue: appStateSettings["materialYou"],
-                                  icon: appStateSettings["outlinedIcons"]
-                                      ? Icons.brush_outlined
-                                      : Icons.brush_rounded,
-                                  enableBorderRadius: true,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                        SelectColor(
-                          selectableColorsList: selectableAccentColors(context),
-                          includeThemeColor: false,
-                          selectedColor: selectedColor,
-                          setSelectedColor: (color) {
-                            selectedColor = color;
-                            updateSettings("accentColor", toHexString(color),
-                                updateGlobalState: true);
-                            updateSettings("accentSystemColor", false,
-                                updateGlobalState: true);
-                            updateWidgetColorsAndText(context);
-                          },
-                          useSystemColorPrompt: true,
+        // 2. Theme & Style Settings Group
+        SettingsGroupCard(
+          title: "Theme & Style",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.palette_outlined
+              : Icons.palette_rounded,
+          children: [
+            Builder(
+              builder: (context) {
+                late Color? selectedColor =
+                    HexColor(appStateSettings["accentColor"]);
+
+                return SettingsContainer(
+                  onTap: () {
+                    openBottomSheet(
+                      context,
+                      useParentContextForTheme: false,
+                      PopupFramework(
+                        title: "select-color".tr(),
+                        child: Column(
+                          children: [
+                            getPlatform() == PlatformOS.isIOS
+                                ? Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                        bottom: 8.0),
+                                    child: SettingsContainerSwitch(
+                                      title: "colorful-interface".tr(),
+                                      onSwitched: (value) {
+                                        updateSettings("materialYou", value,
+                                            updateGlobalState: true);
+                                      },
+                                      initialValue: appStateSettings["materialYou"],
+                                      icon: appStateSettings["outlinedIcons"]
+                                          ? Icons.brush_outlined
+                                          : Icons.brush_rounded,
+                                      enableBorderRadius: true,
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                            SelectColor(
+                              selectableColorsList: selectableAccentColors(context),
+                              includeThemeColor: false,
+                              selectedColor: selectedColor,
+                              setSelectedColor: (color) {
+                                selectedColor = color;
+                                updateSettings("accentColor", toHexString(color),
+                                    updateGlobalState: true);
+                                updateSettings("accentSystemColor", false,
+                                    updateGlobalState: true);
+                                updateWidgetColorsAndText(context);
+                              },
+                              useSystemColorPrompt: true,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
+                  title: "accent-color".tr(),
+                  description: "accent-color-description".tr(),
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.color_lens_outlined
+                      : Icons.color_lens_rounded,
                 );
               },
-              title: "accent-color".tr(),
-              description: "accent-color-description".tr(),
+            ),
+            getPlatform() == PlatformOS.isIOS
+                ? const SizedBox.shrink()
+                : SettingsContainerSwitch(
+                    title: "material-you".tr(),
+                    description: "material-you-description".tr(),
+                    onSwitched: (value) {
+                      updateSettings("materialYou", value, updateGlobalState: true);
+                    },
+                    initialValue: appStateSettings["materialYou"],
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.brush_outlined
+                        : Icons.brush_rounded,
+                  ),
+            const ThemeSettingsDropdown(),
+            SettingsContainerOpenPage(
+              openPage: const MoreOptionsPagePreferences(),
+              title: "more-options".tr(),
+              description: "more-options-description".tr(),
               icon: appStateSettings["outlinedIcons"]
-                  ? Icons.color_lens_outlined
-                  : Icons.color_lens_rounded,
-            );
-          },
-        ),
-        getPlatform() == PlatformOS.isIOS
-            ? const SizedBox.shrink()
-            : SettingsContainerSwitch(
-                title: "material-you".tr(),
-                description: "material-you-description".tr(),
-                onSwitched: (value) {
-                  updateSettings("materialYou", value, updateGlobalState: true);
-                },
-                initialValue: appStateSettings["materialYou"],
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.brush_outlined
-                    : Icons.brush_rounded,
-              ),
-        const ThemeSettingsDropdown(),
-
-        // EnterName(),
-        SettingsHeader(title: "preferences".tr()),
-
-        SettingsContainerOpenPage(
-          openPage: const EditHomePage(),
-          title: "edit-home-page".tr(),
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.home_outlined
-              : Icons.home_rounded,
+                  ? Icons.style_outlined
+                  : Icons.style_rounded,
+            ),
+          ],
         ),
 
-        notificationsGlobalEnabled && getIsFullScreen(context) == false
-            ? SettingsContainerOpenPage(
-                openPage: const NotificationsPage(),
-                title: "notifications".tr(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.notifications_outlined
-                    : Icons.notifications_rounded,
-              )
-            : const SizedBox.shrink(),
+        // 3. Transactions Settings Group
+        SettingsGroupCard(
+          title: "transactions".tr().capitalizeFirst,
+          icon: navBarIconsData["transactions"]!.iconData,
+          children: [
+            SettingsContainerOpenPage(
+              openPage: const SubscriptionsPage(),
+              title: navBarIconsData["subscriptions"]!.label.tr(),
+              icon: navBarIconsData["subscriptions"]!.iconData,
+            ),
+            SettingsContainerOpenPage(
+              openPage: const UpcomingOverdueTransactions(overdueTransactions: null),
+              title: navBarIconsData["scheduled"]!.label.tr(),
+              icon: navBarIconsData["scheduled"]!.iconData,
+            ),
+            appStateSettings["emailScanning"]
+                ? SettingsContainerOpenPage(
+                    openPage: const AutoTransactionsPageEmail(),
+                    title: "auto-email-transactions".tr(),
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.mark_email_unread_outlined
+                        : Icons.mark_email_unread_rounded,
+                  )
+                : const SizedBox.shrink(),
+            SettingsContainerOpenPage(
+              openPage: const BillSplitter(),
+              title: "bill-splitter".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.summarize_outlined
+                  : Icons.summarize_rounded,
+            ),
+            SettingsContainerOpenPage(
+              openPage: const ActivityPage(),
+              title: "transaction-activity-log".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.ballot_outlined
+                  : Icons.ballot_rounded,
+            ),
+          ],
+        ),
 
-        const BiometricsSettingToggle(),
-
-        SettingsContainer(
-          title: "language".tr(),
+        // 4. Localization & Formatting Group
+        SettingsGroupCard(
+          title: "Localization & Formatting",
           icon: appStateSettings["outlinedIcons"]
               ? Icons.language_outlined
               : Icons.language_rounded,
-          afterWidget: Tappable(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            borderRadius: 10,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.symmetric(
-                  horizontal: 16, vertical: 10),
-              child: TextFont(
-                text: languageDisplayFilter(
-                    appStateSettings["locale"].toString()),
-                fontSize: 14,
+          children: [
+            SettingsContainer(
+              title: "language".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.language_outlined
+                  : Icons.language_rounded,
+              afterWidget: Tappable(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: 10,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(
+                      horizontal: 16, vertical: 10),
+                  child: TextFont(
+                    text: languageDisplayFilter(
+                        appStateSettings["locale"].toString()),
+                    fontSize: 14,
+                  ),
+                ),
               ),
+              onTap: () {
+                openLanguagePicker(context);
+              },
             ),
-          ),
-          onTap: () {
-            openLanguagePicker(context);
-          },
+            const PrimaryCurrencySetting(),
+            const Time24HourFormatSetting(),
+            const FirstDayOfWeekSetting(updateHomePage: true),
+            const NumberFormattingSetting(),
+          ],
         ),
 
-        SettingsContainerOpenPage(
-          openPage: const MoreOptionsPagePreferences(),
-          title: "more-options".tr(),
-          description: "more-options-description".tr(),
+        // 5. Notifications Group
+        SettingsGroupCard(
+          title: "notifications".tr().capitalizeFirst,
           icon: appStateSettings["outlinedIcons"]
-              ? Icons.app_registration_outlined
-              : Icons.app_registration_rounded,
+              ? Icons.notifications_outlined
+              : Icons.notifications_rounded,
+          children: [
+            notificationsGlobalEnabled && getIsFullScreen(context) == false
+                ? SettingsContainerOpenPage(
+                    openPage: const NotificationsPage(),
+                    title: "notifications".tr(),
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.notifications_outlined
+                        : Icons.notifications_rounded,
+                  )
+                : const SizedBox.shrink(),
+          ],
         ),
 
-        SettingsHeader(title: "tools-and-extras".tr()),
-        // SettingsContainerOpenPage(
-        //   openPage: AutoTransactionsPage(),
-        //   title: "Auto Transactions",
-        //   icon: appStateSettings["outlinedIcons"] ? Icons.auto_fix_high_outlined : Icons.auto_fix_high_rounded,
-        // ),
-
-        appStateSettings["emailScanning"]
-            ? SettingsContainerOpenPage(
-                openPage: const AutoTransactionsPageEmail(),
-                title: "auto-email-transactions".tr(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.mark_email_unread_outlined
-                    : Icons.mark_email_unread_rounded,
-              )
-            : const SizedBox.shrink(),
-
-        appStateSettings["notificationScanningDebug"] &&
-                getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
-            ? SettingsContainerOpenPage(
-                title: "Notification Transactions",
-                openPage: const AutoTransactionsPageNotifications(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.edit_notifications_outlined
-                    : Icons.edit_notifications_rounded,
-              )
-            : const SizedBox.shrink(),
-
-        SettingsContainerOpenPage(
-          openPage: const BillSplitter(),
-          title: "bill-splitter".tr(),
+        // 6. Import & Export Data Group
+        SettingsGroupCard(
+          title: "Import & Export Data",
           icon: appStateSettings["outlinedIcons"]
-              ? Icons.summarize_outlined
-              : Icons.summarize_rounded,
-        ),
-
-        SettingsContainerOpenPage(
-          openPage: const ActivityPage(),
-          title: "transaction-activity-log".tr(),
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.ballot_outlined
-              : Icons.ballot_rounded,
-        ),
-
-        SettingsHeader(title: "import-and-export".tr()),
-
-        const ExportCSV(),
-
-        const ImportCSV(),
-
-        SettingsHeader(title: "backups".tr()),
-
-        const ExportDB(),
-
-        const ImportDB(),
-
-        GoogleAccountLoginButton(
-          isOutlinedButton: false,
-          forceButtonName: "google-drive".tr(),
+              ? Icons.swap_horiz_outlined
+              : Icons.swap_horiz_rounded,
+          children: [
+            const ExportCSV(),
+            const ImportCSV(),
+            const ExportDB(),
+            const ImportDB(),
+            GoogleAccountLoginButton(
+              isOutlinedButton: false,
+              forceButtonName: "google-drive".tr(),
+            ),
+          ],
         ),
       ],
     );
@@ -691,32 +756,78 @@ class MoreOptionsPagePreferences extends StatelessWidget {
       dragDownToDismiss: true,
       horizontalPaddingConstrained: true,
       listWidgets: [
-        SettingsHeader(title: "style".tr()),
-        const HeaderHeightSetting(),
-        const OutlinedIconsSetting(),
-        const FontPickerSetting(),
-        const AppAnimationSetting(),
-        const CountingNumberAnimationSetting(),
-        const IncreaseTextContrastSetting(),
-        SettingsHeader(title: "transactions".tr()),
-        const TransactionsSettings(),
-        SettingsHeader(title: "accounts".tr()),
-        const WalletsSettings(),
-        const PrimaryCurrencySetting(),
-        SettingsHeader(title: "budgets".tr()),
-        const BudgetSettings(),
-        SettingsHeader(title: "goals".tr()),
-        const ObjectiveSettings(),
-        SettingsHeader(title: "titles".tr()),
-        const TitlesSettings(),
-        SettingsHeader(title: "widgets".tr()),
-        const WidgetSettings(),
-        SettingsHeader(title: "formatting".tr()),
-        const NumberFormattingSetting(),
-        const PercentagePrecisionSetting(),
-        const Time24HourFormatSetting(),
-        const FirstDayOfWeekSetting(updateHomePage: true),
-        const NumberPadFormatSetting(),
+        SettingsGroupCard(
+          title: "style".tr(),
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.palette_outlined
+              : Icons.palette_rounded,
+          children: const [
+            HeaderHeightSetting(),
+            OutlinedIconsSetting(),
+            FontPickerSetting(),
+            AppAnimationSetting(),
+            CountingNumberAnimationSetting(),
+            IncreaseTextContrastSetting(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "transactions".tr(),
+          icon: navBarIconsData["transactions"]!.iconData,
+          children: const [
+            TransactionsSettings(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "accounts".tr(),
+          icon: navBarIconsData["accountDetails"]!.iconData,
+          children: const [
+            WalletsSettings(),
+            PrimaryCurrencySetting(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "budgets".tr(),
+          icon: navBarIconsData["budgetDetails"]!.iconData,
+          children: const [
+            BudgetSettings(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "goals".tr(),
+          icon: navBarIconsData["goals"]!.iconData,
+          children: const [
+            ObjectiveSettings(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "titles".tr(),
+          icon: navBarIconsData["titlesDetails"]!.iconData,
+          children: const [
+            TitlesSettings(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "widgets".tr(),
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.widgets_outlined
+              : Icons.widgets_rounded,
+          children: const [
+            WidgetSettings(),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "formatting".tr(),
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.format_list_numbered_outlined
+              : Icons.format_list_numbered_rounded,
+          children: const [
+            NumberFormattingSetting(),
+            PercentagePrecisionSetting(),
+            Time24HourFormatSetting(),
+            FirstDayOfWeekSetting(updateHomePage: true),
+            NumberPadFormatSetting(),
+          ],
+        ),
       ],
     );
   }
