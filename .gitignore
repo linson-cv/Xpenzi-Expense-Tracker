@@ -47,12 +47,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Keys
+# Keys & Firebase Configs
 /android/key.properties
 /android/app/keystore.jks
 /android/app/release.jks
 key.properties
 *.jks
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
 
 /.firebase
 .firebase/
