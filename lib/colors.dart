@@ -98,10 +98,10 @@ AppColors getAppColors(
                     ? darkenPastel(accentColor, amount: 0.83)
                     : const Color(0xFF161616),
             "lightDarkAccentHeavyLight": appStateSettings["forceFullDarkBackground"] == true
-                ? const Color(0xFF121212)
+                ? const Color(0xFF0D0D0D)
                 : lightDarkAccentHeavyLight,
             "canvasContainer": appStateSettings["forceFullDarkBackground"] == true
-                ? const Color(0xFF0F0F0F)
+                ? Colors.black
                 : const Color(0xFF242424),
             "lightDarkAccentHeavy": const Color(0xFF444444),
             "shadowColor": const Color(0x69BDBDBD),
@@ -122,12 +122,14 @@ AppColors getAppColors(
                 : const Color(0x28FFFFFF),
             "standardContainerColor": getPlatform() == PlatformOS.isIOS
                 ? themeData.colorScheme.surface
-                : appStateSettings["materialYou"]
-                    ? darkenPastel(
-                        themeData.colorScheme.secondaryContainer,
-                        amount: 0.6,
-                      )
-                    : lightDarkAccentHeavyLight,
+                : appStateSettings["forceFullDarkBackground"] == true
+                    ? const Color(0xFF0F0F0F)
+                    : appStateSettings["materialYou"]
+                        ? darkenPastel(
+                            themeData.colorScheme.secondaryContainer,
+                            amount: 0.6,
+                          )
+                        : lightDarkAccentHeavyLight,
           },
         );
 }
@@ -401,7 +403,7 @@ ColorScheme getColorScheme(Brightness brightness) {
     return ColorScheme.fromSeed(
       seedColor: getSettingConstants(appStateSettings)["accentColor"],
       brightness: Brightness.light,
-      background: appStateSettings["materialYou"]
+      surface: appStateSettings["materialYou"]
           ? lightenPastel(getSettingConstants(appStateSettings)["accentColor"],
               amount: 0.91)
           : Colors.white,
@@ -410,13 +412,13 @@ ColorScheme getColorScheme(Brightness brightness) {
     return ColorScheme.fromSeed(
       seedColor: getSettingConstants(appStateSettings)["accentColor"],
       brightness: Brightness.dark,
-      background: appStateSettings["forceFullDarkBackground"] == true
+      surface: appStateSettings["forceFullDarkBackground"] == true
           ? Colors.black
           : appStateSettings["materialYou"]
               ? darkenPastel(
                   getSettingConstants(appStateSettings)["accentColor"],
                   amount: 0.92)
-              : Colors.black,
+              : const Color(0xFF141414),
     );
   }
 }

@@ -72,7 +72,7 @@ class _NotificationPermissionBannerState
                         label: "Enable Permission",
                         icon: Icons.check_circle_rounded,
                         onTap: () async {
-                          bool status = await requestReadNotificationPermission();
+                          bool status = await requestReadNotificationPermission(context: context);
                           if (status) {
                             await updateSettings(
                                 "notificationScanning", true,

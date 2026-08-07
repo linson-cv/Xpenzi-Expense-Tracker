@@ -21,8 +21,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/pages/addButton.dart';
 
-import 'package:budget/widgets/homeQuickActionDock.dart';
-
 class HomePageWalletSwitcher extends StatelessWidget {
   const HomePageWalletSwitcher({super.key});
 
@@ -104,8 +102,6 @@ class HomePageWalletSwitcher extends StatelessWidget {
               },
             ),
           ),
-          if (appStateSettings["homeQuickActionDock"] == true)
-            const HomeQuickActionDock(),
         ],
       ),
     );

@@ -28,7 +28,6 @@ import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/showDatePicker.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart' hide SliverReorderableList;
 import 'package:flutter/material.dart' hide SliverReorderableList;
 import 'package:flutter/services.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
@@ -463,16 +462,19 @@ class _EditHomePageState extends State<EditHomePage> {
                 ],
                 updateGlobalState: false,
               );
-              await updateSettings("showWalletSwitcher", true, updateGlobalState: false);
+              await updateSettings("showWalletSwitcher", false, updateGlobalState: false);
               await updateSettings("showWalletList", true, updateGlobalState: false);
               await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
               await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
-              await updateSettings("showCreditDebt", true, updateGlobalState: false);
+              await updateSettings("showCreditDebt", false, updateGlobalState: false);
               await updateSettings("showObjectiveLoans", true, updateGlobalState: false);
               await updateSettings("showSpendingGraph", true, updateGlobalState: false);
               await updateSettings("showTransactionsList", true, updateGlobalState: false);
-              await updateSettings("showPinnedBudgets", true, updateGlobalState: false);
-              await updateSettings("showObjectives", true, updateGlobalState: true);
+              await updateSettings("showPinnedBudgets", false, updateGlobalState: false);
+              await updateSettings("showObjectives", false, updateGlobalState: false);
+              await updateSettings("showNetWorth", false, updateGlobalState: false);
+              await updateSettings("showPieChart", false, updateGlobalState: false);
+              await updateSettings("showHeatMap", false, updateGlobalState: true);
 
               if (mounted) {
                 setState(() {
@@ -634,22 +636,18 @@ class HomePageEditRowEntry extends StatelessWidget {
       currentReorder: currentReorder,
       padding:
           const EdgeInsetsDirectional.only(start: 18, end: 0, top: 16, bottom: 16),
-      extraWidget: Row(
-        children: [
-          getPlatform() == PlatformOS.isIOS
-              ? CupertinoSwitch(
-                  activeTrackColor: Theme.of(context).colorScheme.primary,
-                  value: switchValue,
-                  onChanged: (value) => toggleSwitch(),
-                )
-              : Switch(
-                  activeThumbColor: Theme.of(context).colorScheme.primary,
-                  value: switchValue,
-                  onChanged: (value) => toggleSwitch(),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-        ],
-      ),
+      extraWidget: canReorder
+          ? IconButton(
+              icon: Icon(
+                switchValue ? Icons.remove_circle : Icons.add_circle,
+                color: switchValue
+                    ? const Color(0xFFFF5252)
+                    : const Color(0xFF4CAF50),
+                size: 26,
+              ),
+              onPressed: () => toggleSwitch(),
+            )
+          : const SizedBox.shrink(),
       content: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

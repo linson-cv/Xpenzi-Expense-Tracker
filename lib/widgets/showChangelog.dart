@@ -26,6 +26,25 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.0.4 (2026-08-07)
+    (A) Fixed Pay Bill quick action to open Credit/Debt Transactions screen cleanly without stacked blank pages
+    (A) Updated developer attribution to LN.Dev & support email to nav.lin.dev@gmail.com
+    (A) Enhanced Amoled Black mode surface theme consistency across cards, scaffolds, & dialogs
+    (A) Positioned Home Quick Action Dock as floating overlay with scroll pass-through
+    (A) Resolved onboarding continuation freeze & added Google Sign-In error notification snackbars
+    (A) Refined default home page widget selection to essential sections with fixed mandatory banner
+    (A) Added home page 3-dot popup menu with direct Edit Home Screen navigation
+    (A) Replaced home screen edit toggles with green plus & red delete buttons
+    < 1.0.3 (2026-08-06)
+    (A) Added Xpenzi Intelligence with Google Gemini AI transaction parsing & prompt customizer
+    (A) Added Local Natural Language Processing (NLP) offline engine for auto-detecting bank SMS & notifications
+    (A) Added Notification Access Onboarding Banner on Home Screen for 1-tap permission setup
+    (A) Added 1-Tap "Pay Bill" shortcut on Credit Card accounts launching direct transfer entry
+    (A) Added Account Type Selector chips (Bank Account, Credit Card, Meal Card, Cash, Savings)
+    (A) Added Unified Recurring Payments & Subscriptions Hub with Monthly & Annual projections
+    (A) Added Mailbox Settings page for Google Sheets Inbox & Google Drive CSV Outbox
+    (A) Decoupled Firebase Auth to ensure 100% offline startup & independent Google Sign-In
+    (A) Fixed back navigation stack pop behavior preventing blank screen flashes
     < 1.0.2 (2026-08-06)
     (A) Added sleek floating navigation dock with configurable label visibility toggle in settings
     (A) Fixed border color fallback eliminating red outlines around floating action elements

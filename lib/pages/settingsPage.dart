@@ -479,7 +479,7 @@ class SettingsPageContent extends StatelessWidget {
                   : Icons.auto_awesome_rounded,
             ),
             SettingsContainerOpenPage(
-              openPage: const MoreOptionsPagePreferences(),
+              openPage: const ExperimentalFeaturesSubPage(),
               title: "Experimental Features",
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.science_outlined
@@ -570,7 +570,7 @@ class GeneralSettingsSubPage extends StatelessWidget {
                   ],
                   updateGlobalState: false,
                 );
-                await updateSettings("showWalletSwitcher", true, updateGlobalState: false);
+                await updateSettings("showWalletSwitcher", false, updateGlobalState: false);
                 await updateSettings("showWalletList", true, updateGlobalState: false);
                 await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
                 await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
@@ -578,8 +578,11 @@ class GeneralSettingsSubPage extends StatelessWidget {
                 await updateSettings("showObjectiveLoans", true, updateGlobalState: false);
                 await updateSettings("showSpendingGraph", true, updateGlobalState: false);
                 await updateSettings("showTransactionsList", true, updateGlobalState: false);
-                await updateSettings("showPinnedBudgets", true, updateGlobalState: false);
-                await updateSettings("showObjectives", true, updateGlobalState: true);
+                await updateSettings("showPinnedBudgets", false, updateGlobalState: false);
+                await updateSettings("showObjectives", false, updateGlobalState: false);
+                await updateSettings("showNetWorth", false, updateGlobalState: false);
+                await updateSettings("showPieChart", false, updateGlobalState: false);
+                await updateSettings("showHeatMap", false, updateGlobalState: true);
 
                 homePageStateKey.currentState?.refreshState();
                 if (context.mounted) {
@@ -1179,20 +1182,16 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
           : appStateSettings["outlinedIcons"]
               ? Icons.dark_mode_outlined
               : Icons.dark_mode_rounded,
-      initial: appStateSettings["theme"].toString() == "black" &&
-              appStateSettings["materialYou"] == false
-          ? "dark"
-          : appStateSettings["theme"].toString(),
-      items: [
+      initial: appStateSettings["theme"].toString(),
+      items: const [
         "system",
         "light",
         "dark",
-        if (appStateSettings["materialYou"] == true) "black"
+        "black",
       ],
       faintValues: [
-        if (appStateSettings["materialYou"] == true &&
-            appStateSettings["theme"].toString() == "system")
-          appStateSettings["forceFullDarkBackground"] == true ? "dark" : "black"
+        if (appStateSettings["theme"].toString() == "system")
+          appStateSettings["forceFullDarkBackground"] == true ? "black" : "dark"
       ],
       onChanged: (value) async {
         if (value == "black") {
@@ -1209,6 +1208,94 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
       getLabel: (item) {
         return item.tr();
       },
+    );
+  }
+}
+
+class ExperimentalFeaturesSubPage extends StatelessWidget {
+  const ExperimentalFeaturesSubPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageFramework(
+      title: "Experimental Features",
+      dragDownToDismiss: true,
+      listWidgets: [
+        SettingsGroupCard(
+          title: "Laboratory",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.science_outlined
+              : Icons.science_rounded,
+          children: [
+            SettingsContainerSwitch(
+              title: "Detailed Transaction Cards",
+              description: "Show multi-line layout with extra details in list views",
+              onSwitched: (value) {
+                updateSettings("nonCompactTransactions", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["nonCompactTransactions"] ?? false,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.table_rows_outlined
+                  : Icons.table_rows_rounded,
+            ),
+            SettingsContainerSwitch(
+              title: "Fade Transaction Overflows",
+              description: "Fade long title text instead of standard truncation dots",
+              onSwitched: (value) {
+                updateSettings("fadeTransactionNameOverflows", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["fadeTransactionNameOverflows"] ?? false,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.gradient_outlined
+                  : Icons.gradient_rounded,
+            ),
+            SettingsContainerSwitch(
+              title: "Circular Progress Offset",
+              description: "Align circular progress rotation with pie chart sections",
+              onSwitched: (value) {
+                updateSettings("circularProgressRotation", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["circularProgressRotation"] ?? false,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.pie_chart_outline
+                  : Icons.pie_chart_rounded,
+            ),
+            SettingsContainerSwitch(
+              title: "Subcategory Icons",
+              description: "Display subcategory icons inside transaction lists",
+              onSwitched: (value) {
+                updateSettings("showSubcategoryIcon", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["showSubcategoryIcon"] ?? false,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.category_outlined
+                  : Icons.category_rounded,
+            ),
+            SettingsContainerSwitch(
+              title: "Animated Budget Cards",
+              description: "Enable smooth animations on budget progress bars",
+              onSwitched: (value) {
+                updateSettings("animatedBudgetContainers", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["animatedBudgetContainers"] ?? true,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.animation_outlined
+                  : Icons.animation_rounded,
+            ),
+            SettingsContainerSwitch(
+              title: "FAQ & Help Shortcuts",
+              description: "Display quick help links in options menus",
+              onSwitched: (value) {
+                updateSettings("showFAQAndHelpLink", value, updateGlobalState: true);
+              },
+              initialValue: appStateSettings["showFAQAndHelpLink"] ?? true,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.help_outline
+                  : Icons.help_rounded,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -50,10 +50,41 @@ Future initNotificationScanning() async {
   }
 }
 
-Future<bool> requestReadNotificationPermission() async {
+Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
+  bool isGranted = await NotificationListenerService.isPermissionGranted();
+  if (isGranted) return true;
+
+  Completer<bool> completer = Completer<bool>();
+
+  openPopup(
+    context,
+    title: "Enable Notification Access",
+    icon: Icons.notifications_active_rounded,
+    description:
+        "Xpenzi uses notification access to auto-detect bank transaction SMS & payment alerts on your device.\n\n• 100% Private & Local processing\n• Bank & payment alerts only\n• No personal chats or sensitive data read",
+    onSubmitLabel: "Open Android Settings",
+    onCancelLabel: "Cancel",
+    onSubmit: () async {
+      popRoute(context);
+      bool status = await NotificationListenerService.requestPermission();
+      completer.complete(status);
+    },
+    onCancel: () {
+      completer.complete(false);
+    },
+  );
+
+  return completer.future;
+}
+
+Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
   bool status = await NotificationListenerService.isPermissionGranted();
   if (status != true) {
-    status = await NotificationListenerService.requestPermission();
+    if (context != null) {
+      status = await promptNotificationPermissionPopup(context);
+    } else {
+      status = await NotificationListenerService.requestPermission();
+    }
   }
   return status;
 }

@@ -21,6 +21,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/widgets/timeDigits.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -532,4 +533,69 @@ Future<bool> checkNotificationsPermissionAll() async {
     return false;
   }
   return false;
+}
+
+class NotificationListenerPermissionSetting extends StatefulWidget {
+  const NotificationListenerPermissionSetting({super.key});
+
+  @override
+  State<NotificationListenerPermissionSetting> createState() =>
+      _NotificationListenerPermissionSettingState();
+}
+
+class _NotificationListenerPermissionSettingState
+    extends State<NotificationListenerPermissionSetting> {
+  bool isPermissionGranted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future _checkStatus() async {
+    if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
+    bool status = await requestReadNotificationPermission();
+    if (mounted) {
+      setState(() {
+        isPermissionGranted = status;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) {
+      return const SizedBox.shrink();
+    }
+
+    return SettingsContainerSwitch(
+      title: "Auto-Detect Bank SMS & Payment Alerts",
+      description: isPermissionGranted
+          ? "Notification listener access granted. Xpenzi can auto-detect transaction SMS."
+          : "Tap to grant notification listener permission for auto transaction parsing.",
+      initialValue: appStateSettings["notificationScanning"] == true && isPermissionGranted,
+      icon: Icons.notifications_active_rounded,
+      onSwitched: (value) async {
+        if (value == true) {
+          bool status = await requestReadNotificationPermission(context: context);
+          if (status) {
+            await updateSettings("notificationScanning", true, updateGlobalState: true);
+            initNotificationScanning();
+          }
+          if (mounted) {
+            setState(() {
+              isPermissionGranted = status;
+            });
+          }
+        } else {
+          await updateSettings("notificationScanning", false, updateGlobalState: true);
+          notificationListenerSubscription?.cancel();
+          if (mounted) {
+            setState(() {});
+          }
+        }
+      },
+    );
+  }
 }

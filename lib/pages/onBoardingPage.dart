@@ -14,6 +14,8 @@ import 'package:budget/widgets/moreIcons.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
+import 'package:budget/widgets/openSnackbar.dart';
+import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
@@ -130,7 +132,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       popRoute(context);
     } else {
       updateSettings("hasOnboarded", true,
-          pagesNeedingRefresh: [], updateGlobalState: true);
+          pagesNeedingRefresh: [0], updateGlobalState: true, forceGlobalStateUpdate: true);
     }
   }
 
@@ -463,11 +465,22 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                         // Let's just use the functionality below this
                         // await signInAndSync(context, next: () {});
 
-                        await signInGoogle(
+                        bool signedIn = await signInGoogle(
                           context: context,
                           waitForCompletion: false,
                           next: () {},
                         );
+                        if (signedIn == false || googleUser == null) {
+                          loadingIndeterminateKey.currentState
+                              ?.setVisibility(false);
+                          openSnackbar(
+                            SnackbarMessage(
+                              title: "Error signing in with Google",
+                              icon: MoreIcons.google,
+                            ),
+                          );
+                          return;
+                        }
                         if (appStateSettings["username"] == "" &&
                             googleUser != null) {
                           updateSettings(
@@ -475,49 +488,17 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                               pagesNeedingRefresh: [0],
                               updateGlobalState: false);
                         }
-                        // If user has sync backups, but no real backups it will show up here
-                        // For now disable restoring of a backup popup, the sync backups will be restored automatically using the function call below
-                        // var result;
-                        // List<drive.File>? files = (await getDriveFiles()).$2;
-                        // if ((files?.length ?? 0) > 0) {
-                        //   result = await openPopup(
-                        //     context,
-                        //     icon: appStateSettings["outlinedIcons"] ? Icons.cloud_sync_outlined : Icons.cloud_sync_rounded,
-                        //     title: "backup-found".tr(),
-                        //     description: "backup-found-description".tr(),
-                        //     onSubmit: () {
-                        //       popRoute(context, true);
-                        //     },
-                        //     onCancel: () {
-                        //       popRoute(context, false);
-                        //     },
-                        //     onSubmitLabel: "restore".tr(),
-                        //     onCancelLabel: "cancel".tr(),
-                        //   );
-                        // }
-                        // if (result == true) {
-                        //   chooseBackup(context, hideDownloadButton: true);
-                        // } else if (result == false && googleUser != null) {
-                        //   openLoadingPopup(context);
-                        //   // set this to true so cloud functions run
-                        //   entireAppLoaded = true;
-                        //   await runAllCloudFunctions(
-                        //     context,
-                        //     forceSignIn: true,
-                        //   );
-                        //   popRoute(context);
-                        //   nextNavigation();
-                        // }
-                        // else {
-                        //   nextNavigation();
-                        // }
 
                         // set this to true so cloud functions run
                         entireAppLoaded = true;
-                        await runAllCloudFunctions(
-                          context,
-                          forceSignIn: true,
-                        );
+                        try {
+                          await runAllCloudFunctions(
+                            context,
+                            forceSignIn: true,
+                          );
+                        } catch (e) {
+                          print("Error running cloud functions: $e");
+                        }
 
                         nextNavigation();
                         loadingIndeterminateKey.currentState
@@ -527,6 +508,12 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                         print("Error signing in: $e");
                         loadingIndeterminateKey.currentState
                             ?.setVisibility(false);
+                        openSnackbar(
+                          SnackbarMessage(
+                            title: "Error signing in with Google",
+                            icon: MoreIcons.google,
+                          ),
+                        );
                       },
                     );
                   },

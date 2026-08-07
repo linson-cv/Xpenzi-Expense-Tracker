@@ -703,8 +703,8 @@ showHelpRestorePopup(BuildContext context) {
     onCancelLabel: "close".tr(),
     onSubmitLabel: "contact".tr(),
     onSubmit: () async {
-      bool openResult = await openUrl('mailto:dapperappdeveloper@gmail.com');
-      if (openResult == false) copyToClipboard("dapperappdeveloper@gmail.com");
+      bool openResult = await openUrl('mailto:nav.lin.dev@gmail.com');
+      if (openResult == false) copyToClipboard("nav.lin.dev@gmail.com");
     },
     onExtra: () =>
         openUrl("https://spendwiseapp.web.app/faq.html#restoring-purchases"),
@@ -1421,7 +1421,7 @@ class PremiumBanner extends StatelessWidget {
             borderRadius: borderRadius,
             onTap: () {
               if (kIsWeb) {
-                openUrl("https://ko-fi.com/dapperappdeveloper");
+                openUrl("mailto:nav.lin.dev@gmail.com");
               } else {
                 openContainer();
               }

@@ -114,10 +114,10 @@ class AboutPageState extends State<AboutPage> {
             const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
         child: Tappable(
           onTap: () {
-            openUrl('mailto:dapperappdeveloper@gmail.com');
+            openUrl('mailto:nav.lin.dev@gmail.com');
           },
           onLongPress: () {
-            copyToClipboard("dapperappdeveloper@gmail.com");
+            copyToClipboard("nav.lin.dev@gmail.com");
           },
           color: containerColor,
           borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
@@ -127,14 +127,14 @@ class AboutPageState extends State<AboutPage> {
             child: Column(
               children: [
                 TextFont(
-                  text: "lead-developer".tr(),
+                  text: "developer".tr(),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   textAlign: TextAlign.center,
                   maxLines: 5,
                 ),
                 TextFont(
-                  text: "James",
+                  text: "LN.Dev",
                   fontSize: 29,
                   fontWeight: FontWeight.bold,
                   textColor: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -142,7 +142,7 @@ class AboutPageState extends State<AboutPage> {
                   maxLines: 5,
                 ),
                 TextFont(
-                  text: "dapperappdeveloper@gmail.com",
+                  text: "nav.lin.dev@gmail.com",
                   fontSize: 16,
                   textAlign: TextAlign.center,
                   maxLines: 5,
@@ -150,51 +150,6 @@ class AboutPageState extends State<AboutPage> {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-      Padding(
-        padding:
-            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
-        child: Tappable(
-          onTap: () {},
-          color: containerColor,
-          borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: 13, vertical: 15),
-            child: Column(
-              children: [
-                TextFont(
-                  text: "database-designer".tr(),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                ),
-                TextFont(
-                  text: "YuYing",
-                  fontSize: 29,
-                  fontWeight: FontWeight.bold,
-                  textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      const SizedBox(height: 10),
-      Padding(
-        padding:
-            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 7),
-        child: Center(
-          child: TextFont(
-            text: "${"made-in-canada".tr()} 🍁",
-            fontSize: 14,
-            textAlign: TextAlign.center,
-            maxLines: 5,
           ),
         ),
       ),

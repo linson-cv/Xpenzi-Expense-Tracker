@@ -64,8 +64,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
             duration: const Duration(milliseconds: 300),
             child: const Column(
               children: [
+                NotificationListenerPermissionSetting(),
                 DailyNotificationsSettings(),
-                UpcomingTransactionsNotificationsSettings()
+                UpcomingTransactionsNotificationsSettings(),
               ],
             ),
           )

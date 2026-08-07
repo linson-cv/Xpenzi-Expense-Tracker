@@ -21,6 +21,7 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
+import 'package:budget/widgets/homeQuickActionDock.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/notificationPermissionBanner.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
@@ -276,17 +277,58 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 ),
                               )
                             : const SizedBox.shrink(),
-                        Tooltip(
-                          message: "edit-home".tr(),
-                          child: IconButton(
-                            padding: const EdgeInsetsDirectional.all(15),
-                            onPressed: () {
+                        PopupMenuButton<String>(
+                          icon: Icon(appStateSettings["outlinedIcons"]
+                              ? Icons.more_vert_outlined
+                              : Icons.more_vert_rounded),
+                          tooltip: "edit-home".tr(),
+                          onSelected: (value) {
+                            if (value == "edit") {
                               pushRoute(context, const EditHomePage());
-                            },
-                            icon: Icon(appStateSettings["outlinedIcons"]
-                                ? Icons.more_vert_outlined
-                                : Icons.more_vert_rounded),
-                          ),
+                            } else if (value == "settings") {
+                              pushRoute(context, const SettingsPageFramework());
+                            }
+                          },
+                          itemBuilder: (BuildContext context) {
+                            return [
+                              PopupMenuItem<String>(
+                                value: "edit",
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      appStateSettings["outlinedIcons"]
+                                          ? Icons.edit_outlined
+                                          : Icons.edit_rounded,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    TextFont(
+                                      text: "edit-home".tr(),
+                                      fontSize: 15,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem<String>(
+                                value: "settings",
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      appStateSettings["outlinedIcons"]
+                                          ? Icons.settings_outlined
+                                          : Icons.settings_rounded,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    TextFont(
+                                      text: "settings".tr(),
+                                      fontSize: 15,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ];
+                          },
                         ),
                       ],
                     ),
@@ -402,7 +444,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           : areAllDisabledAfterTransactionsList(
                                   homePageSections)
                               ? 25
-                              : 73,
+                              : 100,
                     ),
                     // Wipe all remaining pixels off - sometimes graphics artifacts are left behind
                     Container(
@@ -412,6 +454,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
+            if (appStateSettings["homeQuickActionDock"] != false)
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 10,
+                child: HomeQuickActionDock(),
+              ),
             const SelectedTransactionsAppBar(
               pageID: "0",
             ),

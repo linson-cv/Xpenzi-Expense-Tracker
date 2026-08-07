@@ -1,5 +1,7 @@
 import 'package:budget/colors.dart';
 import 'package:budget/pages/addTransactionPage.dart';
+import 'package:budget/pages/addWalletPage.dart';
+import 'package:budget/pages/creditDebtTransactionsPage.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
@@ -7,20 +9,29 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:budget/functions.dart';
 
 class HomeQuickActionDock extends StatelessWidget {
   const HomeQuickActionDock({super.key});
 
-  void _openAddTransaction(BuildContext context, {bool? selectedIncome, bool transferBalancePopup = false}) {
+  void _openAddTransaction(BuildContext context, {bool? selectedIncome}) {
     HapticFeedback.lightImpact();
-    openBottomSheet(
+    pushRoute(
       context,
-      fullSnap: true,
-      popupWithKeyboard: true,
       AddTransactionPage(
         routesToPopAfterDelete: RoutesToPopAfterDelete.None,
         selectedIncome: selectedIncome,
-        transferBalancePopup: transferBalancePopup,
+      ),
+    );
+  }
+
+  void _openTransfer(BuildContext context) {
+    HapticFeedback.lightImpact();
+    openBottomSheet(
+      context,
+      const TransferBalancePopup(
+        wallet: null,
+        allowEditWallet: true,
       ),
     );
   }
@@ -40,10 +51,17 @@ class HomeQuickActionDock extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isAmoled
-                ? const Color(0xFF262626)
-                : getColor(context, "border").withOpacity(0.3),
-            width: 1.2,
+                ? const Color(0xFF222222)
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+            width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         child: Row(
@@ -71,7 +89,7 @@ class HomeQuickActionDock extends StatelessWidget {
                 label: "Transfer",
                 icon: Icons.swap_horiz_rounded,
                 color: const Color(0xFF2196F3),
-                onTap: () => _openAddTransaction(context, transferBalancePopup: true),
+                onTap: () => _openTransfer(context),
               ),
             ),
             const SizedBox(width: 8),
@@ -80,7 +98,13 @@ class HomeQuickActionDock extends StatelessWidget {
                 label: "Pay Bill",
                 icon: Icons.credit_card_rounded,
                 color: const Color(0xFFFF9800),
-                onTap: () => _openAddTransaction(context, selectedIncome: false),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  pushRoute(
+                    context,
+                    const CreditDebtTransactions(isCredit: null),
+                  );
+                },
               ),
             ),
           ],
@@ -107,7 +131,7 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tappable(
       borderRadius: 16,
-      color: color.withOpacity(0.12),
+      color: color.withValues(alpha: 0.12),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -115,7 +139,14 @@ class _QuickActionButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 22, color: color),
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 20, color: color),
+            ),
             const SizedBox(height: 4),
             TextFont(
               text: label,
