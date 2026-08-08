@@ -11,6 +11,7 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/util/keepAliveClientMixin.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/walletEntry.dart';
+import 'package:budget/widgets/transactionEntry/incomeAmountArrow.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -92,7 +93,7 @@ class HomePageWalletList extends StatelessWidget {
 
                         bool groupByColor = appStateSettings["walletsListGroupByColor"] == true;
                         List<Widget> children = [];
-                        children.add(const SizedBox(height: 8));
+                        children.add(const SizedBox(height: 4));
 
                         if (groupByColor) {
                           Map<String, List<WalletWithDetails>> grouped = {};
@@ -108,43 +109,119 @@ class HomePageWalletList extends StatelessWidget {
                                       Provider.of<AllWallets>(context),
                                       w.wallet.currency);
                             }
+                            Color groupColor = HexColor(color,
+                                defaultColor:
+                                    Theme.of(context).colorScheme.primary);
                             children.add(
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                child: Row(
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: getColor(
+                                      context, "lightDarkAccentHeavyLight"),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: groupColor.withValues(alpha: 0.4),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: HexColor(color, defaultColor: Theme.of(context).colorScheme.primary),
-                                        shape: BoxShape.circle,
+                                    const SizedBox(height: 4),
+                                    for (var w in groupWallets)
+                                      WalletEntryRow(
+                                        selected: Provider.of<SelectedWalletPk>(
+                                                    context)
+                                                .selectedWalletPk ==
+                                            w.wallet.walletPk,
+                                        walletWithDetails: w,
+                                        closedColor: Colors.transparent,
                                       ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: TextFont(
-                                        text: "", // could be a color name if we had one, but we leave empty or say Group
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
+                                    if (groupWallets.length > 1) ...[
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        height: 1,
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        color:
+                                            groupColor.withValues(alpha: 0.3),
                                       ),
-                                    ),
-                                    TextFont(
-                                      text: convertToMoney(Provider.of<AllWallets>(context), groupTotal),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      textColor: getColor(context, "black"),
-                                    ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.only(
+                                          start: 48,
+                                          end: 18,
+                                          top: 12,
+                                          bottom: 12,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            TextFont(
+                                              text: "total".tr(),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (appStateSettings[
+                                                            "accountColorfulAmountsWithArrows"] ==
+                                                        true &&
+                                                    groupTotal != 0)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsetsDirectional.only(
+                                                            end: 4),
+                                                    child: IncomeOutcomeArrow(
+                                                      isIncome: groupTotal > 0,
+                                                      iconSize: 24,
+                                                      width: 14,
+                                                      height: 10,
+                                                    ),
+                                                  ),
+                                                TextFont(
+                                                  text: convertToMoney(
+                                                    Provider.of<AllWallets>(
+                                                        context),
+                                                    appStateSettings[
+                                                                "accountColorfulAmountsWithArrows"] ==
+                                                            true
+                                                        ? groupTotal.abs()
+                                                        : groupTotal,
+                                                  ),
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  textColor: appStateSettings[
+                                                              "accountColorfulAmountsWithArrows"] ==
+                                                          true
+                                                      ? (groupTotal == 0
+                                                          ? getColor(
+                                                              context, "black")
+                                                          : (groupTotal > 0
+                                                              ? getColor(
+                                                                  context,
+                                                                  "incomeAmount")
+                                                              : getColor(
+                                                                  context,
+                                                                  "expenseAmount")))
+                                                      : getColor(
+                                                          context, "black"),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      const SizedBox(height: 4),
+                                    ],
                                   ],
                                 ),
                               ),
                             );
-                            for (var w in groupWallets) {
-                              children.add(WalletEntryRow(
-                                selected: Provider.of<SelectedWalletPk>(context).selectedWalletPk == w.wallet.walletPk,
-                                walletWithDetails: w,
-                              ));
-                            }
                           });
                         } else {
                           for (var w in wallets) {
@@ -154,7 +231,7 @@ class HomePageWalletList extends StatelessWidget {
                             ));
                           }
                         }
-                        children.add(const SizedBox(height: 8));
+                        children.add(const SizedBox(height: 4));
 
                         return Column(
                           mainAxisSize: MainAxisSize.max,

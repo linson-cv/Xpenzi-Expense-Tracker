@@ -1,5 +1,6 @@
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addTransactionPage.dart';
+import 'package:budget/pages/premiumPage.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
@@ -213,7 +214,90 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
             padding: EdgeInsetsDirectional.only(top: 8.0),
             child: SuggestIcon(),
           ),
+          const Padding(
+            padding: EdgeInsetsDirectional.only(top: 8.0),
+            child: ProIconPackBanner(),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class ProIconPackBanner extends StatelessWidget {
+  const ProIconPackBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tappable(
+      onTap: () {
+        pushRoute(
+          context,
+          const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
+        );
+      },
+      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+      borderRadius: 15,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(
+            start: 15, end: 12, top: 12, bottom: 12),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 12),
+              child: Icon(
+                appStateSettings["outlinedIcons"]
+                    ? Icons.workspace_premium_outlined
+                    : Icons.workspace_premium_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 31,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      TextFont(
+                        text: "Pro Icon Packs",
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const TextFont(
+                          text: "PRO",
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          textColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  TextFont(
+                    text: "Unlock exclusive HD category icon collections & custom packs",
+                    fontSize: 12,
+                    textColor: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              appStateSettings["outlinedIcons"]
+                  ? Icons.chevron_right_outlined
+                  : Icons.chevron_right_rounded,
+              size: 25,
+            ),
+          ],
+        ),
       ),
     );
   }

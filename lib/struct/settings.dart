@@ -319,6 +319,71 @@ Future<void> resetLanguageToSystem(BuildContext context) async {
   );
 }
 
+Future<void> resetHomePageLayoutSettings() async {
+  List<String> defaultHomePageOrder = [
+    "walletsList",
+    "allSpendingSummary",
+    "overdueUpcoming",
+    "creditDebts",
+    "spendingGraph",
+    "transactionsList",
+    "wallets",
+    "budgets",
+    "objectiveLoans",
+    "objectives",
+    "netWorth",
+    "pieChart",
+    "heatMap",
+  ];
+  List<String> defaultHomePageOrderFullScreen = [
+    "walletsList",
+    "ORDER:LEFT",
+    "allSpendingSummary",
+    "spendingGraph",
+    "transactionsList",
+    "ORDER:RIGHT",
+    "overdueUpcoming",
+    "creditDebts",
+    "wallets",
+    "budgets",
+    "objectiveLoans",
+    "objectives",
+    "netWorth",
+    "pieChart",
+    "heatMap",
+  ];
+
+  await updateSettings("homePageOrder", defaultHomePageOrder, updateGlobalState: false);
+  await updateSettings("homePageOrderFullScreen", defaultHomePageOrderFullScreen, updateGlobalState: false);
+
+  await updateSettings("showWalletSwitcher", false, updateGlobalState: false);
+  await updateSettings("showWalletSwitcherFullScreen", false, updateGlobalState: false);
+  await updateSettings("showWalletList", true, updateGlobalState: false);
+  await updateSettings("showWalletListFullScreen", true, updateGlobalState: false);
+  await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
+  await updateSettings("showAllSpendingSummaryFullScreen", true, updateGlobalState: false);
+  await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
+  await updateSettings("showOverdueUpcomingFullScreen", true, updateGlobalState: false);
+  await updateSettings("showCreditDebt", true, updateGlobalState: false);
+  await updateSettings("showCreditDebtFullScreen", true, updateGlobalState: false);
+  await updateSettings("showObjectiveLoans", false, updateGlobalState: false);
+  await updateSettings("showObjectiveLoansFullScreen", false, updateGlobalState: false);
+  await updateSettings("showSpendingGraph", true, updateGlobalState: false);
+  await updateSettings("showSpendingGraphFullScreen", true, updateGlobalState: false);
+  await updateSettings("showTransactionsList", true, updateGlobalState: false);
+  await updateSettings("showTransactionsListFullScreen", true, updateGlobalState: false);
+  await updateSettings("showPinnedBudgets", false, updateGlobalState: false);
+  await updateSettings("showPinnedBudgetsFullScreen", false, updateGlobalState: false);
+  await updateSettings("showObjectives", false, updateGlobalState: false);
+  await updateSettings("showObjectivesFullScreen", false, updateGlobalState: false);
+  await updateSettings("showNetWorth", false, updateGlobalState: false);
+  await updateSettings("showNetWorthFullScreen", false, updateGlobalState: false);
+  await updateSettings("showPieChart", false, updateGlobalState: false);
+  await updateSettings("showPieChartFullScreen", false, updateGlobalState: false);
+  await updateSettings("showHeatMap", false, updateGlobalState: false);
+  await updateSettings("showHeatMapFullScreen", false, updateGlobalState: true);
+}
+
 // Backup user settings by creating an entry in the db
 Future backupSettings() async {
   String userSettings = sharedPreferences.getString('userSettings') ?? "";

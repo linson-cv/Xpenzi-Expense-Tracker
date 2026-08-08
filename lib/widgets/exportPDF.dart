@@ -60,12 +60,13 @@ class ExportPDF extends StatelessWidget {
         openBottomSheet(
           context,
           PopupFramework(
-            title: "export-pdf".tr(),
+            title: "Export PDF Report",
             child: ExportPDFPopup(onExport: exportPDF),
           ),
         );
       },
-      title: "export-pdf".tr(),
+      title: "Export PDF Report",
+      description: "Export transactions to a clean, printable PDF statement",
       icon: appStateSettings["outlinedIcons"]
           ? Icons.picture_as_pdf_outlined
           : Icons.picture_as_pdf_rounded,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:budget/database/tables.dart';
 import 'package:budget/main.dart';
+import 'package:budget/pages/markdownPage.dart';
 import 'package:budget/pages/subscriptionsPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
@@ -1155,7 +1156,17 @@ String cleanupNoteStringWithURLs(String text) {
   return modifiedText.trim();
 }
 
-Future<bool> openUrl(String link) async {
+Future<bool> openUrl(String link, {BuildContext? context}) async {
+  if (link.toLowerCase().endsWith(".md") ||
+      link.contains("/blob/") ||
+      (link.contains("github.com") && link.contains(".md")) ||
+      link.toLowerCase().endsWith("faq.md")) {
+    BuildContext? targetContext = context ?? navigatorKey.currentContext;
+    if (targetContext != null) {
+      pushRoute(targetContext, MarkdownPage(url: link));
+      return true;
+    }
+  }
   if (await canLaunchUrl(Uri.parse(link))) {
     return await launchUrl(
       Uri.parse(link),

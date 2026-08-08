@@ -11,6 +11,7 @@ import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
+import 'package:budget/widgets/monthSelector.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,20 +33,6 @@ class _CalendarPageState extends State<CalendarPage> {
     final now = DateTime.now();
     _focusedMonth = DateTime(now.year, now.month);
     _selectedDay = DateTime(now.year, now.month, now.day);
-  }
-
-  void _previousMonth() {
-    setState(() {
-      _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
-      _selectedDay = null;
-    });
-  }
-
-  void _nextMonth() {
-    setState(() {
-      _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1);
-      _selectedDay = null;
-    });
   }
 
   @override
@@ -109,10 +96,13 @@ class _CalendarPageState extends State<CalendarPage> {
 
               return Column(
                 children: [
-                  _MonthNavigator(
-                    focusedMonth: _focusedMonth,
-                    onPrevious: _previousMonth,
-                    onNext: _nextMonth,
+                  MonthSelector(
+                    setSelectedDateStart: (DateTime dateTime, int offset) {
+                      setState(() {
+                        _focusedMonth = DateTime(dateTime.year, dateTime.month);
+                        _selectedDay = null;
+                      });
+                    },
                   ),
                   _MonthlySummary(
                     income: monthIncome,
@@ -162,69 +152,7 @@ class _DayTotals {
   double get net => income - expense;
 }
 
-// ── Month Navigator ──────────────────────────────────────────────────────────
-
-class _MonthNavigator extends StatelessWidget {
-  const _MonthNavigator({
-    required this.focusedMonth,
-    required this.onPrevious,
-    required this.onNext,
-  });
-  final DateTime focusedMonth;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = DateFormat(
-      "MMMM yyyy",
-      context.locale.toLanguageTag(),
-    ).format(focusedMonth);
-
-    return Padding(
-      padding:
-          const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Tappable(
-            color: Colors.transparent,
-            onTap: onPrevious,
-            borderRadius: 50,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(
-                appStateSettings["outlinedIcons"]
-                    ? Icons.chevron_left_outlined
-                    : Icons.chevron_left_rounded,
-                size: 28,
-              ),
-            ),
-          ),
-          TextFont(
-            text: label,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-          Tappable(
-            color: Colors.transparent,
-            onTap: onNext,
-            borderRadius: 50,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(
-                appStateSettings["outlinedIcons"]
-                    ? Icons.chevron_right_outlined
-                    : Icons.chevron_right_rounded,
-                size: 28,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── Monthly Summary ──────────────────────────────────────────────────────────
 
 // ── Monthly Summary ──────────────────────────────────────────────────────────
 
@@ -240,90 +168,75 @@ class _MonthlySummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final net = income - expense;
-    return Padding(
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: 13),
-      child: Container(
-        decoration: BoxDecoration(
-          color: getColor(context, "lightDarkAccentHeavyLight"),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: boxShadowCheck(boxShadowGeneral(context)),
-        ),
-        padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: 20, vertical: 14),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _SummaryChip(
-              label: "income".tr(),
-              amount: income,
-              allWallets: allWallets,
-              isPositive: true,
-            ),
-            Container(
-              width: 1,
-              height: 36,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            _SummaryChip(
-              label: "expense".tr(),
-              amount: expense,
-              allWallets: allWallets,
-              isPositive: false,
-            ),
-            Container(
-              width: 1,
-              height: 36,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            _SummaryChip(
-              label: "net".tr(),
-              amount: net,
-              allWallets: allWallets,
-              isPositive: net >= 0,
-            ),
-          ],
+    final double net = income - expense;
+    return Container(
+      margin: const EdgeInsetsDirectional.symmetric(horizontal: 13, vertical: 4),
+      padding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
         ),
       ),
-    );
-  }
-}
-
-class _SummaryChip extends StatelessWidget {
-  const _SummaryChip({
-    required this.label,
-    required this.amount,
-    required this.allWallets,
-    required this.isPositive,
-  });
-  final String label;
-  final double amount;
-  final AllWallets allWallets;
-  final bool isPositive;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        TextFont(
-          text: label,
-          fontSize: 12,
-          textColor: Theme.of(context)
-              .colorScheme
-              .onSurface
-              .withValues(alpha: 0.6),
-        ),
-        const SizedBox(height: 3),
-        TextFont(
-          text: convertToMoney(allWallets, amount.abs()),
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          textColor: isPositive
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.error,
-        ),
-      ],
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          // Expense (Red arrow down)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.arrow_drop_down_rounded,
+                color: Theme.of(context).colorScheme.error,
+                size: 22,
+              ),
+              TextFont(
+                text: convertToMoney(allWallets, expense),
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                textColor: Theme.of(context).colorScheme.error,
+              ),
+            ],
+          ),
+          // Income (Green arrow up)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.arrow_drop_up_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
+              TextFont(
+                text: convertToMoney(allWallets, income),
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                textColor: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+          ),
+          // Balance / Net (= amount)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const TextFont(
+                text: "= ",
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              TextFont(
+                text: "${net < 0 ? '-' : ''}${convertToMoney(allWallets, net.abs())}",
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                textColor: net >= 0
+                    ? Theme.of(context).colorScheme.onSurface
+                    : Theme.of(context).colorScheme.error,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -346,10 +259,24 @@ class _CalendarGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final int daysInMonth =
         DateTime(focusedMonth.year, focusedMonth.month + 1, 0).day;
-    final int startWeekday =
-        DateTime(focusedMonth.year, focusedMonth.month, 1).weekday - 1;
+
+    final int firstDayOfWeek = appStateSettings["firstDayOfWeek"] == -1
+        ? MaterialLocalizations.of(context).firstDayOfWeekIndex
+        : (int.tryParse(appStateSettings["firstDayOfWeek"].toString()) ?? 0);
+
+    final DateTime firstOfMonth =
+        DateTime(focusedMonth.year, focusedMonth.month, 1);
+    final int firstWeekdayIndex = firstOfMonth.weekday % 7; // 0 for Sun, 1 for Mon...
+    final int startWeekday = (firstWeekdayIndex - firstDayOfWeek + 7) % 7;
     final DateTime today = DateTime.now();
-    final List<String> weekLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+    List<String> weekLabels = [];
+    for (int i = 0; i < 7; i++) {
+      int dayIndex = (firstDayOfWeek + i) % 7;
+      DateTime dateForDayName = DateTime(2023, 1, 1 + dayIndex); // 2023-01-01 was a Sunday
+      String name = DateFormat.E(context.locale.toLanguageTag()).format(dateForDayName);
+      weekLabels.add(name);
+    }
 
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 13),
@@ -367,7 +294,7 @@ class _CalendarGrid extends StatelessWidget {
                         textColor: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withValues(alpha: 0.5),
+                            .withOpacity(0.5),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -381,9 +308,9 @@ class _CalendarGrid extends StatelessWidget {
             shrinkWrap: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              childAspectRatio: 0.85,
-              mainAxisSpacing: 2,
-              crossAxisSpacing: 2,
+              childAspectRatio: 0.76,
+              mainAxisSpacing: 3,
+              crossAxisSpacing: 3,
             ),
             itemCount: startWeekday + daysInMonth,
             itemBuilder: (context, index) {
@@ -433,52 +360,92 @@ class _DayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final allWallets = Provider.of<AllWallets>(context);
     final Color bgColor = isSelected
         ? Theme.of(context).colorScheme.primary
         : isToday
-            ? Theme.of(context).colorScheme.primaryContainer
+            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.6)
             : getColor(context, "lightDarkAccentHeavyLight");
     final Color textColor = isSelected
         ? Theme.of(context).colorScheme.onPrimary
         : Theme.of(context).colorScheme.onSurface;
     final bool hasTx = totals != null;
-    Color? dotColor;
+
+    double displayAmount = 0;
     if (hasTx) {
-      dotColor = (totals!.net >= 0)
-          ? Theme.of(context).colorScheme.primary
-          : Theme.of(context).colorScheme.error;
+      displayAmount = totals!.expense > 0 ? totals!.expense : totals!.income;
     }
+    String amountStr = convertToMoney(allWallets, displayAmount, forceCompactNumberFormatter: true);
 
     return Tappable(
       color: bgColor,
       borderRadius: 12,
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(3),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextFont(
               text: "$day",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: (isToday || isSelected)
                   ? FontWeight.bold
                   : FontWeight.normal,
               textColor: textColor,
             ),
-            if (hasTx) ...[
-              const SizedBox(height: 2),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? textColor.withValues(alpha: 0.7)
-                      : dotColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
+            const SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (hasTx && totals!.income > 0)
+                  Container(
+                    width: 5,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? textColor.withOpacity(0.8)
+                          : Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                if (hasTx && totals!.expense > 0)
+                  Container(
+                    width: 5,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? textColor.withOpacity(0.8)
+                          : Theme.of(context).colorScheme.error,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                if (!hasTx)
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? textColor.withOpacity(0.4)
+                          : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.4),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            TextFont(
+              text: amountStr,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              textColor: isSelected
+                  ? textColor.withOpacity(0.9)
+                  : (hasTx && totals!.expense > 0)
+                      ? Theme.of(context).colorScheme.error.withOpacity(0.85)
+                      : textColor.withOpacity(0.5),
+            ),
           ],
         ),
       ),

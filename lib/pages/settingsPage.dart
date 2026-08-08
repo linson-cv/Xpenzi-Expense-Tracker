@@ -17,7 +17,6 @@ import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
-import 'package:budget/widgets/dropdownSelect.dart';
 import 'package:budget/widgets/exportDB.dart';
 import 'package:budget/widgets/exportPDF.dart';
 import 'package:budget/widgets/importCSV.dart';
@@ -84,6 +83,7 @@ class MoreActionsPage extends StatefulWidget {
 
 class MoreActionsPageState extends State<MoreActionsPage> {
   GlobalKey<PageFrameworkState> pageState = GlobalKey();
+  String searchValue = "";
 
   void refreshState() {
     print("refresh settings");
@@ -99,34 +99,30 @@ class MoreActionsPageState extends State<MoreActionsPage> {
     return OrientationBuilder(builder: (context, _) {
       return PageFramework(
         key: pageState,
-        title: "more-actions".tr(),
+        title: "settings".tr(),
         backButton: false,
         horizontalPaddingConstrained: true,
-        actions: [
-          CustomPopupMenuButton(
-            showButtons: true,
-            keepOutFirst: true,
-            items: [
-              if (appStateSettings["showFAQAndHelpLink"] == true)
-                DropdownItemMenu(
-                  id: "open-faq",
-                  label: "faq".tr(),
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.live_help_outlined
-                      : Icons.live_help_rounded,
-                  action: () {
-                    openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md");
-                  },
-                ),
-            ],
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 10, end: 10),
+              child: TextInput(
+                labelText: "Find settings, preferences & features...",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.search_outlined
+                    : Icons.search_rounded,
+                onChanged: (value) {
+                  setState(() {
+                    searchValue = value.toLowerCase();
+                  });
+                },
+                autoFocus: false,
+              ),
+            ),
           ),
-        ],
-        listWidgets: const [
-          Padding(
-            padding: EdgeInsetsDirectional.only(bottom: 8.0),
-            child: PremiumBanner(),
+          SliverToBoxAdapter(
+            child: SettingsPageContent(searchValue: searchValue),
           ),
-          MorePages()
         ],
       );
     });
@@ -362,7 +358,7 @@ Future<String> enterNameBottomSheet(context,
         nextWithInput: (text) {
           updateSettings("username", text.trim(),
               pagesNeedingRefresh: updatePageWhenSet ? [0] : [],
-              updateGlobalState: false);
+              updateGlobalState: true);
         },
         selectedText: appStateSettings["username"],
         placeholder: "nickname".tr(),
@@ -397,7 +393,7 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
           child: Padding(
             padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 15, end: 15),
             child: TextInput(
-              labelText: "search-settings".tr(),
+              labelText: "Find settings, preferences & features...",
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.search_outlined
                   : Icons.search_rounded,
@@ -422,10 +418,79 @@ class SettingsPageContent extends StatelessWidget {
   const SettingsPageContent({super.key, this.searchValue = ""});
   final String searchValue;
 
-  bool _match(String title, String description) {
+  bool _fuzzyMatch(String target, String token) {
+    if (target.contains(token) || token.contains(target)) return true;
+    if (token.length >= 4 && target.length >= 4) {
+      if (target.startsWith(token.substring(0, 3))) return true;
+    }
+    return false;
+  }
+
+  bool _match(String title, String description, [List<String> keywords = const []]) {
     if (searchValue.trim().isEmpty) return true;
-    return title.toLowerCase().contains(searchValue.trim()) ||
-           description.toLowerCase().contains(searchValue.trim());
+    String rawQuery = searchValue.trim().toLowerCase();
+    List<String> queryTokens =
+        rawQuery.split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+    if (queryTokens.isEmpty) return true;
+
+    List<String> pool = [
+      title.toLowerCase(),
+      description.toLowerCase(),
+      ...keywords.map((k) => k.toLowerCase()),
+    ];
+
+    Set<String> expandedQueryTokens = Set.from(queryTokens);
+    for (String token in queryTokens) {
+      if (["password", "passcode", "auth", "pin", "finger", "face", "security", "protect", "lock", "login"].contains(token)) {
+        expandedQueryTokens.addAll(["biometric", "biometrics", "pin", "lock", "security"]);
+      }
+      if (["color", "colour", "dark", "light", "appearance", "skin", "ui", "look", "night", "day", "mode"].contains(token)) {
+        expandedQueryTokens.addAll(["theme", "style", "color", "accent", "outlined"]);
+      }
+      if (["money", "dollar", "rupee", "euro", "forex", "cash", "account", "wallet", "symbol"].contains(token)) {
+        expandedQueryTokens.addAll(["currency", "formatting", "exchange"]);
+      }
+      if (["words", "speech", "translate", "i18n", "dictionary", "dialect", "talk"].contains(token)) {
+        expandedQueryTokens.addAll(["language", "locale", "translation"]);
+      }
+      if (["export", "download", "save", "sync", "cloud", "drive", "excel", "file", "dump"].contains(token)) {
+        expandedQueryTokens.addAll(["backup", "import", "csv", "pdf"]);
+      }
+      if (["notice", "notify", "alarm", "schedule", "alert", "ping", "bell", "remind"].contains(token)) {
+        expandedQueryTokens.addAll(["notification", "reminder", "daily"]);
+      }
+      if (["reset", "clear", "revert", "factory", "default", "restore"].contains(token)) {
+        expandedQueryTokens.addAll(["reset home", "default layout"]);
+      }
+      if (["dock", "bar", "navigation", "nav", "bottom", "float", "label"].contains(token)) {
+        expandedQueryTokens.addAll(["floating", "dock", "navbar"]);
+      }
+      if (["vibrate", "touch", "haptic", "press", "pad", "number", "numpad"].contains(token)) {
+        expandedQueryTokens.addAll(["haptic", "vibration", "feedback"]);
+      }
+      if (["user", "name", "profile", "nick", "who", "avatar", "me"].contains(token)) {
+        expandedQueryTokens.addAll(["username", "profile", "name", "greeting"]);
+      }
+      if (["auto", "automated", "bot", "gmail", "scan", "parser", "email", "mail"].contains(token)) {
+        expandedQueryTokens.addAll(["automation", "mail", "ai"]);
+      }
+      if (["split", "bill", "divide", "share", "group", "check", "tab"].contains(token)) {
+        expandedQueryTokens.addAll(["bill", "splitter"]);
+      }
+      if (["beta", "test", "experiment", "trial", "secret", "lab"].contains(token)) {
+        expandedQueryTokens.addAll(["experimental", "beta"]);
+      }
+    }
+
+    for (String qToken in expandedQueryTokens) {
+      for (String item in pool) {
+        if (item.contains(qToken) || _fuzzyMatch(item, qToken)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -437,7 +502,9 @@ class SettingsPageContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AnimatedExpanded(
-            expand: _match("General Settings", "Biometric lock, haptic feedback, edit data"),
+            expand: _match("General Settings", "Biometric lock, haptic feedback, edit data", [
+              "general", "preferences", "biometric", "biometrics", "fingerprint", "face id", "lock", "passcode", "pin", "security", "haptic", "feedback", "vibration", "edit home", "widgets", "layout", "floating", "dock", "navbar", "navigation bar", "labels", "reset home", "default layout"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -453,7 +520,9 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("Theme & Style", "Theme color, icon style, animations, font"),
+            expand: _match("Theme & Style", "Theme color, icon style, animations, font", [
+              "theme", "style", "appearance", "dark mode", "light mode", "color", "accent", "outlined", "icons", "font", "typography", "animation", "animations", "count up", "black background", "palette"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -469,7 +538,9 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("Transactions", "New transaction, scheduled transactions"),
+            expand: _match("Transactions", "New transaction, scheduled transactions", [
+              "transaction", "transactions", "auto pay", "automatic", "subscriptions", "recurring", "repetitive", "upcoming", "compact", "title", "note", "layout"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -483,7 +554,9 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("Localization & Formatting", "Language, currency, formatting"),
+            expand: _match("Localization & Formatting", "Language, currency, formatting", [
+              "localization", "formatting", "language", "locale", "translation", "currency", "currencies", "exchange rate", "24-hour", "time format", "format", "decimals"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -499,7 +572,9 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("Notifications", "Daily & upcoming transaction reminders"),
+            expand: _match("Notifications", "Daily & upcoming transaction reminders", [
+              "notification", "notifications", "reminder", "reminders", "daily", "upcoming", "alert"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -515,7 +590,9 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("Import & Export Data", "Import CSV, backup data"),
+            expand: _match("Import & Export Data", "Import CSV, backup data", [
+              "import", "export", "csv", "pdf", "backup", "restore", "google drive", "data", "file"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -531,7 +608,9 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("about-app".tr(namedArgs: {"app": globalAppName}), "App version, changelog, licensing info"),
+            expand: _match("about-app".tr(namedArgs: {"app": globalAppName}), "App version, changelog, licensing info", [
+              "about", "version", "changelog", "license", "licensing", "app info"
+            ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -549,9 +628,9 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Intelligent & Automation", "") || 
-                    _match("Advanced Automation", "") || 
-                    _match("Xpenzi Intelligence", ""),
+                    _match("Intelligent & Automation", "", ["ai", "automation", "mail", "email", "gemini", "read emails", "parse"]) || 
+                    _match("Advanced Automation", "", ["mail", "email", "automation", "read emails", "parse"]) || 
+                    _match("Xpenzi Intelligence", "", ["ai", "intelligence", "gemini", "smart", "assistant"]),
             child: Column(
               children: [
                 const SizedBox(height: 8),
@@ -562,7 +641,7 @@ class SettingsPageContent extends StatelessWidget {
                       : Icons.auto_awesome_rounded,
                   children: [
                     AnimatedExpanded(
-                      expand: _match("Intelligent & Automation", "") || _match("Advanced Automation", ""),
+                      expand: _match("Intelligent & Automation", "") || _match("Advanced Automation", "", ["mail", "email", "automation", "read emails", "parse"]),
                       child: SettingsContainerOpenPage(
                         openPage: const AutoTransactionsPageEmail(),
                         title: "Advanced Automation",
@@ -572,7 +651,7 @@ class SettingsPageContent extends StatelessWidget {
                       ),
                     ),
                     AnimatedExpanded(
-                      expand: _match("Intelligent & Automation", "") || _match("Xpenzi Intelligence", ""),
+                      expand: _match("Intelligent & Automation", "") || _match("Xpenzi Intelligence", "", ["ai", "intelligence", "gemini", "smart", "assistant"]),
                       child: SettingsContainerOpenPage(
                         openPage: const AiSettingsPage(),
                         title: "Xpenzi Intelligence",
@@ -589,8 +668,8 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Permissions", "") || 
-                    _match("Device Permissions", ""),
+                    _match("Permissions", "", ["permission", "permissions", "security", "device", "access"]) || 
+                    _match("Device Permissions", "", ["permission", "permissions", "security", "device", "access"]),
             child: SettingsGroupCard(
               title: "Permissions",
               icon: appStateSettings["outlinedIcons"]
@@ -598,7 +677,7 @@ class SettingsPageContent extends StatelessWidget {
                   : Icons.security_rounded,
               children: [
                 AnimatedExpanded(
-                  expand: _match("Permissions", "") || _match("Device Permissions", ""),
+                  expand: _match("Permissions", "") || _match("Device Permissions", "", ["permission", "permissions", "security", "device", "access"]),
                   child: SettingsContainerOpenPage(
                     openPage: const PermissionsSettingsSubPage(),
                     title: "Device Permissions",
@@ -613,9 +692,9 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Tools & Extras", "") || 
-                    _match("Bill Splitter", "") || 
-                    _match("Experimental Features", ""),
+                    _match("Tools & Extras", "", ["bill", "splitter", "experimental", "beta", "labs"]) || 
+                    _match("Bill Splitter", "", ["bill", "splitter", "split", "divide bill", "group bill"]) || 
+                    _match("Experimental Features", "", ["experimental", "beta", "labs", "test", "features"]),
             child: SettingsGroupCard(
               title: "Tools & Extras",
               icon: appStateSettings["outlinedIcons"]
@@ -623,7 +702,7 @@ class SettingsPageContent extends StatelessWidget {
                   : Icons.extension_rounded,
               children: [
                 AnimatedExpanded(
-                  expand: _match("Tools & Extras", "") || _match("Bill Splitter", ""),
+                  expand: _match("Tools & Extras", "") || _match("Bill Splitter", "", ["bill", "splitter", "split", "divide bill", "group bill"]),
                   child: SettingsContainerOpenPage(
                     openPage: const BillSplitter(),
                     title: "Bill Splitter",
@@ -633,7 +712,7 @@ class SettingsPageContent extends StatelessWidget {
                   ),
                 ),
                 AnimatedExpanded(
-                  expand: _match("Tools & Extras", "") || _match("Experimental Features", ""),
+                  expand: _match("Tools & Extras", "") || _match("Experimental Features", "", ["experimental", "beta", "labs", "test", "features"]),
                   child: SettingsContainerOpenPage(
                     openPage: const ExperimentalFeaturesSubPage(),
                     title: "Experimental Features",
@@ -671,6 +750,19 @@ class GeneralSettingsSubPage extends StatelessWidget {
               ? Icons.tune_outlined
               : Icons.tune_rounded,
           children: [
+            SettingsContainer(
+              title: "username".tr(),
+              description: appStateSettings["username"] == null ||
+                      appStateSettings["username"] == ""
+                  ? "Set display name for greetings"
+                  : appStateSettings["username"].toString(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.person_outlined
+                  : Icons.person_rounded,
+              onTap: () async {
+                await enterNameBottomSheet(context);
+              },
+            ),
             const BiometricsSettingToggle(),
             const NumberPadHapticFeedbackSetting(),
             SettingsContainerOpenPage(
@@ -710,39 +802,7 @@ class GeneralSettingsSubPage extends StatelessWidget {
                   ? Icons.restart_alt_outlined
                   : Icons.restart_alt_rounded,
               onTap: () async {
-                await updateSettings(
-                  "homePageOrder",
-                  [
-                    "wallets",
-                    "walletsList",
-                    "allSpendingSummary",
-                    "overdueUpcoming",
-                    "creditDebts",
-                    "objectiveLoans",
-                    "spendingGraph",
-                    "transactionsList",
-                    "budgets",
-                    "objectives",
-                    "netWorth",
-                    "pieChart",
-                    "heatMap",
-                  ],
-                  updateGlobalState: false,
-                );
-                await updateSettings("showWalletSwitcher", false, updateGlobalState: false);
-                await updateSettings("showWalletList", true, updateGlobalState: false);
-                await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
-                await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
-                await updateSettings("showCreditDebt", true, updateGlobalState: false);
-                await updateSettings("showObjectiveLoans", true, updateGlobalState: false);
-                await updateSettings("showSpendingGraph", true, updateGlobalState: false);
-                await updateSettings("showTransactionsList", true, updateGlobalState: false);
-                await updateSettings("showPinnedBudgets", false, updateGlobalState: false);
-                await updateSettings("showObjectives", false, updateGlobalState: false);
-                await updateSettings("showNetWorth", false, updateGlobalState: false);
-                await updateSettings("showPieChart", false, updateGlobalState: false);
-                await updateSettings("showHeatMap", false, updateGlobalState: true);
-
+                await resetHomePageLayoutSettings();
                 homePageStateKey.currentState?.refreshState();
                 if (context.mounted) {
                   openSnackbar(
@@ -2526,21 +2586,13 @@ class NumberPadHapticFeedbackSetting extends StatelessWidget {
   final bool enableBorderRadius;
   @override
   Widget build(BuildContext context) {
-    return SettingsContainerSwitch(
-      enableBorderRadius: enableBorderRadius,
+    return SettingsContainerOpenPage(
+      openPage: const HapticFeedbackSettingsSubPage(),
       title: "haptic-feedback".tr(),
+      description: "Customize touch vibrations per action & triggers",
       icon: appStateSettings["outlinedIcons"]
           ? Icons.vibration_outlined
           : Symbols.vibration_rounded,
-      initialValue: appStateSettings["numberPadHapticFeedback"] == true,
-      onSwitched: (value) async {
-        if (value == true) HapticFeedback.heavyImpact();
-        await updateSettings(
-          "numberPadHapticFeedback",
-          value,
-          updateGlobalState: false,
-        );
-      },
     );
   }
 }
@@ -2578,9 +2630,140 @@ class PercentagePrecisionSetting extends StatelessWidget {
   }
 }
 
+class HapticFeedbackSettingsSubPage extends StatelessWidget {
+  const HapticFeedbackSettingsSubPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageFramework(
+      title: "haptic-feedback".tr(),
+      dragDownToDismiss: true,
+      listWidgets: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: SettingsContainerOutlined(
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.info_outline
+                : Icons.info_rounded,
+            title: "Haptic Feedback & Trigger Conditions",
+            description:
+                "Vibration effects occur dynamically during key app actions. Ensure Touch Haptics are enabled in your device's System Settings for vibrations to function.",
+          ),
+        ),
+        SettingsGroupCard(
+          title: "Customizable Actions",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.vibration_outlined
+              : Symbols.vibration_rounded,
+          children: [
+            SettingsContainerSwitch(
+              title: "Number Pad & Keypad",
+              description:
+                  "Vibrates when typing digits or backspace on the amount keypad",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.pin_outlined
+                  : Icons.pin_rounded,
+              initialValue: appStateSettings["numberPadHapticFeedback"] == true,
+              onSwitched: (value) async {
+                if (value == true) HapticFeedback.heavyImpact();
+                await updateSettings("numberPadHapticFeedback", value,
+                    updateGlobalState: false);
+              },
+            ),
+            SettingsContainerSwitch(
+              title: "Saving Transactions & Data",
+              description:
+                  "Vibrates upon successfully saving or adding entries",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.save_outlined
+                  : Icons.save_rounded,
+              initialValue: appStateSettings["savingHapticFeedback"] == true,
+              onSwitched: (value) async {
+                if (value == true) HapticFeedback.lightImpact();
+                await updateSettings("savingHapticFeedback", value,
+                    updateGlobalState: false);
+              },
+            ),
+            SettingsContainerSwitch(
+              title: "Tab & Dock Navigation",
+              description:
+                  "Vibrates when switching bottom navigation tabs or dock items",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.tab_outlined
+                  : Icons.tab_rounded,
+              initialValue:
+                  appStateSettings["tabNavigationHapticFeedback"] == true,
+              onSwitched: (value) async {
+                if (value == true) HapticFeedback.mediumImpact();
+                await updateSettings("tabNavigationHapticFeedback", value,
+                    updateGlobalState: false);
+              },
+            ),
+            SettingsContainerSwitch(
+              title: "Popups & Drag Dismissal",
+              description:
+                  "Vibrates when pulling down or closing bottom sheets and popups",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.swipe_down_outlined
+                  : Icons.swipe_down_rounded,
+              initialValue:
+                  appStateSettings["closeNavigationHapticFeedback"] == true,
+              onSwitched: (value) async {
+                if (value == true) HapticFeedback.selectionClick();
+                await updateSettings("closeNavigationHapticFeedback", value,
+                    updateGlobalState: false);
+              },
+            ),
+            SettingsContainerSwitch(
+              title: "Buttons & Selection Taps",
+              description:
+                  "Vibrates when pressing buttons or selecting items",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.touch_app_outlined
+                  : Icons.touch_app_rounded,
+              initialValue: appStateSettings["buttonPressHapticFeedback"] == true,
+              onSwitched: (value) async {
+                if (value == true) HapticFeedback.selectionClick();
+                await updateSettings("buttonPressHapticFeedback", value,
+                    updateGlobalState: false);
+              },
+            ),
+            SettingsContainerSwitch(
+              title: "Delete & Destructive Actions",
+              description:
+                  "Vibrates when deleting entries, categories, or accounts",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.delete_outline
+                  : Icons.delete_rounded,
+              initialValue: appStateSettings["deleteActionHapticFeedback"] == true,
+              onSwitched: (value) async {
+                if (value == true) HapticFeedback.heavyImpact();
+                await updateSettings("deleteActionHapticFeedback", value,
+                    updateGlobalState: false);
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 void savingHapticFeedback() {
   if (appStateSettings["savingHapticFeedback"] == true) {
     HapticFeedback.lightImpact();
+  }
+}
+
+void deleteHapticFeedback() {
+  if (appStateSettings["deleteActionHapticFeedback"] == true) {
+    HapticFeedback.heavyImpact();
+  }
+}
+
+void buttonPressHapticFeedback() {
+  if (appStateSettings["buttonPressHapticFeedback"] == true) {
+    HapticFeedback.selectionClick();
   }
 }
 

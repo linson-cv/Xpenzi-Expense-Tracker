@@ -22,36 +22,51 @@ Xpenzi: Expense Tracker is a full-fledged, feature-rich application designed to 
 - Search and Filters: Easily search and filter transactions based on various criteria such as date, category, amount, or custom tags, enabling quick access to information.
 - Easy Editing: Long-press and swipe to select multiple budgets, edit accordingly as needed or delete multiple at once.
 
-### 💱 Financial Flexibility
+### 💱 Financial Flexibility & Multi-Currency Tools
 
-- Multiple Currencies and Accounts: Manage finances across different currencies and accounts with up-to-date conversion rates for accurate calculations and effortless currency conversions. The interface shows the original amount added and the converted amount to the selected account.
-- Switch Accounts and Currencies with Ease: On the homepage, easily select a different account and currency and everything will be converted automatically in an instant.
+- **Multiple Currencies and Accounts**: Manage finances across different currencies and accounts with up-to-date conversion rates for accurate calculations and effortless currency conversions.
+- **Live Currency Converter on Amount Keypad**: Convert foreign payments on the fly directly inside the transaction amount keypad with intelligent search filtering by **Country Name**, **Currency Code**, and **Currency Name**.
+- **Group by Color Account Layout**: Group accounts and wallets into color-tinted card containers with horizontal dividers, aligned total summary rows, and income/outcome indicators.
+- **Account Type Visual Icons**: Easily distinguish wallets with automatic account type icons (Bank, Credit Card, Meal Card, Cash, Savings).
+
+### 🔍 Intelligent Deep & Fuzzy Search
+
+- **Deep & Synonym Settings Search**: Search settings, options, and preferences with instant synonym expansion and prefix token matching (e.g. searching `"passcode"`, `"fingerprint"`, `"color"`, `"revert"`, `"excel"`, `"gmail"` matches corresponding feature cards).
+
+### 📳 Customizable Per-Action Haptic Feedback
+
+- **Per-Action Vibration Feedback**: Granular haptic feedback toggles for Number Pad, Saving entries, Tab navigation, Popup dismissal, Button taps, and Delete warning actions, fully backed by OS hardware permissions.
+
+### 📄 Export PDF Reports & Data Backup
+
+- **High-Quality PDF Reports**: Generate and export printable PDF transaction statements with customizable date ranges and wallet filters.
+- **Cross-Platform Compatibility**: Full import/export support for Cashew `.json` and `.csv` files.
 
 ### 🔒 Enhanced Security and Accessibility
 
-- Biometric Lock: Secure budget data using biometric authentication, adding an extra layer of privacy.
-- Google Login: Conveniently log in to the app using your Google account, ensuring a streamlined and hassle-free authentication process.
+- **Biometric Lock**: Secure budget data using biometric authentication, adding an extra layer of privacy.
+- **Prominent User Profile**: Easily set display name for home screen greetings and personalized financial tracking.
+- **Google Login**: Conveniently log in to the app using your Google account.
 
 ### 🎨 User Experience and Design
 
-- Material You Design: Enjoy a visually appealing and modern interface, following the principles of Material You design for a delightful user experience.
-- Custom Accent Color: Personalize the app by selecting a custom accent color that suits your style, or follow that of the system.
-- Light and Dark Mode: Seamlessly switch between light and dark themes to optimize visibility and reduce eye strain.
-- Customizable Home Screen: Tailor the home screen layout and widgets to display the financial information that matters most to you, providing a personalized and efficient dashboard.
-- Detailed Graph Visuals: Gain valuable insights into spending patterns through detailed and interactive graphs, visualizing financial data at a glance.
-- Beautiful Adaptive UI: A responsive user interface that adapts flawlessly to both web and mobile platforms, providing an immersive and consistent user experience across devices.
+- **Material You Design**: Enjoy a visually appealing and modern interface following Material 3 design principles.
+- **Synchronized Home Page Layout**: Consistent layout reset logic between initial app launch and reset actions.
+- **Custom Accent Color**: Personalize the app by selecting a custom accent color or dynamic system color palette.
+- **Light and Dark Mode**: Seamlessly switch between light and dark themes to optimize visibility and reduce eye strain.
+- **Customizable Home Screen**: Tailor the home screen layout and widgets to display the financial information that matters most to you.
+- **Detailed Graph Visuals**: Gain valuable insights into spending patterns through detailed and interactive graphs.
 
 ### ☁ Backup and Syncing
 
-- Cross-Device Sync: Keep budget data synchronized across all devices, ensuring access to financial information wherever you go.
-- Google Drive Backup: Safeguard budget data by utilizing Google Drive's backup functionality, allowing easy restoration of data if needed.
+- **Cross-Device Sync**: Keep budget data synchronized across all devices.
+- **Google Drive Backup**: Safeguard budget data by utilizing Google Drive's backup functionality.
 
 ### 💿 Smart Automation
 
-- Notifications: Stay informed about important financial events and receive timely reminders for budget goals, transactions, and upcoming due dates.
-- Import CSV Files: Seamlessly import financial data by uploading CSV files, facilitating a smooth transition from other applications or platforms.
-- Import Google Sheets: Seamlessly import Google Sheets tables, quickly importing many transactions from a spreadsheet.
-- App Links: Automatically create transactions with pre-filled data using app linking.
+- **Notifications**: Stay informed about important financial events and receive timely reminders for budget goals, transactions, and upcoming due dates.
+- **Import CSV & Google Sheets**: Seamlessly import financial data by uploading CSV files or connecting Google Sheets tables.
+- **App Links**: Automatically create transactions with pre-filled data using app linking.
 
 ---
 

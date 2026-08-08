@@ -17,6 +17,7 @@ import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -135,6 +136,48 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       updateSettings("hasOnboarded", true,
           pagesNeedingRefresh: [0], updateGlobalState: true, forceGlobalStateUpdate: true);
     }
+  }
+
+  Future<void> continueWithoutSignInWithForcedName(BuildContext context) async {
+    if (appStateSettings["username"] == null ||
+        appStateSettings["username"].toString().trim().isEmpty) {
+      await openBottomSheet(
+        context,
+        popupWithKeyboard: true,
+        PopupFramework(
+          title: "enter-name".tr(),
+          child: SelectText(
+            buttonLabel: "set-name".tr(),
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.person_outlined
+                : Icons.person_rounded,
+            setSelectedText: (_) {},
+            nextWithInput: (text) {
+              if (text.trim().isNotEmpty) {
+                updateSettings("username", text.trim(),
+                    pagesNeedingRefresh: [0], updateGlobalState: true);
+              }
+            },
+            selectedText: appStateSettings["username"],
+            placeholder: "nickname".tr(),
+            autoFocus: true,
+          ),
+        ),
+      );
+    }
+
+    if (appStateSettings["username"] == null ||
+        appStateSettings["username"].toString().trim().isEmpty) {
+      openSnackbar(
+        SnackbarMessage(
+          title: "Please enter your name to continue",
+          icon: Icons.person_rounded,
+        ),
+      );
+      return;
+    }
+
+    nextNavigation();
   }
 
   final FocusNode _focusNode = FocusNode();
@@ -323,7 +366,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                           openBottomSheet(
                             context,
                             PopupFramework(
-                              title: "amount-decimals".tr(),
+                              title: "decimal-precision".tr(),
                               child: RadioItems(
                                 items: const [0, 1, 2],
                                 initial: appStateSettings["amountDecimals"],
@@ -339,7 +382,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                             ),
                           );
                         },
-                        text: "amount-decimals".tr(),
+                        text: "decimal-precision".tr(),
                       ),
                     ],
                   ),
@@ -476,7 +519,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                     child: Button(
                       label: "lets-go".tr(),
                       onTap: () {
-                        nextNavigation();
+                        continueWithoutSignInWithForcedName(context);
                       },
                       expandedLayout: false,
                     ),
@@ -572,7 +615,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
               ? const SizedBox.shrink()
               : LowKeyButton(
                   onTap: () {
-                    nextNavigation();
+                    continueWithoutSignInWithForcedName(context);
                   },
                   text: "continue-without-sign-in".tr(),
                 ),

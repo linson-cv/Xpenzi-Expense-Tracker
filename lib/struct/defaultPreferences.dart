@@ -234,6 +234,8 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "savingHapticFeedback": false,
     "closeNavigationHapticFeedback": false,
     "tabNavigationHapticFeedback": false,
+    "buttonPressHapticFeedback": false,
+    "deleteActionHapticFeedback": false,
     "percentagePrecision": 0, //number of decimals to round percentages to
     "allSpendingLastPage": 0, //index of the last tab on the all spending page
     "loansLastPage": 0, //index of the last tab on the loans page

@@ -26,6 +26,16 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.2
+    (A) Redesigned Calendar view with month selector, top totals banner, and compact daily amounts on day cells
+    (A) Added In-App GitHub Markdown Viewer for native, offline-capable FAQ, User Guide & Policy reading
+    (A) Live Currency Converter on keypad supporting country & currency code search
+    (A) Simplified single-layer Settings page with real-time deep search and zero duplicate tiles
+    (A) Home header icons upgrade: direct Edit Layout (✏️) and Settings (⚙️) buttons
+    (A) Custom per-action haptic feedback toggles with vibration permission support
+    (A) Enforced display name entry during onboarding when continuing without sign-in
+    (A) Added Pro Icon Packs feature banner in category icon selection
+    (A) Instant dismissal on Pro paywall "Unlock for Free" with always-visible back navigation
     < 1.1.1
     (A) Added interactive monthly Calendar view with income, expense & net per day
     (A) Calendar day-tap shows transaction detail panel with quick-add for selected date

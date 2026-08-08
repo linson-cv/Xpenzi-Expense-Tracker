@@ -124,7 +124,7 @@ class _EditHomePageState extends State<EditHomePage> {
                   description: "Visually group accounts by color in the list",
                   onSwitched: (value) {
                     updateSettings("walletsListGroupByColor", value,
-                        updateGlobalState: false, pagesNeedingRefresh: [1]);
+                        updateGlobalState: true);
                   },
                   initialValue:
                       appStateSettings["walletsListGroupByColor"] ?? false,
@@ -462,38 +462,7 @@ class _EditHomePageState extends State<EditHomePage> {
               textColor: Theme.of(context).colorScheme.primary,
             ),
             onPressed: () async {
-              await updateSettings(
-                "homePageOrder",
-                [
-                  "walletsList",
-                  "allSpendingSummary",
-                  "overdueUpcoming",
-                  "creditDebts",
-                  "spendingGraph",
-                  "transactionsList",
-                  "wallets",
-                  "budgets",
-                  "objectiveLoans",
-                  "objectives",
-                  "netWorth",
-                  "pieChart",
-                  "heatMap",
-                ],
-                updateGlobalState: false,
-              );
-              await updateSettings("showWalletSwitcher", false, updateGlobalState: false);
-              await updateSettings("showWalletList", true, updateGlobalState: false);
-              await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
-              await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
-              await updateSettings("showCreditDebt", true, updateGlobalState: false);
-              await updateSettings("showObjectiveLoans", false, updateGlobalState: false);
-              await updateSettings("showSpendingGraph", true, updateGlobalState: false);
-              await updateSettings("showTransactionsList", true, updateGlobalState: false);
-              await updateSettings("showPinnedBudgets", false, updateGlobalState: false);
-              await updateSettings("showObjectives", false, updateGlobalState: false);
-              await updateSettings("showNetWorth", false, updateGlobalState: false);
-              await updateSettings("showPieChart", false, updateGlobalState: false);
-              await updateSettings("showHeatMap", false, updateGlobalState: true);
+              await resetHomePageLayoutSettings();
 
               if (mounted) {
                 setState(() {

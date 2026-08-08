@@ -186,11 +186,13 @@ class WalletEntryRow extends StatelessWidget {
     required this.selected,
     this.isCurrencyRow = false,
     this.percent,
+    this.closedColor,
   });
   final WalletWithDetails walletWithDetails;
   final bool selected;
   final bool isCurrencyRow;
   final double? percent;
+  final Color? closedColor;
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +212,7 @@ class WalletEntryRow extends StatelessWidget {
             )
           : WatchedWalletDetailsPage(
               walletPk: walletWithDetails.wallet.walletPk),
-      closedColor: getColor(context, "lightDarkAccentHeavyLight"),
+      closedColor: closedColor ?? getColor(context, "lightDarkAccentHeavyLight"),
       button: (openContainer) {
         return Tappable(
           color: Colors.transparent,
@@ -275,18 +277,13 @@ class WalletEntryRow extends StatelessWidget {
                               text: "",
                               maxLines: 1,
                               richTextSpan: [
-                                if (!isCurrencyRow && walletWithDetails.wallet.iconName != null)
+                                if (!isCurrencyRow)
                                   WidgetSpan(
                                     alignment: PlaceholderAlignment.middle,
                                     child: Padding(
                                       padding: const EdgeInsetsDirectional.only(end: 5),
                                       child: Icon(
-                                        walletWithDetails.wallet.iconName == "Bank Account" ? Icons.account_balance_rounded :
-                                        walletWithDetails.wallet.iconName == "Credit Card" ? Icons.credit_card_rounded :
-                                        walletWithDetails.wallet.iconName == "Meal Card" ? Icons.restaurant_rounded :
-                                        walletWithDetails.wallet.iconName == "Cash" ? Icons.payments_rounded :
-                                        walletWithDetails.wallet.iconName == "Savings" ? Icons.savings_rounded :
-                                        Icons.account_balance_wallet_rounded,
+                                        getWalletAccountIconData(walletWithDetails.wallet),
                                         size: 18,
                                         color: getColor(context, "black"),
                                       ),
@@ -467,4 +464,53 @@ Future<bool> setPrimaryWallet(String walletPk, {AllWallets? allWallets}) async {
   }
   selectedWalletPkController.add(SelectedWalletPk(selectedWalletPk: walletPk));
   return true;
+}
+
+IconData getWalletAccountIconData(TransactionWallet wallet) {
+  if (wallet.iconName != null && wallet.iconName!.isNotEmpty) {
+    switch (wallet.iconName) {
+      case "Bank Account":
+        return Icons.account_balance_rounded;
+      case "Credit Card":
+        return Icons.credit_card_rounded;
+      case "Meal Card":
+        return Icons.restaurant_rounded;
+      case "Cash":
+        return Icons.payments_rounded;
+      case "Savings":
+        return Icons.savings_rounded;
+      default:
+        return Icons.account_balance_wallet_rounded;
+    }
+  }
+  String nameLower = wallet.name.toLowerCase();
+  if (nameLower.contains("cred") || nameLower.contains("card")) {
+    return Icons.credit_card_rounded;
+  } else if (nameLower.contains("bank") ||
+      nameLower.contains("icici") ||
+      nameLower.contains("federal") ||
+      nameLower.contains("canara") ||
+      nameLower.contains("hdfc") ||
+      nameLower.contains("sbi") ||
+      nameLower.contains("axis") ||
+      nameLower.contains("kotak") ||
+      nameLower.contains("indus") ||
+      nameLower.contains("yes") ||
+      nameLower.contains("pnb") ||
+      nameLower.contains("bob") ||
+      nameLower.contains("idfc")) {
+    return Icons.account_balance_rounded;
+  } else if (nameLower.contains("pluxee") ||
+      nameLower.contains("meal") ||
+      nameLower.contains("sodexo") ||
+      nameLower.contains("food")) {
+    return Icons.restaurant_rounded;
+  } else if (nameLower.contains("cash") ||
+      nameLower.contains("wallet") ||
+      nameLower.contains("pay")) {
+    return Icons.payments_rounded;
+  } else if (nameLower.contains("sav")) {
+    return Icons.savings_rounded;
+  }
+  return Icons.account_balance_wallet_rounded;
 }

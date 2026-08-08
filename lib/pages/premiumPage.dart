@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
@@ -178,6 +178,8 @@ class PremiumPage extends StatelessWidget {
                                     if (result is bool && result == false) {
                                       purchasesStateKey.currentState
                                           ?.highlightProducts();
+                                    } else if (result is bool && result == true && context.mounted) {
+                                      popRoute(context);
                                     }
                                   },
                                   color: darkenPastel(
@@ -220,8 +222,7 @@ class PremiumPage extends StatelessWidget {
                               : appStateSettings["outlinedIcons"]
                                   ? Icons.arrow_back_outlined
                                   : Icons.arrow_back_rounded,
-                          color:
-                              Colors.black.withValues(alpha: canDismiss ? 0.9 : 0.16),
+                          color: Colors.black.withValues(alpha: 0.85),
                         ),
                         onPressed: () {
                           popRoute(context);
@@ -391,10 +392,9 @@ class _FreePremiumMessageState extends State<FreePremiumMessage> {
                           : ""),
                   onTap: () {
                     if (timerUp) {
-                      popRoute(context, true); //Pop current popup route
-                      popRoute(context, true); //Pop premium page route
                       updateSettings("premiumPopupFreeSeen", true,
                           updateGlobalState: false);
+                      popRoute(context, true);
                     }
                   },
                 ),

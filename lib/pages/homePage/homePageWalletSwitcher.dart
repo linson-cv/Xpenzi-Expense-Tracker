@@ -251,7 +251,7 @@ class EditHomePagePinnedWalletsPopup extends StatelessWidget {
                   description: "Visually group accounts by color in the list",
                   onSwitched: (value) {
                     updateSettings("walletsListGroupByColor", value,
-                        updateGlobalState: false, pagesNeedingRefresh: [1]);
+                        updateGlobalState: true);
                   },
                   initialValue:
                       appStateSettings["walletsListGroupByColor"] ?? false,

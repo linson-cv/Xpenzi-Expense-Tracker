@@ -276,58 +276,28 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 ),
                               )
                             : const SizedBox.shrink(),
-                        PopupMenuButton<String>(
-                          icon: Icon(appStateSettings["outlinedIcons"]
-                              ? Icons.more_vert_outlined
-                              : Icons.more_vert_rounded),
-                          tooltip: "edit-home".tr(),
-                          onSelected: (value) {
-                            if (value == "edit") {
-                              pushRoute(context, const EditHomePage());
-                            } else if (value == "settings") {
-                              pushRoute(context, const SettingsPageFramework());
-                            }
-                          },
-                          itemBuilder: (BuildContext context) {
-                            return [
-                              PopupMenuItem<String>(
-                                value: "edit",
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      appStateSettings["outlinedIcons"]
-                                          ? Icons.edit_outlined
-                                          : Icons.edit_rounded,
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    TextFont(
-                                      text: "edit-home".tr(),
-                                      fontSize: 15,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              PopupMenuItem<String>(
-                                value: "settings",
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      appStateSettings["outlinedIcons"]
-                                          ? Icons.settings_outlined
-                                          : Icons.settings_rounded,
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    TextFont(
-                                      text: "settings".tr(),
-                                      fontSize: 15,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ];
-                          },
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(appStateSettings["outlinedIcons"]
+                                  ? Icons.edit_outlined
+                                  : Icons.edit_rounded),
+                              tooltip: "edit-home".tr(),
+                              onPressed: () {
+                                pushRoute(context, const EditHomePage());
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(appStateSettings["outlinedIcons"]
+                                  ? Icons.settings_outlined
+                                  : Icons.settings_rounded),
+                              tooltip: "settings".tr(),
+                              onPressed: () {
+                                pushRoute(context, const SettingsPageFramework());
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),

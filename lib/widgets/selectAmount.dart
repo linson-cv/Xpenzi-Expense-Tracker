@@ -16,12 +16,15 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/contextMenu.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' hide TextInput;
 import 'package:intl/number_symbols_data.dart';
 import 'package:math_expressions/math_expressions.dart';
 import 'package:budget/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/struct/currencyFunctions.dart';
+import 'package:budget/widgets/currencyPicker.dart';
+import 'package:budget/widgets/framework/popupFramework.dart';
+import 'package:budget/widgets/textInput.dart';
 import 'package:universal_io/io.dart';
 import 'dart:ui' as ui;
 
@@ -674,6 +677,50 @@ class _SelectAmountState extends State<SelectAmount> {
                   ),
                 ),
               ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 4, end: 4),
+          child: Tappable(
+            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+            borderRadius: 12,
+            onTap: () {
+              String currentWalletCurrency = widget.currencyKey ??
+                  getSelectedWallet(listen: false)?.currency ??
+                  appStateSettings["selectedWalletPk"] ??
+                  "USD";
+              openCurrencyConverterPopup(
+                context,
+                walletCurrency: currentWalletCurrency,
+                onApply: (convertedAmount) {
+                  setState(() {
+                    amount = convertedAmount.toStringAsFixed(getDecimals(listen: false));
+                    amount = removeTrailingZeroes(amount);
+                  });
+                  widget.setSelectedAmount(convertedAmount, amount);
+                },
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    appStateSettings["outlinedIcons"]
+                        ? Icons.currency_exchange_outlined
+                        : Icons.currency_exchange_rounded,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  const TextFont(
+                    text: "Convert",
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1569,4 +1616,212 @@ int countNonTrailingZeroes(String input) {
   }
 
   return count;
+}
+
+Future<void> openCurrencyPickerPopup(
+  BuildContext context, {
+  required Function(String currencyCode) onSelected,
+  String? initialCurrency,
+}) async {
+  await openBottomSheet(
+    context,
+    PopupFramework(
+      title: "Select Currency",
+      hasPadding: false,
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.75,
+        child: CustomScrollView(
+          slivers: [
+            CurrencyPicker(
+              showExchangeRateInfoNotice: false,
+              initialCurrency: initialCurrency,
+              onSelected: (currency) {
+                onSelected(currency);
+                popRoute(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> openCurrencyConverterPopup(
+  BuildContext context, {
+  required String walletCurrency,
+  required Function(double convertedAmount) onApply,
+}) async {
+  await openBottomSheet(
+    context,
+    PopupFramework(
+      title: "Currency Converter",
+      subtitle: "Convert foreign currency amounts using live exchange rates",
+      child: CurrencyConverterPopup(
+        walletCurrency: walletCurrency,
+        onApply: onApply,
+      ),
+    ),
+  );
+}
+
+class CurrencyConverterPopup extends StatefulWidget {
+  const CurrencyConverterPopup({
+    super.key,
+    required this.walletCurrency,
+    required this.onApply,
+  });
+
+  final String walletCurrency;
+  final Function(double convertedAmount) onApply;
+
+  @override
+  State<CurrencyConverterPopup> createState() => _CurrencyConverterPopupState();
+}
+
+class _CurrencyConverterPopupState extends State<CurrencyConverterPopup> {
+  late String selectedForeignCurrency;
+  double foreignAmount = 100.0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.walletCurrency.toUpperCase() == "USD") {
+      selectedForeignCurrency = "EUR";
+    } else {
+      selectedForeignCurrency = "USD";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double ratio = amountRatioFromToCurrency(
+          selectedForeignCurrency,
+          widget.walletCurrency,
+        ) ??
+        1.0;
+    double converted = foreignAmount * ratio;
+
+    String foreignSymbol =
+        currenciesJSON[selectedForeignCurrency]?["Symbol"] ?? selectedForeignCurrency;
+    String walletSymbol =
+        currenciesJSON[widget.walletCurrency]?["Symbol"] ?? widget.walletCurrency;
+    String countryName =
+        currenciesJSON[selectedForeignCurrency]?["CountryName"] ?? "";
+    String currencyName =
+        currenciesJSON[selectedForeignCurrency]?["Currency"] ?? selectedForeignCurrency;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Tappable(
+            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.6),
+            borderRadius: 15,
+            onTap: () {
+              openCurrencyPickerPopup(
+                context,
+                initialCurrency: selectedForeignCurrency,
+                onSelected: (currency) {
+                  setState(() {
+                    selectedForeignCurrency = currency;
+                  });
+                },
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Row(
+                children: [
+                  Icon(
+                    appStateSettings["outlinedIcons"]
+                        ? Icons.public_outlined
+                        : Icons.public_rounded,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFont(
+                          text: "$selectedForeignCurrency - $currencyName",
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        if (countryName.isNotEmpty)
+                          TextFont(
+                            text: countryName,
+                            fontSize: 12,
+                            textColor: getColor(context, "textLight"),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextInput(
+            labelText: "Foreign Amount ($foreignSymbol)",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.payments_outlined
+                : Icons.payments_rounded,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (text) {
+              setState(() {
+                foreignAmount = double.tryParse(text) ?? 0.0;
+              });
+            },
+            padding: EdgeInsetsDirectional.zero,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              children: [
+                TextFont(
+                  text: "Converted Amount",
+                  fontSize: 12,
+                  textColor: getColor(context, "textLight"),
+                ),
+                const SizedBox(height: 6),
+                TextFont(
+                  text: "$walletSymbol ${converted.toStringAsFixed(2)} ${widget.walletCurrency}",
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 6),
+                TextFont(
+                  text: "Rate: 1 $selectedForeignCurrency = ${ratio.toStringAsFixed(4)} ${widget.walletCurrency}",
+                  fontSize: 12,
+                  textColor: getColor(context, "textLight"),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Button(
+            label: "Apply $walletSymbol ${converted.toStringAsFixed(2)}",
+            onTap: () {
+              widget.onApply(converted);
+              popRoute(context);
+            },
+          ),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
 }
