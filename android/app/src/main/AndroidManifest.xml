@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+﻿<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.navlin.xpenzi">
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
@@ -49,8 +49,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="spendwiseapp.web.app" android:pathPrefix="/addTransaction"/>
-                <data android:scheme="https" android:host="spendwiseapp.web.app" android:pathPrefix="/addTransactionRoute"/>
+                <data android:scheme="https" android:host="Xpenziapp.web.app" android:pathPrefix="/addTransaction"/>
+                <data android:scheme="https" android:host="Xpenziapp.web.app" android:pathPrefix="/addTransactionRoute"/>
             </intent-filter>
 
             <!-- Specifies an Android theme to apply to this Activity as soon as
@@ -146,3 +146,4 @@
             android:value="2" />
     </application>
 </manifest>
+

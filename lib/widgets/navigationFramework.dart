@@ -22,6 +22,7 @@ import 'package:budget/pages/objectivesListPage.dart';
 import 'package:budget/pages/onBoardingPage.dart';
 import 'package:budget/pages/premiumPage.dart';
 import 'package:budget/pages/settingsPage.dart';
+import 'package:budget/pages/recurringHubPage.dart';
 import 'package:budget/pages/subscriptionsPage.dart';
 import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
@@ -354,7 +355,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
   ];
   final List<Widget> pagesExtended = [
     const MoreActionsPage(), //4
-    SubscriptionsPage(key: subscriptionsPageStateKey), //5
+    const RecurringHubPage(initialIndex: 0), //5
     const NotificationsPage(), //6
     WalletDetailsPage(
         key: walletDetailsAllSpendingPageStateKey, wallet: null), //7
@@ -366,9 +367,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
     const AboutPage(), //13
     ObjectivesListPage(key: objectivesListPageStateKey, backButton: false), //14
     const EditObjectivesPage(objectiveType: ObjectiveType.goal), //15
-    UpcomingOverdueTransactions(
-        key: upcomingOverdueTransactionsStateKey,
-        overdueTransactions: null), //16
+    const RecurringHubPage(initialIndex: 1), //16
     CreditDebtTransactions(key: creditDebtTransactionsKey, isCredit: null), //17
   ];
 

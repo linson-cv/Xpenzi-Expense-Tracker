@@ -11,7 +11,19 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
+class SettingsSearchProvider extends InheritedWidget {
+  final String searchValue;
+  const SettingsSearchProvider({super.key, required this.searchValue, required super.child});
+
+  static String of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<SettingsSearchProvider>()?.searchValue ?? "";
+  }
+
+  @override
+  bool updateShouldNotify(SettingsSearchProvider oldWidget) => searchValue != oldWidget.searchValue;
+}
 class SettingsContainerSwitch extends StatefulWidget {
   const SettingsContainerSwitch({
     required this.title,
@@ -198,6 +210,15 @@ class SettingsContainerOpenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String searchValue = SettingsSearchProvider.of(context).trim().toLowerCase();
+    if (searchValue.isNotEmpty) {
+      bool matchesTitle = title.toLowerCase().contains(searchValue) || title.tr().toLowerCase().contains(searchValue);
+      bool matchesDescription = (description?.toLowerCase().contains(searchValue) ?? false) || (description?.tr().toLowerCase().contains(searchValue) ?? false);
+      if (!matchesTitle && !matchesDescription) {
+        return const SizedBox.shrink();
+      }
+    }
+
     ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: isOutlined == false || isOutlined == null
@@ -570,6 +591,15 @@ class SettingsContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String searchValue = SettingsSearchProvider.of(context).trim().toLowerCase();
+    if (searchValue.isNotEmpty) {
+      bool matchesTitle = title.toLowerCase().contains(searchValue) || title.tr().toLowerCase().contains(searchValue);
+      bool matchesDescription = (description?.toLowerCase().contains(searchValue) ?? false) || (description?.tr().toLowerCase().contains(searchValue) ?? false);
+      if (!matchesTitle && !matchesDescription) {
+        return const SizedBox.shrink();
+      }
+    }
+
     return ClipRRect(
       borderRadius: BorderRadiusDirectional.circular(
           (enableBorderRadius || getIsFullScreen(context)) && isOutlined != true
@@ -730,6 +760,13 @@ class SettingsGroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (SettingsSearchProvider.of(context).trim().isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      );
+    }
+
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final bool isAmoled = appStateSettings["forceFullDarkBackground"] == true && isDark;
 

@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class RecurringHubPage extends StatefulWidget {
-  const RecurringHubPage({super.key});
+  final int initialIndex;
+  const RecurringHubPage({super.key, this.initialIndex = 0});
 
   @override
   State<RecurringHubPage> createState() => _RecurringHubPageState();
@@ -23,7 +24,7 @@ class _RecurringHubPageState extends State<RecurringHubPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
   }
 
   @override

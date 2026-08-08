@@ -54,18 +54,14 @@ class BottomNavBarState extends State<BottomNavBar> {
       if (navigationStackedIndex == 3) {
         settingsPageStateKey.currentState?.scrollToTop();
       }
-      if (navigationStackedIndex == 5) {
-        subscriptionsPageStateKey.currentState?.scrollToTop();
-      }
+      // Index 5 is now RecurringHubPage (Subscriptions tab)
       if (navigationStackedIndex == 7) {
         walletDetailsAllSpendingPageStateKey.currentState?.scrollToTop();
       }
       if (navigationStackedIndex == 14) {
         objectivesListPageStateKey.currentState?.scrollToTop();
       }
-      if (navigationStackedIndex == 16) {
-        upcomingOverdueTransactionsStateKey.currentState?.scrollToTop();
-      }
+      // Index 16 is now RecurringHubPage (Scheduled tab)
       if (navigationStackedIndex == 17) {
         creditDebtTransactionsKey.currentState?.scrollToTop();
       }

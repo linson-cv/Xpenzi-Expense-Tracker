@@ -15,7 +15,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/pages/addButton.dart';
-
+import 'package:budget/widgets/textWidgets.dart';
 class HomePageWalletList extends StatelessWidget {
   const HomePageWalletList({super.key});
 
@@ -55,22 +55,11 @@ class HomePageWalletList extends StatelessWidget {
                             HomePageWidgetDisplay.WalletList),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            if (snapshot.hasData && snapshot.data!.isNotEmpty)
-                              const SizedBox(height: 8),
-                            for (WalletWithDetails walletDetails
-                                in snapshot.data!)
-                              WalletEntryRow(
-                                selected: Provider.of<SelectedWalletPk>(context)
-                                        .selectedWalletPk ==
-                                    walletDetails.wallet.walletPk,
-                                walletWithDetails: walletDetails,
-                              ),
-                            if (snapshot.hasData && snapshot.data!.isNotEmpty)
-                              const SizedBox(height: 8),
-                            if (snapshot.hasData && snapshot.data!.isEmpty)
+                        List<WalletWithDetails> wallets = snapshot.data!;
+                        if (wallets.isEmpty) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
                               Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -81,8 +70,7 @@ class HomePageWalletList extends StatelessWidget {
                                           context,
                                           const EditHomePagePinnedWalletsPopup(
                                             homePageWidgetDisplay:
-                                                HomePageWidgetDisplay
-                                                    .WalletList,
+                                                HomePageWidgetDisplay.WalletList,
                                           ),
                                           useCustomController: true,
                                         );
@@ -98,7 +86,79 @@ class HomePageWalletList extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                          ],
+                            ],
+                          );
+                        }
+
+                        bool groupByColor = appStateSettings["walletsListGroupByColor"] == true;
+                        List<Widget> children = [];
+                        children.add(const SizedBox(height: 8));
+
+                        if (groupByColor) {
+                          Map<String, List<WalletWithDetails>> grouped = {};
+                          for (var w in wallets) {
+                            String color = w.wallet.colour ?? "";
+                            grouped.putIfAbsent(color, () => []).add(w);
+                          }
+                          grouped.forEach((color, groupWallets) {
+                            double groupTotal = 0;
+                            for (var w in groupWallets) {
+                              groupTotal += (w.totalSpent ?? 0.0) *
+                                  amountRatioToPrimaryCurrency(
+                                      Provider.of<AllWallets>(context),
+                                      w.wallet.currency);
+                            }
+                            children.add(
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: HexColor(color, defaultColor: Theme.of(context).colorScheme.primary),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: TextFont(
+                                        text: "", // could be a color name if we had one, but we leave empty or say Group
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    TextFont(
+                                      text: convertToMoney(Provider.of<AllWallets>(context), groupTotal),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      textColor: getColor(context, "black"),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                            for (var w in groupWallets) {
+                              children.add(WalletEntryRow(
+                                selected: Provider.of<SelectedWalletPk>(context).selectedWalletPk == w.wallet.walletPk,
+                                walletWithDetails: w,
+                              ));
+                            }
+                          });
+                        } else {
+                          for (var w in wallets) {
+                            children.add(WalletEntryRow(
+                              selected: Provider.of<SelectedWalletPk>(context).selectedWalletPk == w.wallet.walletPk,
+                              walletWithDetails: w,
+                            ));
+                          }
+                        }
+                        children.add(const SizedBox(height: 8));
+
+                        return Column(
+                          mainAxisSize: MainAxisSize.max,
+                          children: children,
                         );
                       }
                       return Container();

@@ -1,4 +1,4 @@
-import 'package:budget/colors.dart';
+﻿import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
 import 'package:budget/pages/addTransactionPage.dart';
@@ -351,7 +351,7 @@ class AccountsPageState extends State<AccountsPage> {
                                 borderRadius: 15,
                                 onTap: () {
                                   openUrl(
-                                      "https://spendwiseapp.web.app/policy.html");
+                                      "https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/PRIVACY.md");
                                 },
                                 child: Padding(
                                   padding:

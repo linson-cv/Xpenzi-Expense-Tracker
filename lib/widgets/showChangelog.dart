@@ -26,7 +26,20 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
-    < 1.0.4 (2026-08-07)
+    < 1.1.1
+    (A) Added interactive monthly Calendar view with income, expense & net per day
+    (A) Calendar day-tap shows transaction detail panel with quick-add for selected date
+    (A) Removed redundant Quick Action Dock — use the + FAB for all entry types
+    (A) Scheduled shortcut now opens Scheduled Bills tab by default
+    (A) Fixed Feedback submission email link for devices without a mail client
+    (A) Updated all FAQ & Guide links to Xpenzi GitHub documentation
+    (A) Added Currency, Language & Decimals selectors to Onboarding flow
+    < 1.1.0
+    (A) Added high-quality PDF Report Export with customizable date ranges and wallet selection
+    (A) Removed hard floating navigation bar borders for a true seamless floating effect
+    (A) Fixed Google Sign-In failures by properly decoupling old hardcoded Firebase references
+    (A) Removed all lingering backend references to the original Cashew open-source tracker
+    < 1.0.4
     (A) Fixed Pay Bill quick action to open Credit/Debt Transactions screen cleanly without stacked blank pages
     (A) Updated developer attribution to LN.Dev & support email to nav.lin.dev@gmail.com
     (A) Enhanced Amoled Black mode surface theme consistency across cards, scaffolds, & dialogs
@@ -35,7 +48,7 @@ String getChangelogString() {
     (A) Refined default home page widget selection to essential sections with fixed mandatory banner
     (A) Added home page 3-dot popup menu with direct Edit Home Screen navigation
     (A) Replaced home screen edit toggles with green plus & red delete buttons
-    < 1.0.3 (2026-08-06)
+    < 1.0.3
     (A) Added Xpenzi Intelligence with Google Gemini AI transaction parsing & prompt customizer
     (A) Added Local Natural Language Processing (NLP) offline engine for auto-detecting bank SMS & notifications
     (A) Added Notification Access Onboarding Banner on Home Screen for 1-tap permission setup
@@ -45,13 +58,13 @@ String getChangelogString() {
     (A) Added Mailbox Settings page for Google Sheets Inbox & Google Drive CSV Outbox
     (A) Decoupled Firebase Auth to ensure 100% offline startup & independent Google Sign-In
     (A) Fixed back navigation stack pop behavior preventing blank screen flashes
-    < 1.0.2 (2026-08-06)
+    < 1.0.2
     (A) Added sleek floating navigation dock with configurable label visibility toggle in settings
     (A) Fixed border color fallback eliminating red outlines around floating action elements
     (A) Reorganized Settings into 6 intuitive cards: General, Theme & Style, Transactions, Localization & Formatting, Notifications, and Data
     (A) Configured default Home Page layout order: Banner -> Account List -> Income & Expenses -> Overdue & Upcoming -> Loans -> Line Graph -> Transactions
     (A) Regenerated native Android, iOS, and Web launcher icons from app branding assets
-    < 1.0.1 (2026-08-06)
+    < 1.0.1
     (A) Added floating pill dock navigation bar with smooth selection animations
     (A) Enhanced pure AMOLED pitch-black dark theme engine with high-contrast outlines
     (A) Added Pinned Transactions quick actions on Floating Action Button (FAB)
@@ -61,7 +74,7 @@ String getChangelogString() {
     (A) Added Animated Budget Containers performance toggle in Settings
     (A) Added Home Screen Quick Action Dock for 1-tap Expense, Income, Transfer & Pay Bill entry
     (A) Streamlined terminology & UX workflows for Savings Goals, Debts, and Accounts
-    < 1.0.0 (Internal Release - 2026-08-06)
+    < 1.0.0
     Initial internal testing release
     Rebranded application baseline
 end""";
@@ -69,6 +82,26 @@ end""";
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
+    "< 1.1.1": [
+      MajorChanges(
+        "Monthly Calendar View",
+        Icons.calendar_month_rounded,
+        info: [
+          "Visualise your spending day-by-day in a full monthly calendar",
+          "Tap any date to see income, expense & net totals plus a transaction preview",
+          "Quick-add a transaction pre-filled with the selected date",
+        ],
+      ),
+    ],
+    "< 1.1.0": [
+      MajorChanges(
+        "PDF Report Export",
+        Icons.picture_as_pdf_rounded,
+        info: [
+          "Export your transaction reports in high-quality PDF format",
+        ],
+      ),
+    ],
     "< 4.4.1": [
       MajorChanges(
         "major-change-1".tr(),
@@ -281,7 +314,7 @@ bool showChangelog(
     context,
     forceShow: forceShow,
     majorChangesOnly:
-        Localizations.localeOf(context).toString().toLowerCase() != "en"
+        !Localizations.localeOf(context).toString().toLowerCase().startsWith("en")
             ? true
             : majorChangesOnly,
   );
@@ -415,7 +448,8 @@ List<Widget>? getChangelogPointsWidgets(BuildContext context,
 
 int parseVersionInt(String versionString) {
   try {
-    int parsedVersion = int.parse(versionString.replaceAll(".", ""));
+    String cleaned = versionString.trim().split(" ")[0].replaceAll(".", "");
+    int parsedVersion = int.parse(cleaned);
     return parsedVersion;
   } catch (e) {
     print("Error parsing version number, defaulting to version 0.");

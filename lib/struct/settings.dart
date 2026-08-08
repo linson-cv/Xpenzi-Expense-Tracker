@@ -228,7 +228,6 @@ Future<Map<String, dynamic>> getUserSettings() async {
 
     Map<String, dynamic> userSettingsJSON = json.decode(userSettings);
 
-    //Set to defaults if a new setting is added, but no entry saved
     userPreferencesDefault.forEach((key, value) {
       userSettingsJSON =
           attemptToMigrateCyclePreferences(userSettingsJSON, key);
@@ -236,6 +235,12 @@ Future<Map<String, dynamic>> getUserSettings() async {
         userSettingsJSON[key] = userPreferencesDefault[key];
       }
     });
+
+    if (userSettingsJSON["homeOrderResetV1"] != true) {
+      userSettingsJSON["homePageOrder"] = userPreferencesDefault["homePageOrder"];
+      userSettingsJSON["homeOrderResetV1"] = true;
+      sharedPreferences.setString('userSettings', json.encode(userSettingsJSON));
+    }
     return userSettingsJSON;
   } catch (e) {
     print("There was an error, settings corrupted: $e");

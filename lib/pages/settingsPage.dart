@@ -4,6 +4,7 @@ import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/billSplitter.dart';
 import 'package:budget/pages/budgetsListPage.dart';
+import 'package:budget/pages/calendarPage.dart';
 import 'package:budget/pages/creditDebtTransactionsPage.dart';
 import 'package:budget/pages/editHomePage.dart';
 import 'package:budget/pages/editObjectivesPage.dart';
@@ -114,7 +115,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
                       ? Icons.live_help_outlined
                       : Icons.live_help_rounded,
                   action: () {
-                    openUrl("https://spendwiseapp.web.app/faq.html");
+                    openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md");
                   },
                 ),
             ],
@@ -201,7 +202,7 @@ class MorePages extends StatelessWidget {
               Expanded(
                 child: SettingsContainer(
                   onTap: () {
-                    openUrl("https://spendwiseapp.web.app/faq.html");
+                    openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md");
                   },
                   title: "Guide / FAQ",
                   icon: appStateSettings["outlinedIcons"]
@@ -221,7 +222,7 @@ class MorePages extends StatelessWidget {
             children: [
               Expanded(
                 child: SettingsContainerOpenPage(
-                  openPage: const ActivityPage(),
+                  openPage: const CalendarPage(),
                   title: "Calendar",
                   icon: appStateSettings["outlinedIcons"]
                       ? Icons.calendar_month_outlined
@@ -245,7 +246,7 @@ class MorePages extends StatelessWidget {
             children: [
               Expanded(
                 child: SettingsContainerOpenPage(
-                  openPage: const RecurringHubPage(),
+                  openPage: const RecurringHubPage(initialIndex: 0),
                   title: navBarIconsData["subscriptions"]!.label.tr(),
                   icon: navBarIconsData["subscriptions"]!.iconData,
                   isOutlined: true,
@@ -253,7 +254,7 @@ class MorePages extends StatelessWidget {
               ),
               Expanded(
                 child: SettingsContainerOpenPage(
-                  openPage: const RecurringHubPage(),
+                  openPage: const RecurringHubPage(initialIndex: 1),
                   title: navBarIconsData["scheduled"]!.label.tr(),
                   icon: navBarIconsData["scheduled"]!.iconData,
                   isOutlined: true,
@@ -307,8 +308,13 @@ class MorePages extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           // Bottom Container: Edit, Delete, and Reorder Data
-          SettingsContainerOpenPage(
-            openPage: const EditDataOverviewPage(),
+          SettingsContainer(
+            onTap: () {
+              openBottomSheet(
+                context,
+                const EditDataOverviewPage(),
+              );
+            },
             title: "Edit, Delete, and Reorder Data",
             description: "For accounts, categories, titles, budgets, goals, loans",
             icon: appStateSettings["outlinedIcons"]
@@ -1073,12 +1079,12 @@ class TransactionsSettingsSubPage extends StatelessWidget {
               getLabel: (item) => item,
             ),
             SettingsContainerOpenPage(
-              openPage: const RecurringHubPage(),
+              openPage: const RecurringHubPage(initialIndex: 0),
               title: navBarIconsData["subscriptions"]!.label.tr(),
               icon: navBarIconsData["subscriptions"]!.iconData,
             ),
             SettingsContainerOpenPage(
-              openPage: const RecurringHubPage(),
+              openPage: const RecurringHubPage(initialIndex: 1),
               title: navBarIconsData["scheduled"]!.label.tr(),
               icon: navBarIconsData["scheduled"]!.iconData,
             ),
@@ -1273,47 +1279,42 @@ class EditDataOverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PageFramework(
+    return PopupFramework(
       title: "Edit, Delete, and Reorder Data",
-      dragDownToDismiss: true,
-      listWidgets: [
-        SettingsGroupCard(
-          title: "Manage Data",
-          icon: Icons.edit_note_rounded,
-          children: [
-            SettingsContainerOpenPage(
-              openPage: const EditWalletsPage(),
-              title: navBarIconsData["accountDetails"]!.label.tr(),
-              icon: navBarIconsData["accountDetails"]!.iconData,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const EditBudgetPage(),
-              title: navBarIconsData["budgetDetails"]!.label.tr(),
-              icon: navBarIconsData["budgetDetails"]!.iconData,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const EditCategoriesPage(),
-              title: navBarIconsData["categoriesDetails"]!.label.tr(),
-              icon: navBarIconsData["categoriesDetails"]!.iconData,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const EditAssociatedTitlesPage(),
-              title: navBarIconsData["titlesDetails"]!.label.tr(),
-              icon: navBarIconsData["titlesDetails"]!.iconData,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const ObjectivesListPage(backButton: true),
-              title: navBarIconsData["goals"]!.label.tr(),
-              icon: navBarIconsData["goals"]!.iconData,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const CreditDebtTransactions(isCredit: null),
-              title: navBarIconsData["loans"]!.label.tr(),
-              icon: navBarIconsData["loans"]!.iconData,
-            ),
-          ],
-        ),
-      ],
+      child: Column(
+        children: [
+          SettingsContainerOpenPage(
+            openPage: const EditWalletsPage(),
+            title: navBarIconsData["accountDetails"]!.label.tr(),
+            icon: navBarIconsData["accountDetails"]!.iconData,
+          ),
+          SettingsContainerOpenPage(
+            openPage: const EditBudgetPage(),
+            title: navBarIconsData["budgetDetails"]!.label.tr(),
+            icon: navBarIconsData["budgetDetails"]!.iconData,
+          ),
+          SettingsContainerOpenPage(
+            openPage: const EditCategoriesPage(),
+            title: navBarIconsData["categoriesDetails"]!.label.tr(),
+            icon: navBarIconsData["categoriesDetails"]!.iconData,
+          ),
+          SettingsContainerOpenPage(
+            openPage: const EditAssociatedTitlesPage(),
+            title: navBarIconsData["titlesDetails"]!.label.tr(),
+            icon: navBarIconsData["titlesDetails"]!.iconData,
+          ),
+          SettingsContainerOpenPage(
+            openPage: const ObjectivesListPage(backButton: true),
+            title: navBarIconsData["goals"]!.label.tr(),
+            icon: navBarIconsData["goals"]!.iconData,
+          ),
+          SettingsContainerOpenPage(
+            openPage: const CreditDebtTransactions(isCredit: null),
+            title: navBarIconsData["loans"]!.label.tr(),
+            icon: navBarIconsData["loans"]!.iconData,
+          ),
+        ],
+      ),
     );
   }
 }

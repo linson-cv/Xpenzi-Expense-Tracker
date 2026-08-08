@@ -25,6 +25,7 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
 import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/showDatePicker.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -114,6 +115,25 @@ class _EditHomePageState extends State<EditHomePage> {
                 useCustomController: true,
               );
             },
+            extraWidgetsBelow: [
+              HorizontalBreakAbove(
+                enabled: true,
+                child: SettingsContainerSwitch(
+                  enableBorderRadius: true,
+                  title: "Group by color",
+                  description: "Visually group accounts by color in the list",
+                  onSwitched: (value) {
+                    updateSettings("walletsListGroupByColor", value,
+                        updateGlobalState: false, pagesNeedingRefresh: [1]);
+                  },
+                  initialValue:
+                      appStateSettings["walletsListGroupByColor"] ?? false,
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.palette_outlined
+                      : Icons.palette_rounded,
+                ),
+              ),
+            ],
           ),
           "budgets": EditHomePageItem(
             icon: appStateSettings["outlinedIcons"]
@@ -445,15 +465,15 @@ class _EditHomePageState extends State<EditHomePage> {
               await updateSettings(
                 "homePageOrder",
                 [
-                  "wallets",
                   "walletsList",
                   "allSpendingSummary",
                   "overdueUpcoming",
                   "creditDebts",
-                  "objectiveLoans",
                   "spendingGraph",
                   "transactionsList",
+                  "wallets",
                   "budgets",
+                  "objectiveLoans",
                   "objectives",
                   "netWorth",
                   "pieChart",
@@ -465,8 +485,8 @@ class _EditHomePageState extends State<EditHomePage> {
               await updateSettings("showWalletList", true, updateGlobalState: false);
               await updateSettings("showAllSpendingSummary", true, updateGlobalState: false);
               await updateSettings("showOverdueUpcoming", true, updateGlobalState: false);
-              await updateSettings("showCreditDebt", false, updateGlobalState: false);
-              await updateSettings("showObjectiveLoans", true, updateGlobalState: false);
+              await updateSettings("showCreditDebt", true, updateGlobalState: false);
+              await updateSettings("showObjectiveLoans", false, updateGlobalState: false);
               await updateSettings("showSpendingGraph", true, updateGlobalState: false);
               await updateSettings("showTransactionsList", true, updateGlobalState: false);
               await updateSettings("showPinnedBudgets", false, updateGlobalState: false);
@@ -478,15 +498,15 @@ class _EditHomePageState extends State<EditHomePage> {
               if (mounted) {
                 setState(() {
                   keyOrder = [
-                    "wallets",
                     "walletsList",
                     "allSpendingSummary",
                     "overdueUpcoming",
                     "creditDebts",
-                    "objectiveLoans",
                     "spendingGraph",
                     "transactionsList",
+                    "wallets",
                     "budgets",
+                    "objectiveLoans",
                     "objectives",
                     "netWorth",
                     "pieChart",
@@ -690,18 +710,20 @@ class HomePageEditRowEntry extends StatelessWidget {
       currentReorder: currentReorder,
       padding:
           const EdgeInsetsDirectional.only(start: 18, end: 0, top: 16, bottom: 16),
-      extraWidget: canReorder
-          ? IconButton(
-              icon: Icon(
-                switchValue ? Icons.remove_circle : Icons.add_circle,
-                color: switchValue
-                    ? const Color(0xFFFF5252)
-                    : const Color(0xFF4CAF50),
-                size: 26,
-              ),
-              onPressed: () => toggleSwitch(),
-            )
-          : const SizedBox.shrink(),
+      extraWidget: Tappable(
+        color: Colors.transparent,
+        onTap: () => toggleSwitch(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Icon(
+            switchValue ? Icons.remove_circle : Icons.add_circle,
+            color: switchValue
+                ? const Color(0xFFFF5252)
+                : const Color(0xFF4CAF50),
+            size: 26,
+          ),
+        ),
+      ),
       content: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

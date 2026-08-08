@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
@@ -32,14 +32,14 @@ StreamSubscription<List<PurchaseDetails>>? purchaseListener;
 Map<String, ProductDetails> storeProducts = {};
 Map<String, String> productIDs = {
   'yearly': getPlatform(ignoreEmulation: true) == PlatformOS.isIOS
-      ? 'spendwise.pro.yearly' //iOS
-      : 'spendwise.pro.yearly', //Android
+      ? 'xpenzi.pro.yearly' //iOS
+      : 'xpenzi.pro.yearly', //Android
   'monthly': getPlatform(ignoreEmulation: true) == PlatformOS.isIOS
-      ? 'spendwise.pro.monthly' //iOS
-      : 'spendwise.pro.monthly', //Android
+      ? 'xpenzi.pro.monthly' //iOS
+      : 'xpenzi.pro.monthly', //Android
   'lifetime': getPlatform(ignoreEmulation: true) == PlatformOS.isIOS
-      ? 'spendwise.pro.life' //iOS
-      : 'spendwise.pro.lifetime', //Android
+      ? 'xpenzi.pro.life' //iOS
+      : 'xpenzi.pro.lifetime', //Android
 };
 
 // A user has paid is appStateSettings["purchaseID"] is not null
@@ -480,10 +480,10 @@ openManagePurchase() {
     openUrl("https://apps.apple.com/account/subscriptions");
   } else if (appStateSettings["purchaseID"] == productIDs["monthly"]) {
     openUrl(
-        "https://play.google.com/store/account/subscriptions?sku=spendwise.pro.monthly&package=com.navlin.xpenzi");
+        "https://play.google.com/store/account/subscriptions?sku=xpenzi.pro.monthly&package=com.navlin.xpenzi");
   } else if (appStateSettings["purchaseID"] == productIDs["yearly"]) {
     openUrl(
-        "https://play.google.com/store/account/subscriptions?sku=spendwise.pro.yearly&package=com.navlin.xpenzi");
+        "https://play.google.com/store/account/subscriptions?sku=xpenzi.pro.yearly&package=com.navlin.xpenzi");
   } else {
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
       openUrl("https://play.google.com/store/account/subscriptions");
@@ -707,7 +707,7 @@ showHelpRestorePopup(BuildContext context) {
       if (openResult == false) copyToClipboard("nav.lin.dev@gmail.com");
     },
     onExtra: () =>
-        openUrl("https://spendwiseapp.web.app/faq.html#restoring-purchases"),
+        openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md"),
     onExtraLabel: "FAQ".tr(),
   );
 }

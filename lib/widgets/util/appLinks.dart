@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
@@ -350,7 +350,7 @@ Future executeAppLink(BuildContext? context, Uri uri,
       }
       break;
 
-    // Ensures we can see other pages of the Spendwise website
+    // Ensures we can see other pages of the Xpenzi website
     // Such as the FAQ
     // default:
     //   if (context != null)
@@ -385,7 +385,7 @@ Future executeAppLink(BuildContext? context, Uri uri,
 //             loadingIndeterminateKey.currentState?.setVisibility(false);
 //           },
 //           onNavigationRequest: (NavigationRequest request) {
-//             if (request.url.startsWith('https://spendwiseapp.web.app/')) {
+//             if (request.url.startsWith('https://github.com/linson-cv/Xpenzi-Expense-Tracker/')) {
 //               return NavigationDecision.navigate;
 //             } else {
 //               openUrl(request.url);

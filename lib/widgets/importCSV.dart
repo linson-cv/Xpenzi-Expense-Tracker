@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
@@ -242,7 +242,7 @@ class _ImportCSVState extends State<ImportCSV> {
                       ? Icons.live_help_outlined
                       : Icons.live_help_rounded,
                   onPressed: () => openUrl(
-                      "https://spendwiseapp.web.app/faq.html#import-csv-data"),
+                      "https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md"),
                 )
               : null,
           title: "assign-columns".tr(),

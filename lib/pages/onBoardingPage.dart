@@ -24,6 +24,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/database/initializeDefaultDatabase.dart';
 
 import 'package:budget/widgets/pageIndicator.dart';
@@ -260,6 +261,93 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
               maxLines: 5,
             ),
           ),
+          StreamBuilder<AllWallets>(
+            stream: database.watchAllWalletsIndexed(),
+            builder: (context, snapshot) {
+              TransactionWallet? primaryWallet = snapshot
+                  .data?.indexedByPk[appStateSettings["selectedWalletPk"]];
+              if (primaryWallet != null) {
+                return Padding(
+                  padding: const EdgeInsetsDirectional.only(top: 25),
+                  child: Column(
+                    children: [
+                      LowKeyButton(
+                        onTap: () {
+                          openBottomSheet(
+                            context,
+                            const SizedBox.shrink(),
+                            customBuilder:
+                                (context2, scrollController, sheetState) {
+                              return CustomScrollView(
+                                controller: scrollController,
+                                slivers: [
+                                  SliverToBoxAdapter(
+                                    child: PopupFramework(
+                                      title: "select-primary-currency".tr(),
+                                      subtitle:
+                                          "select-primary-currency-description"
+                                              .tr(),
+                                      bottomSafeAreaExtraPadding: false,
+                                      child: const SizedBox.shrink(),
+                                    ),
+                                  ),
+                                  CurrencyPicker(
+                                    showExchangeRateInfoNotice: false,
+                                    onSelected: (selectedCurrency) {
+                                      popRoute(context);
+                                      database.createOrUpdateWallet(
+                                          primaryWallet.copyWith(
+                                              currency: Value(selectedCurrency)));
+                                    },
+                                    initialCurrency: primaryWallet.currency,
+                                    onHasFocus: () {},
+                                    unSelectedColor: appStateSettings["materialYou"]
+                                        ? null
+                                        : getColor(context, "canvasContainer"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        text: "change-currency".tr(),
+                      ),
+                      const SizedBox(height: 10),
+                      LowKeyButton(
+                        onTap: () => openLanguagePicker(context),
+                        text: "language".tr(),
+                      ),
+                      const SizedBox(height: 10),
+                      LowKeyButton(
+                        onTap: () async {
+                          openBottomSheet(
+                            context,
+                            PopupFramework(
+                              title: "amount-decimals".tr(),
+                              child: RadioItems(
+                                items: const [0, 1, 2],
+                                initial: appStateSettings["amountDecimals"],
+                                displayFilter: (item) => item.toString(),
+                                onChanged: (value) async {
+                                  updateSettings("amountDecimals", value,
+                                      updateGlobalState: false);
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 50));
+                                  popRoute(context);
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        text: "amount-decimals".tr(),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           const SizedBox(height: 55),
         ],
         bottomWidget: widget.showPreviewDemoButton
@@ -345,66 +433,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
           //   ),
           // ),
 
-          StreamBuilder<AllWallets>(
-            stream: database.watchAllWalletsIndexed(),
-            builder: (context, snapshot) {
-              TransactionWallet? primaryWallet = snapshot
-                  .data?.indexedByPk[appStateSettings["selectedWalletPk"]];
-              if (primaryWallet != null) {
-                return Padding(
-                  padding: const EdgeInsetsDirectional.only(top: 15),
-                  child: LowKeyButton(
-                    onTap: () {
-                      openBottomSheet(
-                        context,
-                        const SizedBox.shrink(),
-                        customBuilder:
-                            (context2, scrollController, sheetState) {
-                          return CustomScrollView(
-                            controller: scrollController,
-                            slivers: [
-                              SliverToBoxAdapter(
-                                child: PopupFramework(
-                                  title: "select-primary-currency".tr(),
-                                  subtitle:
-                                      "select-primary-currency-description"
-                                          .tr(),
-                                  bottomSafeAreaExtraPadding: false,
-                                  child: const SizedBox.shrink(),
-                                ),
-                              ),
-                              CurrencyPicker(
-                                showExchangeRateInfoNotice: false,
-                                onSelected: (selectedCurrency) {
-                                  popRoute(context);
-                                  database.createOrUpdateWallet(
-                                      primaryWallet.copyWith(
-                                          currency: Value(selectedCurrency)));
-                                },
-                                initialCurrency: primaryWallet.currency,
-                                onHasFocus: () {
-                                  // Disable scroll when focus - because iOS header height is different than that of Android.
-                                  // Future.delayed(Duration(milliseconds: 500), () {
-                                  //   addWalletPageKey.currentState?.scrollTo(250);
-                                  // });
-                                },
-                                unSelectedColor: appStateSettings["materialYou"]
-                                    ? null
-                                    : getColor(context, "canvasContainer"),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    text: "change-currency".tr(),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-          const SizedBox(height: 15),
+
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 25),
             child: TextFont(

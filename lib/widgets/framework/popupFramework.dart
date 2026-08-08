@@ -4,6 +4,7 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/colors.dart';
+import 'package:budget/widgets/navigationSidebar.dart';
 
 class PopupFramework extends StatelessWidget {
   const PopupFramework({
@@ -161,6 +162,8 @@ class PopupFramework extends StatelessWidget {
                     if (bottomSafeAreaPadding < initialBottomPadding) {
                       bottomSafeAreaPadding = initialBottomPadding;
                     }
+                    
+                    bottomSafeAreaPadding += getHeightNavigationSidebar(context);
 
                     // print(MediaQuery.paddingOf(context).bottom);
                     // print(bottomSafeAreaPadding);

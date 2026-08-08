@@ -1,4 +1,4 @@
-# Xpenzi (Spendwise) - Guide and FAQ
+﻿# Xpenzi (Xpenzi) - Guide and FAQ
 
 Welcome to Xpenzi! Below you'll find answers to some common questions.
 
@@ -15,7 +15,8 @@ Head to **Settings -> Theme & Style**. From there you can change your accent col
 Navigate to **Settings -> Import & Export -> Backups**. You can export your entire database securely.
 
 ## 5. Is Xpenzi open source?
-Yes! You can view the source code and contribute on our [GitHub Repository](https://github.com/linson-cv/Spendwise-Expense-Tracker).
+Yes! You can view the source code and contribute on our [GitHub Repository](https://github.com/linson-cv/Xpenzi-Expense-Tracker).
 
 ## Need More Help?
 If you have any further questions, bugs to report, or feature requests, please submit feedback via the **Settings -> About -> Feedback** button, which will open a draft directly to the developer!
+

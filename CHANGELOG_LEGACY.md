@@ -1,4 +1,4 @@
-# Legacy App Changelog (Pre-Rebrand History)
+﻿# Legacy App Changelog (Pre-Rebrand History)
 
 This document contains all legacy release notes (v6.6.12 and earlier) prior to the v1.0.0 rebrand.
 
@@ -258,7 +258,7 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 - Decimal precision icon change and description
 - Prevent transfers between same account
 - Transfer button hidden if only one account
-- When tapping support, Spendwise Pro options highlight
+- When tapping support, Xpenzi Pro options highlight
 - Fixed demo goals amount
 - Enabled merging an account from primary account, primary account is changed instead of deleted
 - Biometric unavailable popup only shows if lock was once enabled
@@ -1366,7 +1366,7 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 ## Release v3.9.6 (Release Date: 2023/2024)
 - New scheduled and loans pages with search
 - Added currency name in transaction entry when multiple currencies used
-- Cleaned up Spendwise Pro screen
+- Cleaned up Xpenzi Pro screen
 
 ## Release v3.9.5 (Release Date: 2023/2024)
 - Premium popup dismissed after purchase
@@ -1494,7 +1494,7 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 - Action bar has create transaction copy button
 
 ## Release v3.8.0 (Release Date: 2023/2024)
-- Spendwise pro background now extends past scrollable area - support for (i) over-scroll
+- Xpenzi pro background now extends past scrollable area - support for (i) over-scroll
 - Proper currency for editing wallets row entry
 - Fixed (i) tappable long press but incomplete would freeze animation
 - Swipe along checks to select transaction
@@ -1545,7 +1545,7 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 - Moved translation help to about page
 
 ## Release v3.7.5 (Release Date: 2023/2024)
-- Spendwise Pro banner in settings
+- Xpenzi Pro banner in settings
 - Removed old implementation of associated titles lookup
 - Added vibration when scrubbing through line graphs
 - New budget history container for (i)
@@ -1599,7 +1599,7 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 - Silent sign-in when platform error when not on web
 
 ## Release v3.7.1 (Release Date: 2023/2024)
-- Spendwise Pro popup
+- Xpenzi Pro popup
 - Custom context menu refactored
 - Removed counting of number in add transaction page
 
@@ -2247,7 +2247,7 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 - Updated FL Charts package
 - Added vibration when reordering categories
 - Fixed auto backups timing
-- App rename to Spendwise
+- App rename to Xpenzi
 - Icon search
 - Most likely category name when selecting icon
 - Added more icons
@@ -2465,3 +2465,4 @@ This document contains all legacy release notes (v6.6.12 and earlier) prior to t
 - Added changelog!
 - You can read the changelog in the About page.
 - All past changes will go here, to prevent clutter.
+

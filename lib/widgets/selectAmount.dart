@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:budget/pages/settingsPage.dart';
 
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addWalletPage.dart';
 import 'package:budget/pages/editWalletsPage.dart';
-import 'package:budget/pages/settingsPage.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';

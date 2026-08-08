@@ -242,6 +242,24 @@ class EditHomePagePinnedWalletsPopup extends StatelessWidget {
                       : Icons.view_list_rounded,
                 ),
               ),
+            if (homePageWidgetDisplay == HomePageWidgetDisplay.WalletList)
+              HorizontalBreakAbove(
+                enabled: true,
+                child: SettingsContainerSwitch(
+                  enableBorderRadius: true,
+                  title: "Group by color",
+                  description: "Visually group accounts by color in the list",
+                  onSwitched: (value) {
+                    updateSettings("walletsListGroupByColor", value,
+                        updateGlobalState: false, pagesNeedingRefresh: [1]);
+                  },
+                  initialValue:
+                      appStateSettings["walletsListGroupByColor"] ?? false,
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.palette_outlined
+                      : Icons.palette_rounded,
+                ),
+              ),
             // if (showCyclePicker &&
             //         homePageWidgetDisplay ==
             //             HomePageWidgetDisplay.WalletSwitcher ||

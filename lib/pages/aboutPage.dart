@@ -5,7 +5,6 @@ import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/debugPage.dart';
 import 'package:budget/pages/detailedChangelogPage.dart';
-import 'package:budget/pages/faqPage.dart';
 import 'package:budget/pages/onBoardingPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/languageMap.dart';
@@ -228,8 +227,8 @@ class AboutPageState extends State<AboutPage> {
       const TranslationInfoBox(
         title: "Polish",
         list: [
-          "Michał S.",
-          "Michał P.",
+          "MichaÅ‚ S.",
+          "MichaÅ‚ P.",
           "Kaczusia",
         ],
       ),
@@ -268,7 +267,7 @@ class AboutPageState extends State<AboutPage> {
         list: [
           "Alexander G.",
           "Jean J.",
-          "João P.",
+          "JoÃ£o P.",
           "Junior M.",
           "Leandro",
           "Xavier B.",
@@ -277,7 +276,7 @@ class AboutPageState extends State<AboutPage> {
       const TranslationInfoBox(
         title: "Bulgarian",
         list: [
-          "Денислав C.",
+          "Ð”ÐµÐ½Ð¸ÑÐ»Ð°Ð² C.",
         ],
       ),
       const TranslationInfoBox(
@@ -398,7 +397,7 @@ class AboutPageState extends State<AboutPage> {
       const TranslationInfoBox(
         title: "Afrikaans",
         list: [
-          "Andrè B.",
+          "AndrÃ¨ B.",
         ],
       ),
       const TranslationInfoBox(
@@ -422,7 +421,7 @@ class AboutPageState extends State<AboutPage> {
       const TranslationInfoBox(
         title: "Hungarian",
         list: [
-          "Döbröntei S.",
+          "DÃ¶brÃ¶ntei S.",
           "Myra S.",
         ],
       ),
@@ -454,7 +453,7 @@ class AboutPageState extends State<AboutPage> {
       const TranslationInfoBox(
         title: "Malay",
         list: [
-          "アリフ",
+          "ã‚¢ãƒªãƒ•",
         ],
       ),
       const TranslationInfoBox(
@@ -681,7 +680,7 @@ void showChangelogForce(BuildContext context) {
   showChangelog(
     context,
     forceShow: true,
-    majorChangesOnly: true,
+    majorChangesOnly: false,
     extraWidget: Padding(
       padding: const EdgeInsetsDirectional.only(
         bottom: 10,
@@ -805,16 +804,16 @@ class AboutLinks extends StatelessWidget {
             _buildTappable(
               context: context,
               isExternalLink: true,
-              onTap: () => openUrl("https://github.com/linson-cv/Spendwise-Expense-Tracker"),
+              onTap: () => openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker"),
               icon: MoreIcons.github,
               text: "app-is-open-source".tr(namedArgs: {"app": globalAppName}),
             ),
             const HorizontalBreak(padding: EdgeInsetsDirectional.zero),
             _buildTappable(
               context: context,
-              isExternalLink: false,
+              isExternalLink: true,
               onTap: () {
-                pushRoute(context, const FAQPage());
+                openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md");
               },
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.live_help_outlined
@@ -855,7 +854,7 @@ class AboutLinks extends StatelessWidget {
             _buildTappable(
               context: context,
               isExternalLink: true,
-              onTap: () => openUrl("http://spendwiseapp.web.app/policy.html"),
+              onTap: () => openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/PRIVACY.md"),
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.policy_outlined
                   : Icons.policy_rounded,
@@ -944,7 +943,7 @@ class AboutDeepLinking extends StatelessWidget {
       title: "deep-linking".tr(),
       showLink: false,
       link:
-          "https://github.com/spendwise/Spendwise?tab=readme-ov-file#app-links",
+          "https://github.com/xpenzi/Xpenzi?tab=readme-ov-file#app-links",
       list: [
         "deep-linking-description".tr(),
       ],

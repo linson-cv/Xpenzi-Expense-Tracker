@@ -1,6 +1,6 @@
-# Spendwise: Expense Tracker
+# Xpenzi: Expense Tracker
 
-Spendwise: Expense Tracker is a full-fledged, feature-rich application designed to empower users in managing their finances effectively. Built using Flutter - with Drift's SQL package, and Firebase - this app offers a seamless and intuitive user experience across various devices.
+Xpenzi: Expense Tracker is a full-fledged, feature-rich application designed to empower users in managing their finances effectively. Built using Flutter - with Drift's SQL package, and Firebase - this app offers a seamless and intuitive user experience across various devices.
 
 ---
 

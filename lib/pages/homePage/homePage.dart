@@ -21,7 +21,6 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
-import 'package:budget/widgets/homeQuickActionDock.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/notificationPermissionBanner.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
@@ -454,13 +453,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            if (appStateSettings["homeQuickActionDock"] != false)
-              const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 10,
-                child: HomeQuickActionDock(),
-              ),
+
             const SelectedTransactionsAppBar(
               pageID: "0",
             ),

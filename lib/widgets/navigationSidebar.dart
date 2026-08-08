@@ -8,10 +8,10 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/navigationFramework.dart';
+import 'package:budget/pages/activityPage.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/timeDigits.dart';
-import 'package:budget/widgets/util/showDatePicker.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -39,10 +39,11 @@ double getHeightNavigationSidebar(context) {
     // No navbar in full screen
     return 0;
   } else {
+    double extraHeight = appStateSettings["floatingNavBar"] == true ? 20.0 : 0.0;
     if (getPlatform() == PlatformOS.isIOS) {
-      return 70 + MediaQuery.viewPaddingOf(context).bottom;
+      return 70 + MediaQuery.viewPaddingOf(context).bottom + extraHeight;
     } else {
-      return 80 + MediaQuery.viewPaddingOf(context).bottom;
+      return 80 + MediaQuery.viewPaddingOf(context).bottom + extraHeight;
     }
   }
 }
@@ -206,17 +207,11 @@ class NavigationSidebarState extends State<NavigationSidebar> {
                                       child: Tappable(
                                         borderRadius: 20,
                                         onTap: () async {
-                                          isCalendarOpened = true;
-                                          if (navigatorKey.currentContext !=
-                                              null) {
-                                            await showCustomDatePicker(
+                                          if (navigatorKey.currentContext != null) {
+                                            pushRoute(
                                               navigatorKey.currentContext!,
-                                              DateTime.now(),
-                                              cancelText: "",
-                                              helpText: "",
-                                              confirmText: "close".tr(),
+                                              const ActivityPage(),
                                             );
-                                            isCalendarOpened = false;
                                           }
                                         },
                                         child: AnimatedPadding(
