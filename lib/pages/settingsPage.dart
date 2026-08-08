@@ -18,6 +18,7 @@ import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/dropdownSelect.dart';
 import 'package:budget/widgets/exportDB.dart';
+import 'package:budget/widgets/exportPDF.dart';
 import 'package:budget/widgets/importCSV.dart';
 import 'package:budget/widgets/exportCSV.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
@@ -50,14 +51,16 @@ import 'package:budget/pages/walletDetailsPage.dart';
 import 'package:budget/struct/initializeBiometrics.dart';
 import 'package:budget/widgets/sliderSelector.dart';
 import 'package:budget/widgets/tappable.dart';
+import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/util/checkWidgetLaunch.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/main.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' hide TextInput;
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
@@ -371,6 +374,8 @@ class SettingsPageFramework extends StatefulWidget {
 }
 
 class SettingsPageFrameworkState extends State<SettingsPageFramework> {
+  String searchValue = "";
+
   void refreshState() {
     print("refresh settings framework");
     setState(() {});
@@ -381,113 +386,261 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
     return PageFramework(
       title: "settings".tr(),
       dragDownToDismiss: true,
-      listWidgets: const [SettingsPageContent()],
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 15, end: 15),
+            child: TextInput(
+              labelText: "search-settings".tr(),
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.search_outlined
+                  : Icons.search_rounded,
+              onChanged: (value) {
+                setState(() {
+                  searchValue = value.toLowerCase();
+                });
+              },
+              autoFocus: false,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SettingsPageContent(searchValue: searchValue),
+        ),
+      ],
     );
   }
 }
 
 class SettingsPageContent extends StatelessWidget {
-  const SettingsPageContent({super.key});
+  const SettingsPageContent({super.key, this.searchValue = ""});
+  final String searchValue;
+
+  bool _match(String title, String description) {
+    if (searchValue.trim().isEmpty) return true;
+    return title.toLowerCase().contains(searchValue.trim()) ||
+           description.toLowerCase().contains(searchValue.trim());
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Main Settings Category Groups
-        SettingsGroupCard(
-          title: "Settings",
-          icon: Icons.settings_rounded,
-          children: [
-            SettingsContainerOpenPage(
-              openPage: const GeneralSettingsSubPage(),
-              title: "General Settings",
-              description: "Biometric lock, haptic feedback, edit data",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.tune_outlined
-                  : Icons.tune_rounded,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AnimatedExpanded(
+            expand: _match("General Settings", "Biometric lock, haptic feedback, edit data"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const GeneralSettingsSubPage(),
+                title: "General Settings",
+                description: "Biometric lock, haptic feedback, edit data",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.tune_outlined
+                    : Icons.tune_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-            SettingsContainerOpenPage(
-              openPage: const ThemeStyleSettingsSubPage(),
-              title: "Theme & Style",
-              description: "Theme color, icon style, animations, font",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.palette_outlined
-                  : Icons.palette_rounded,
+          ),
+          AnimatedExpanded(
+            expand: _match("Theme & Style", "Theme color, icon style, animations, font"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const ThemeStyleSettingsSubPage(),
+                title: "Theme & Style",
+                description: "Theme color, icon style, animations, font",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.palette_outlined
+                    : Icons.palette_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-            SettingsContainerOpenPage(
-              openPage: const TransactionsSettingsSubPage(),
-              title: "Transactions",
-              description: "New transaction, scheduled transactions",
-              icon: navBarIconsData["transactions"]!.iconData,
+          ),
+          AnimatedExpanded(
+            expand: _match("Transactions", "New transaction, scheduled transactions"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const TransactionsSettingsSubPage(),
+                title: "Transactions",
+                description: "New transaction, scheduled transactions",
+                icon: navBarIconsData["transactions"]!.iconData,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-            SettingsContainerOpenPage(
-              openPage: const LocalizationSettingsSubPage(),
-              title: "Localization & Formatting",
-              description: "Language, currency, formatting",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.language_outlined
-                  : Icons.language_rounded,
+          ),
+          AnimatedExpanded(
+            expand: _match("Localization & Formatting", "Language, currency, formatting"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const LocalizationSettingsSubPage(),
+                title: "Localization & Formatting",
+                description: "Language, currency, formatting",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.language_outlined
+                    : Icons.language_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-            SettingsContainerOpenPage(
-              openPage: const NotificationsPage(),
-              title: "Notifications",
-              description: "Daily & upcoming transaction reminders",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.notifications_outlined
-                  : Icons.notifications_rounded,
+          ),
+          AnimatedExpanded(
+            expand: _match("Notifications", "Daily & upcoming transaction reminders"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const NotificationsPage(),
+                title: "Notifications",
+                description: "Daily & upcoming transaction reminders",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.notifications_outlined
+                    : Icons.notifications_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-            SettingsContainerOpenPage(
-              openPage: const ImportExportSettingsSubPage(),
-              title: "Import & Export Data",
-              description: "Import CSV, backup data",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.sd_storage_outlined
-                  : Icons.sd_storage_rounded,
+          ),
+          AnimatedExpanded(
+            expand: _match("Import & Export Data", "Import CSV, backup data"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const ImportExportSettingsSubPage(),
+                title: "Import & Export Data",
+                description: "Import CSV, backup data",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.sd_storage_outlined
+                    : Icons.sd_storage_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-            SettingsContainerOpenPage(
-              openPage: const AboutPage(),
-              title: "about-app".tr(namedArgs: {"app": globalAppName}),
-              description: "App version, changelog, licensing info",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.info_outline
-                  : Icons.info_rounded,
+          ),
+          AnimatedExpanded(
+            expand: _match("about-app".tr(namedArgs: {"app": globalAppName}), "App version, changelog, licensing info"),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const AboutPage(),
+                title: "about-app".tr(namedArgs: {"app": globalAppName}),
+                description: "App version, changelog, licensing info",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.info_outline
+                    : Icons.info_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
-          ],
-        ),
+          ),
 
-        // Tools & Extras Section
-        SettingsGroupCard(
-          title: "Tools & Extras",
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.extension_outlined
-              : Icons.extension_rounded,
-          children: [
-            SettingsContainerOpenPage(
-              openPage: const BillSplitter(),
-              title: "Bill Splitter",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.summarize_outlined
-                  : Icons.summarize_rounded,
+          AnimatedExpanded(
+            expand: searchValue.trim().isEmpty || 
+                    _match("Intelligent & Automation", "") || 
+                    _match("Advanced Automation", "") || 
+                    _match("Xpenzi Intelligence", ""),
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                SettingsGroupCard(
+                  title: "Intelligent & Automation",
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.auto_awesome_outlined
+                      : Icons.auto_awesome_rounded,
+                  children: [
+                    AnimatedExpanded(
+                      expand: _match("Intelligent & Automation", "") || _match("Advanced Automation", ""),
+                      child: SettingsContainerOpenPage(
+                        openPage: const AutoTransactionsPageEmail(),
+                        title: "Advanced Automation",
+                        icon: appStateSettings["outlinedIcons"]
+                            ? Icons.mail_outlined
+                            : Icons.mail_rounded,
+                      ),
+                    ),
+                    AnimatedExpanded(
+                      expand: _match("Intelligent & Automation", "") || _match("Xpenzi Intelligence", ""),
+                      child: SettingsContainerOpenPage(
+                        openPage: const AiSettingsPage(),
+                        title: "Xpenzi Intelligence",
+                        icon: appStateSettings["outlinedIcons"]
+                            ? Icons.smart_toy_outlined
+                            : Icons.smart_toy_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            SettingsContainerOpenPage(
-              openPage: const AutoTransactionsPageEmail(),
-              title: "Advanced Automation",
+          ),
+
+          AnimatedExpanded(
+            expand: searchValue.trim().isEmpty || 
+                    _match("Permissions", "") || 
+                    _match("Device Permissions", ""),
+            child: SettingsGroupCard(
+              title: "Permissions",
               icon: appStateSettings["outlinedIcons"]
-                  ? Icons.auto_awesome_outlined
-                  : Icons.auto_awesome_rounded,
+                  ? Icons.security_outlined
+                  : Icons.security_rounded,
+              children: [
+                AnimatedExpanded(
+                  expand: _match("Permissions", "") || _match("Device Permissions", ""),
+                  child: SettingsContainerOpenPage(
+                    openPage: const PermissionsSettingsSubPage(),
+                    title: "Device Permissions",
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.phonelink_lock_outlined
+                        : Icons.phonelink_lock_rounded,
+                  ),
+                ),
+              ],
             ),
-            SettingsContainerOpenPage(
-              openPage: const ExperimentalFeaturesSubPage(),
-              title: "Experimental Features",
+          ),
+
+          AnimatedExpanded(
+            expand: searchValue.trim().isEmpty || 
+                    _match("Tools & Extras", "") || 
+                    _match("Bill Splitter", "") || 
+                    _match("Experimental Features", ""),
+            child: SettingsGroupCard(
+              title: "Tools & Extras",
               icon: appStateSettings["outlinedIcons"]
-                  ? Icons.science_outlined
-                  : Icons.science_rounded,
+                  ? Icons.extension_outlined
+                  : Icons.extension_rounded,
+              children: [
+                AnimatedExpanded(
+                  expand: _match("Tools & Extras", "") || _match("Bill Splitter", ""),
+                  child: SettingsContainerOpenPage(
+                    openPage: const BillSplitter(),
+                    title: "Bill Splitter",
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.summarize_outlined
+                        : Icons.summarize_rounded,
+                  ),
+                ),
+                AnimatedExpanded(
+                  expand: _match("Tools & Extras", "") || _match("Experimental Features", ""),
+                  child: SettingsContainerOpenPage(
+                    openPage: const ExperimentalFeaturesSubPage(),
+                    title: "Experimental Features",
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.science_outlined
+                        : Icons.science_rounded,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -719,8 +872,8 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
             getPlatform() == PlatformOS.isIOS
                 ? const SizedBox.shrink()
                 : SettingsContainerSwitch(
-                    title: "material-you".tr(),
-                    description: "material-you-description".tr(),
+                    title: "Dynamic Color (Material You)",
+                    description: "Match app colors to your device's wallpaper",
                     onSwitched: (value) {
                       updateSettings("materialYou", value, updateGlobalState: true);
                     },
@@ -752,6 +905,16 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
               },
               getLabel: (item) => item,
             ),
+            SettingsContainer(
+              title: "Category Icon Pack",
+              description: "Unlock premium icons for categories",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.category_outlined
+                  : Icons.category_rounded,
+              onTap: () {
+                pushRoute(context, const PremiumPage(popRouteWithPurchase: false));
+              },
+            ),
             SettingsContainerDropdown(
               title: "Net Total Style",
               icon: appStateSettings["outlinedIcons"]
@@ -763,14 +926,6 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
                 updateSettings("netTotalsColorful", value == "Colorful", updateGlobalState: true);
               },
               getLabel: (item) => item,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const MoreOptionsPagePreferences(),
-              title: "more-options".tr(),
-              description: "more-options-description".tr(),
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.style_outlined
-                  : Icons.style_rounded,
             ),
           ],
         ),
@@ -1089,6 +1244,7 @@ class ImportExportSettingsSubPage extends StatelessWidget {
           title: "Spreadsheets",
           icon: Icons.table_chart_outlined,
           children: const [
+            ExportPDF(),
             ExportCSV(),
             ImportCSV(),
           ],
@@ -1774,12 +1930,6 @@ void openFontPicker(BuildContext context) {
         items: const [
           // These values match that of pubspec font family
           "Avenir",
-          "DMSans",
-          "Metropolis",
-          // SF Pro removed - users on iOS can just select Platform font
-          // Inter is the font family fallback
-          "RobotoCondensed",
-          "Inconsolata",
           "(Platform)",
         ],
         initial: appStateSettings["font"].toString(),
@@ -1799,12 +1949,6 @@ String fontNameDisplayFilter(String value) {
     return "default".tr().capitalizeFirst;
   } else if (value == "(Platform)") {
     return "platform".tr().capitalizeFirst;
-  } else if (value == "DMSans") {
-    return "DM Sans";
-  } else if (value == "RobotoCondensed") {
-    return "Roboto Condensed";
-  } else if (value == "Inconsolata") {
-    return "Inconsolata Monospace";
   }
   return value.toString();
 }
@@ -2529,6 +2673,71 @@ class AnimatedBudgetContainersSetting extends StatelessWidget {
           pagesNeedingRefresh: [0, 2],
         );
       },
+    );
+  }
+}
+
+class PermissionsSettingsSubPage extends StatelessWidget {
+  const PermissionsSettingsSubPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageFramework(
+      title: "Permissions",
+      dragDownToDismiss: true,
+      listWidgets: [
+        SettingsGroupCard(
+          title: "Device Permissions",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.security_outlined
+              : Icons.security_rounded,
+          children: [
+            SettingsContainer(
+              title: "Notifications",
+              description: "Enable or disable notifications for this app",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.notifications_outlined
+                  : Icons.notifications_rounded,
+              onTap: () {
+                AppSettings.openAppSettings(type: AppSettingsType.notification);
+              },
+            ),
+            SettingsContainer(
+              title: "Read App Notifications",
+              description: "Manage permission to auto-detect transaction SMS/alerts",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.mark_email_read_outlined
+                  : Icons.mark_email_read_rounded,
+              onTap: () async {
+                bool status = await NotificationListenerService.isPermissionGranted();
+                if (status) {
+                  openSnackbar(
+                    SnackbarMessage(
+                      title: "Permission Already Granted",
+                      description: "You can revoke this via Android Settings -> Apps -> Special app access -> Device & app notifications",
+                      icon: Icons.check_circle_rounded,
+                    )
+                  );
+                  // Optionally request again which opens the settings page where they can turn it off
+                  NotificationListenerService.requestPermission();
+                } else {
+                  promptNotificationPermissionPopup(context);
+                }
+              },
+            ),
+            SettingsContainer(
+              title: "Open App Settings",
+              description: "Open system settings to manage all permissions",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.settings_applications_outlined
+                  : Icons.settings_applications_rounded,
+              onTap: () {
+                AppSettings.openAppSettings();
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/debugPage.dart';
 import 'package:budget/pages/detailedChangelogPage.dart';
+import 'package:budget/pages/faqPage.dart';
 import 'package:budget/pages/onBoardingPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/languageMap.dart';
@@ -16,9 +17,9 @@ import 'package:budget/widgets/navigationSidebar.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
-import 'package:budget/widgets/ratingPopup.dart';
 import 'package:budget/widgets/showChangelog.dart';
 import 'package:budget/widgets/tappable.dart';
+import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
@@ -151,6 +152,14 @@ class AboutPageState extends State<AboutPage> {
               ],
             ),
           ),
+        ),
+      ),
+      Padding(
+        padding:
+            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
+        child: AboutInfoBox(
+          title: "Cashew (Original Fork Repo)",
+          link: "https://github.com/jameskokoska/Cashew",
         ),
       ),
     ];
@@ -764,22 +773,9 @@ void deleteAllDataFlow(BuildContext context) {
     },
     onSubmit: () async {
       popRoute(context);
-      openPopup(
+      openBottomSheet(
         context,
-        title: "erase-everything-warning".tr(),
-        description: "erase-everything-warning-description".tr(),
-        icon: appStateSettings["outlinedIcons"]
-            ? Icons.warning_amber_outlined
-            : Icons.warning_amber_rounded,
-        onSubmit: () async {
-          popRoute(context);
-          clearDatabase(context);
-        },
-        onSubmitLabel: "erase".tr(),
-        onCancelLabel: "cancel".tr(),
-        onCancel: () {
-          popRoute(context);
-        },
+        const EraseDataConfirmationPopup(),
       );
     },
     onSubmitLabel: "erase".tr(),
@@ -809,15 +805,17 @@ class AboutLinks extends StatelessWidget {
             _buildTappable(
               context: context,
               isExternalLink: true,
-              onTap: () => openUrl("https://github.com/spendwise/Spendwise"),
+              onTap: () => openUrl("https://github.com/linson-cv/Spendwise-Expense-Tracker"),
               icon: MoreIcons.github,
               text: "app-is-open-source".tr(namedArgs: {"app": globalAppName}),
             ),
             const HorizontalBreak(padding: EdgeInsetsDirectional.zero),
             _buildTappable(
               context: context,
-              isExternalLink: true,
-              onTap: () => openUrl("https://spendwiseapp.web.app/faq.html"),
+              isExternalLink: false,
+              onTap: () {
+                pushRoute(context, const FAQPage());
+              },
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.live_help_outlined
                   : Icons.live_help_rounded,
@@ -827,8 +825,7 @@ class AboutLinks extends StatelessWidget {
             _buildTappable(
               context: context,
               isExternalLink: false,
-              onTap: () =>
-                  openBottomSheet(context, const RatingPopup(), fullSnap: true),
+              onTap: () => openUrl('mailto:nav.lin.dev@gmail.com?subject=Xpenzi Feedback (Beta)'),
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.rate_review_outlined
                   : Icons.rate_review_rounded,
@@ -1056,6 +1053,86 @@ class AboutInfoBox extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class EraseDataConfirmationPopup extends StatefulWidget {
+  const EraseDataConfirmationPopup({super.key});
+  @override
+  State<EraseDataConfirmationPopup> createState() => _EraseDataConfirmationPopupState();
+}
+
+class _EraseDataConfirmationPopupState extends State<EraseDataConfirmationPopup> {
+  String typedText = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupFramework(
+      title: "erase-everything-warning".tr(),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10),
+            child: TextFont(
+              textAlign: TextAlign.center,
+              text: "To confirm, please type \"DELETE\" below.",
+              fontSize: 16.5,
+              maxLines: 100,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: TextInput(
+              labelText: "Type DELETE",
+              onChanged: (val) {
+                setState(() {
+                  typedText = val.trim();
+                });
+              },
+              autoFocus: true,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              runSpacing: 10,
+              children: [
+                IntrinsicWidth(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Button(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      textColor: Theme.of(context).colorScheme.onTertiaryContainer,
+                      label: "cancel".tr(),
+                      onTap: () {
+                        popRoute(context);
+                      },
+                    ),
+                  ),
+                ),
+                IntrinsicWidth(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Button(
+                      color: typedText == "DELETE" ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      textColor: typedText == "DELETE" ? Theme.of(context).colorScheme.onError : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      label: "erase".tr(),
+                      onTap: () {
+                        if (typedText == "DELETE") {
+                          popRoute(context);
+                          clearDatabase(context);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

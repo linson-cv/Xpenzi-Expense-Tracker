@@ -65,6 +65,7 @@ Future<FirebaseFirestore?> firebaseGetDBInstance() async {
       }
     } catch (e) {
       print("There was an error with google sign in: $e");
+      print("NOTE: Google Sign-In usually fails with PlatformException(sign_in_failed) if the SHA-1 or SHA-256 certificate fingerprints are missing in the Firebase Console for your package (com.navlin.xpenzi). Please verify your Firebase project settings.");
       return null;
     }
   }

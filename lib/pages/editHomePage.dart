@@ -435,12 +435,11 @@ class _EditHomePageState extends State<EditHomePage> {
         dragDownToDismissEnabled: dragDownToDismissEnabled,
         title: "edit-home".tr(),
         actions: [
-          IconButton(
-            tooltip: "Reset Home Page Layout",
-            icon: Icon(
-              appStateSettings["outlinedIcons"]
-                  ? Icons.restart_alt_outlined
-                  : Icons.restart_alt_rounded,
+          TextButton(
+            child: TextFont(
+              text: "reset".tr(),
+              fontSize: 16,
+              textColor: Theme.of(context).colorScheme.primary,
             ),
             onPressed: () async {
               await updateSettings(
@@ -538,6 +537,18 @@ class _EditHomePageState extends State<EditHomePage> {
               },
             ),
           ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                  start: 18, top: 15, bottom: 5),
+              child: TextFont(
+                text: "Added to Home",
+                fontSize: 14,
+                textColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           SliverReorderableList(
             onReorderStart: (index) {
               HapticFeedback.heavyImpact();
@@ -553,14 +564,13 @@ class _EditHomePageState extends State<EditHomePage> {
               });
             },
             itemBuilder: (context, index) {
-              if (keyOrder.length <= index) {
-                return Container(
-                  key: ValueKey(index),
-                );
+              List<String> enabledKeys = keyOrder.cast<String>().where((k) => ["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(k) || editHomePageItems[k]?.isEnabled == true).toList();
+              if (enabledKeys.length <= index) {
+                return Container(key: ValueKey(index));
               }
-              String key = keyOrder[index];
+              String key = enabledKeys[index];
 
-              if (["ORDER:LEFT", "ORDER:RIGHT"].contains(key)) {
+              if (["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(key)) {
                 return PanelSectionSeparator(
                   orderKey: key,
                   key: ValueKey(key),
@@ -568,9 +578,7 @@ class _EditHomePageState extends State<EditHomePage> {
               }
 
               if (editHomePageItems[key] == null) {
-                return Container(
-                  key: ValueKey(index),
-                );
+                return Container(key: ValueKey(index));
               }
 
               return HomePageEditRowEntry(
@@ -586,19 +594,65 @@ class _EditHomePageState extends State<EditHomePage> {
                 index: index,
               );
             },
-            itemCount: keyOrder.length,
+            itemCount: keyOrder.where((k) => ["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(k) || editHomePageItems[k]?.isEnabled == true).length,
             onReorder: (oldIndex, newIndex) async {
               setState(() {
+                List<String> enabledKeys = keyOrder.cast<String>().where((k) => ["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(k) || editHomePageItems[k]?.isEnabled == true).toList();
+                List<String> disabledKeys = keyOrder.cast<String>().where((k) => !["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(k) && editHomePageItems[k]?.isEnabled == false).toList();
+                
                 if (oldIndex < newIndex) {
                   newIndex -= 1;
                 }
-                final String item = keyOrder.removeAt(oldIndex);
-                keyOrder.insert(newIndex, item);
+                final String item = enabledKeys.removeAt(oldIndex);
+                enabledKeys.insert(newIndex, item);
+                
+                keyOrder = [...enabledKeys, ...disabledKeys];
               });
               updateSettings(getHomePageOrderSettingsKey(context), keyOrder,
                   pagesNeedingRefresh: [], updateGlobalState: false);
               return true;
             },
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                  start: 18, top: 20, bottom: 5),
+              child: TextFont(
+                text: "Not Added",
+                fontSize: 14,
+                textColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                List<String> disabledKeys = keyOrder.cast<String>().where((k) => !["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(k) && editHomePageItems[k]?.isEnabled == false).toList();
+                if (disabledKeys.length <= index) {
+                  return Container(key: ValueKey(index));
+                }
+                String key = disabledKeys[index];
+
+                if (editHomePageItems[key] == null) {
+                  return Container(key: ValueKey(index));
+                }
+
+                return HomePageEditRowEntry(
+                  key: ValueKey(key),
+                  text: editHomePageItems[key]!.name,
+                  iconData: editHomePageItems[key]!.icon,
+                  toggleSwitch: () => toggleSwitch(key),
+                  switchValue: editHomePageItems[key]?.isEnabled ?? false,
+                  canReorder: false,
+                  currentReorder: false,
+                  onTap: editHomePageItems[key]?.onTap,
+                  extraWidgetsBelow: editHomePageItems[key]?.extraWidgetsBelow,
+                  index: index,
+                );
+              },
+              childCount: keyOrder.where((k) => !["ORDER:LEFT", "ORDER:RIGHT", "ORDER:CENTER"].contains(k) && editHomePageItems[k]?.isEnabled == false).length,
+            ),
           ),
         ],
       ),

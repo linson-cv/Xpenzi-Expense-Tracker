@@ -493,7 +493,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
                   : const Duration(milliseconds: 300),
           children: [...pages, ...pagesExtended],
         ),
-        extendBody: false,
+        extendBody: appStateSettings["floatingNavBar"] == true,
         bottomNavigationBar: BottomNavBar(
           currentNavigationStackedIndex: currentPage,
           onChanged: (index) {

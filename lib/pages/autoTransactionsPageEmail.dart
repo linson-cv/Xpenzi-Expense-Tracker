@@ -80,8 +80,9 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
 Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
   bool status = await NotificationListenerService.isPermissionGranted();
   if (status != true) {
-    if (context != null) {
-      status = await promptNotificationPermissionPopup(context);
+    BuildContext? popupContext = context ?? navigatorKey.currentContext;
+    if (popupContext != null) {
+      status = await promptNotificationPermissionPopup(popupContext);
     } else {
       status = await NotificationListenerService.requestPermission();
     }

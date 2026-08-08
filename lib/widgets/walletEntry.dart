@@ -266,7 +266,7 @@ class WalletEntryRow extends StatelessWidget {
                         ),
                         Flexible(
                           child: Padding(
-                            padding: const EdgeInsetsDirectional.only(
+                                  padding: const EdgeInsetsDirectional.only(
                               end: 17,
                               start: 10,
                             ),
@@ -275,6 +275,23 @@ class WalletEntryRow extends StatelessWidget {
                               text: "",
                               maxLines: 1,
                               richTextSpan: [
+                                if (!isCurrencyRow && walletWithDetails.wallet.iconName != null)
+                                  WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: Padding(
+                                      padding: const EdgeInsetsDirectional.only(end: 5),
+                                      child: Icon(
+                                        walletWithDetails.wallet.iconName == "Bank Account" ? Icons.account_balance_rounded :
+                                        walletWithDetails.wallet.iconName == "Credit Card" ? Icons.credit_card_rounded :
+                                        walletWithDetails.wallet.iconName == "Meal Card" ? Icons.restaurant_rounded :
+                                        walletWithDetails.wallet.iconName == "Cash" ? Icons.payments_rounded :
+                                        walletWithDetails.wallet.iconName == "Savings" ? Icons.savings_rounded :
+                                        Icons.account_balance_wallet_rounded,
+                                        size: 18,
+                                        color: getColor(context, "black"),
+                                      ),
+                                    ),
+                                  ),
                                 TextSpan(
                                   text: isCurrencyRow
                                       ? (walletWithDetails.wallet.currency ??

@@ -210,6 +210,14 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                 );
               }
               if (snapshot.hasData && (snapshot.data ?? []).isNotEmpty) {
+                List<WalletWithDetails> walletsListToDisplay =
+                    List.from(snapshot.data!);
+                if (appStateSettings["groupWalletsByColor"] == true) {
+                  walletsListToDisplay.sort((a, b) {
+                    return (a.wallet.colour ?? "")
+                        .compareTo(b.wallet.colour ?? "");
+                  });
+                }
                 return SliverReorderableList(
                   onReorderStart: (index) {
                     HapticFeedback.heavyImpact();
@@ -225,7 +233,8 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                     });
                   },
                   itemBuilder: (context, index) {
-                    WalletWithDetails walletWithDetails = snapshot.data![index];
+                    WalletWithDetails walletWithDetails =
+                        walletsListToDisplay[index];
                     TransactionWallet wallet = walletWithDetails.wallet;
                     Color accentColor = dynamicPastel(
                         context,
@@ -235,27 +244,37 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                         amountLight: 0.55,
                         amountDark: 0.35);
                     return EditRowEntry(
-                      extraIcon: Provider.of<SelectedWalletPk>(context)
-                                  .selectedWalletPk ==
-                              wallet.walletPk
-                          ? appStateSettings["outlinedIcons"]
-                              ? Icons.star_outlined
-                              : Icons.star_rounded
-                          : Icons.star_outline,
-                      onExtra: () async {
-                        setPrimaryWallet(
-                          wallet.walletPk,
-                          allWallets:
-                              Provider.of<AllWallets>(context, listen: false),
-                        );
-                      },
+                      extraWidget: CustomPopupMenuButton(
+                        showButtons: true,
+                        keepOutFirst: true,
+                        items: [
+                          DropdownItemMenu(
+                            id: "make-primary",
+                            label: "primary-default".tr(),
+                            icon: Provider.of<SelectedWalletPk>(context)
+                                        .selectedWalletPk ==
+                                    wallet.walletPk
+                                ? (appStateSettings["outlinedIcons"]
+                                    ? Icons.star_outlined
+                                    : Icons.star_rounded)
+                                : Icons.star_outline,
+                            action: () async {
+                              setPrimaryWallet(
+                                wallet.walletPk,
+                                allWallets: Provider.of<AllWallets>(context,
+                                    listen: false),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                       canDelete: (wallet.walletPk != "0" ||
                           Provider.of<AllWallets>(context, listen: true)
                                   .indexedByPk
                                   .entries
                                   .length >
                               1),
-                      canReorder: searchValue == "" &&
+                      canReorder: appStateSettings["groupWalletsByColor"] != true && searchValue == "" &&
                           (snapshot.data ?? []).length != 1,
                       currentReorder:
                           currentReorder != -1 && currentReorder != index,
@@ -333,10 +352,10 @@ class _EditWalletsPageState extends State<EditWalletsPage> {
                       key: ValueKey(wallet.walletPk),
                     );
                   },
-                  itemCount: snapshot.data!.length,
+                  itemCount: walletsListToDisplay.length,
                   onReorder: (intPrevious, intNew) async {
                     WalletWithDetails oldWalletWithDetails =
-                        snapshot.data![intPrevious];
+                        walletsListToDisplay[intPrevious];
                     TransactionWallet oldWallet = oldWalletWithDetails.wallet;
 
                     if (intNew > intPrevious) {
@@ -723,6 +742,25 @@ class PrimaryCurrencySetting extends StatelessWidget {
   }
 }
 
+class GroupWalletsByColorSettingToggle extends StatelessWidget {
+  const GroupWalletsByColorSettingToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "Group by Color",
+      description: "Group and sort accounts by color",
+      onSwitched: (value) {
+        updateSettings("groupWalletsByColor", value, updateGlobalState: true);
+      },
+      initialValue: appStateSettings["groupWalletsByColor"] == true,
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.color_lens_outlined
+          : Icons.color_lens_rounded,
+    );
+  }
+}
+
 class WalletsSettings extends StatelessWidget {
   const WalletsSettings({this.backgroundColor, super.key});
   final Color? backgroundColor;
@@ -731,6 +769,7 @@ class WalletsSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        const GroupWalletsByColorSettingToggle(),
         const ShowAccountLabelSettingToggle(),
         const ShowCurrencyLabelSettingToggle(),
         ExchangeRateSettingPage(backgroundColor: backgroundColor),

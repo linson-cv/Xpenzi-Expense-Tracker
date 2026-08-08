@@ -26,7 +26,7 @@ class TextFont extends StatelessWidget {
   final TextOverflow? overflow;
   final Widget? overflowReplacement;
   final bool? softWrap;
-  final List<TextSpan>? richTextSpan;
+  final List<InlineSpan>? richTextSpan;
   final bool selectableText;
   final double? letterSpacing;
 
@@ -66,10 +66,7 @@ class TextFont extends StatelessWidget {
       letterSpacing: letterSpacing,
       fontWeight: fontWeight,
       fontSize: fontSize,
-      fontFamily: fallbackFontLocales.contains(appStateSettings["locale"]) &&
-              appStateSettings["font"] == "Avenir"
-          ? "DMSans"
-          : appStateSettings["font"],
+      fontFamily: appStateSettings["font"],
       fontFamilyFallback: const ['Inter'],
       color: finalTextColor,
       decoration: TextDecoration.underline,

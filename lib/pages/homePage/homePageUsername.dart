@@ -4,6 +4,9 @@ import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:budget/database/tables.dart';
+import 'package:budget/struct/databaseGlobal.dart';
 
 class HomePageUsername extends StatelessWidget {
   final AnimationController animationControllerHeader;
@@ -47,10 +50,39 @@ class HomePageUsername extends StatelessWidget {
                 child: PartyHat(
                   size: 23,
                   enabled: showUsername,
-                  child: TextFont(
-                    text: getWelcomeMessage(),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFont(
+                        text: getWelcomeMessage(),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                      StreamBuilder<double?>(
+                        stream: database.watchTotalSpentInTimeRangeFromCategories(
+                          allWallets: Provider.of<AllWallets>(context),
+                          start: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
+                          end: DateTime.now(),
+                          categoryFks: null,
+                          categoryFksExclude: null,
+                          budgetTransactionFilters: null,
+                          memberTransactionFilters: null,
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData && snapshot.data != null && snapshot.data! > 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: TextFont(
+                                text: "You've spent ${convertToMoney(Provider.of<AllWallets>(context), snapshot.data!)} so far this week. Keep it up!",
+                                fontSize: 13,
+                                textColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }
+                      ),
+                    ],
                   ),
                 ),
               ),

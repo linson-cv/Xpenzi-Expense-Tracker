@@ -7,6 +7,7 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
+import 'dart:ui';
 import 'package:drift/drift.dart' hide Column;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -52,12 +53,15 @@ Future<T?> openPopup<T extends Object?>(
       } else {
         tween = Tween(begin: 0.95, end: 1);
       }
-      return ScaleTransition(
-        scale: tween.animate(
-            CurvedAnimation(parent: anim, curve: Curves.easeInOutQuart)),
-        child: FadeTransition(
-          opacity: anim,
-          child: child,
+      return BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: ScaleTransition(
+          scale: tween.animate(
+              CurvedAnimation(parent: anim, curve: Curves.easeInOutQuart)),
+          child: FadeTransition(
+            opacity: anim,
+            child: child,
+          ),
         ),
       );
     },
@@ -604,7 +608,7 @@ class CodeBlock extends StatelessWidget {
               text: text,
               style: TextStyle(
                 fontSize: fontSize ?? 15,
-                fontFamily: "Inconsolata",
+                fontFamily: "Inter",
                 // fontFamilyFallback: <String>["monospace", "Courier"],
                 color: getColor(context, "black"),
               ),
