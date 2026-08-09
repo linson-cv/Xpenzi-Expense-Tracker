@@ -26,6 +26,12 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.4
+    (A) Dedicated Transactions sorting modal by Date Created, Date Updated, Amount & Title
+    (A) In-grid Explore page customization with live + and - action badges and 2-column reordering
+    (A) Uniform equal sizing for all Explore cards including Transactions Search
+    (A) Refined header edit pen icon on Explore and updated transactions navbar icon to receipt
+    (A) Cleaned up Explore layout and consolidated search bar on Settings page
     < 1.1.3
     (A) Redesigned Explore screen with customizable 2-column grid cards, search, and live drag-to-reorder
     (A) Fixed account type persistence (Bank Account, Credit Card, Meal Card, Cash, Savings)
@@ -97,6 +103,20 @@ end""";
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
+    "< 1.1.4": [
+      MajorChanges(
+        "Smart Transactions Sort & In-Grid Explore Editing",
+        Icons.sort_rounded,
+        info: [
+          "Sort transactions by Date Created, Date Updated, Amount, and Title",
+          "Edit Explore cards directly in 2-column grid mode with + and - badges",
+          "Uniform equal card sizing for all Explore shortcuts",
+        ],
+        onTap: (context) {
+          popRoute(context);
+        },
+      ),
+    ],
     "< 1.1.3": [
       MajorChanges(
         "Customizable Explore Screen",

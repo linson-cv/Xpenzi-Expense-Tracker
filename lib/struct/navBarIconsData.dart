@@ -37,8 +37,8 @@ Map<String, NavBarIconData> getNavBarIconsData() {
     ),
     "transactions": NavBarIconData(
       iconData: appStateSettings["outlinedIcons"]
-          ? Icons.wallet_outlined
-          : Icons.wallet_rounded,
+          ? Icons.receipt_long_outlined
+          : Icons.receipt_long_rounded,
       label: "transactions",
       navigationIndexedStackIndex: 1,
     ),

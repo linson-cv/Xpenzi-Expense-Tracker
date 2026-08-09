@@ -1465,20 +1465,35 @@ class FinanceDatabase extends _$FinanceDatabase {
     ])
       ..limit(limit ?? DEFAULT_LIMIT, offset: null)
       ..orderBy([
-        // This will bring unpaid transactions to the top of the list
-        // Before it brought it to the top of the day, but now
-        // This returns all transactions within a time range
-        // (t) => OrderingTerm(
-        //       expression: (t.type
-        //                   .equalsValue(TransactionSpecialType.repetitive) |
-        //               t.type.equalsValue(
-        //                   TransactionSpecialType.subscription) |
-        //               t.type.equalsValue(TransactionSpecialType.upcoming)) &
-        //           t.paid.equals(false),
-        //       mode: OrderingMode.desc,
-        //     ),
+        if (searchFilters?.sortOption == TransactionSortOption.amount)
+          OrderingTerm(
+            expression: transactions.amount,
+            mode: searchFilters?.sortAscending == true
+                ? OrderingMode.asc
+                : OrderingMode.desc,
+          )
+        else if (searchFilters?.sortOption == TransactionSortOption.title)
+          OrderingTerm(
+            expression: transactions.name,
+            mode: searchFilters?.sortAscending == true
+                ? OrderingMode.asc
+                : OrderingMode.desc,
+          )
+        else if (searchFilters?.sortOption == TransactionSortOption.dateUpdated)
+          OrderingTerm(
+            expression: transactions.dateTimeModified,
+            mode: searchFilters?.sortAscending == true
+                ? OrderingMode.asc
+                : OrderingMode.desc,
+          )
+        else
+          OrderingTerm(
+            expression: transactions.dateCreated,
+            mode: searchFilters?.sortAscending == true
+                ? OrderingMode.asc
+                : OrderingMode.desc,
+          ),
         OrderingTerm.desc(transactions.dateCreated),
-        OrderingTerm.desc(transactions.dateTimeModified),
       ])
       ..where(
         // Should match that of getTransactionCategoryWithDay

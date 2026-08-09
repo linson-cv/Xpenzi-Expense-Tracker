@@ -20,8 +20,17 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
 import 'package:provider/provider.dart';
+import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/selectChips.dart';
 import 'package:budget/widgets/amountRangeSlider.dart';
+import 'package:budget/widgets/textWidgets.dart';
+
+enum TransactionSortOption {
+  dateCreated,
+  dateUpdated,
+  amount,
+  title,
+}
 
 class SearchFilters {
   SearchFilters({
@@ -44,6 +53,8 @@ class SearchFilters {
     this.searchQuery,
     this.titleContains,
     this.noteContains,
+    this.sortOption = TransactionSortOption.dateCreated,
+    this.sortAscending = false,
   }) {
     walletPks = walletPks.isEmpty ? [] : walletPks;
     categoryPks = categoryPks.isEmpty ? [] : categoryPks;
@@ -88,6 +99,8 @@ class SearchFilters {
   String? searchQuery;
   String? titleContains;
   String? noteContains;
+  TransactionSortOption sortOption;
+  bool sortAscending;
 
   SearchFilters copyWith({
     List<String>? walletPks,
@@ -109,6 +122,8 @@ class SearchFilters {
     String? searchQuery,
     String? titleContains,
     String? noteContains,
+    TransactionSortOption? sortOption,
+    bool? sortAscending,
   }) {
     return SearchFilters(
       walletPks: walletPks ?? this.walletPks,
@@ -132,6 +147,8 @@ class SearchFilters {
       searchQuery: searchQuery ?? this.searchQuery,
       titleContains: titleContains ?? this.titleContains,
       noteContains: noteContains ?? this.noteContains,
+      sortOption: sortOption ?? this.sortOption,
+      sortAscending: sortAscending ?? this.sortAscending,
     );
   }
 
@@ -155,6 +172,8 @@ class SearchFilters {
     searchQuery = null;
     titleContains = null;
     noteContains = null;
+    sortOption = TransactionSortOption.dateCreated;
+    sortAscending = false;
   }
 
   bool isClear({bool? ignoreDateTimeRange, bool? ignoreSearchQuery}) {
@@ -176,7 +195,9 @@ class SearchFilters {
         (ignoreDateTimeRange == true || dateTimeRange == null) &&
         (ignoreSearchQuery == true || searchQuery == null) &&
         titleContains == null &&
-        noteContains == null) {
+        noteContains == null &&
+        sortOption == TransactionSortOption.dateCreated &&
+        sortAscending == false) {
       return true;
     } else {
       return false;
@@ -306,6 +327,16 @@ class SearchFilters {
               noteContains = value;
             }
             break;
+          case 'sortOption':
+            try {
+              sortOption = TransactionSortOption.values[int.parse(value)];
+            } catch (_) {}
+            break;
+          case 'sortAscending':
+            try {
+              sortAscending = bool.parse(value);
+            } catch (_) {}
+            break;
           default:
             break;
         }
@@ -367,6 +398,8 @@ class SearchFilters {
     outString += "searchQuery:-:$searchQuery:-:";
     outString += "titleContains:-:$titleContains:-:";
     outString += "noteContains:-:$noteContains:-:";
+    outString += "sortOption:-:${sortOption.index}:-:";
+    outString += "sortAscending:-:$sortAscending:-:";
     //print(outString);
     return outString;
   }
@@ -1602,6 +1635,99 @@ class AppliedFilterChips extends StatelessWidget {
                 : const SizedBox.shrink(),
           );
         },
+      ),
+    );
+  }
+}
+
+class TransactionSortSelection extends StatefulWidget {
+  const TransactionSortSelection({
+    required this.searchFilters,
+    required this.setSearchFilters,
+    super.key,
+  });
+
+  final SearchFilters searchFilters;
+  final Function(SearchFilters searchFilters) setSearchFilters;
+
+  @override
+  State<TransactionSortSelection> createState() =>
+      _TransactionSortSelectionState();
+}
+
+class _TransactionSortSelectionState extends State<TransactionSortSelection> {
+  late TransactionSortOption selectedSortOption =
+      widget.searchFilters.sortOption;
+  late bool selectedSortAscending = widget.searchFilters.sortAscending;
+
+  void updateSort(TransactionSortOption option) {
+    setState(() {
+      selectedSortOption = option;
+      widget.searchFilters.sortOption = option;
+      widget.searchFilters.sortAscending = selectedSortAscending;
+    });
+    widget.setSearchFilters(widget.searchFilters);
+  }
+
+  void updateAscending(bool ascending) {
+    setState(() {
+      selectedSortAscending = ascending;
+      widget.searchFilters.sortAscending = ascending;
+    });
+    widget.setSearchFilters(widget.searchFilters);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+            child: TextFont(
+              text: "sort-by".tr(),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          RadioItems<TransactionSortOption>(
+            initial: selectedSortOption,
+            items: TransactionSortOption.values,
+            displayFilter: (option) {
+              switch (option) {
+                case TransactionSortOption.dateCreated:
+                  return "Date Created".tr();
+                case TransactionSortOption.dateUpdated:
+                  return "Date Updated".tr();
+                case TransactionSortOption.amount:
+                  return "Amount".tr();
+                case TransactionSortOption.title:
+                  return "Title".tr();
+              }
+            },
+            onChanged: (option) => updateSort(option),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+            child: TextFont(
+              text: "order".tr(),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          RadioItems<bool>(
+            initial: selectedSortAscending,
+            items: const [false, true],
+            displayFilter: (ascending) {
+              return ascending ? "Ascending".tr() : "Descending".tr();
+            },
+            onChanged: (ascending) => updateAscending(ascending),
+          ),
+        ],
       ),
     );
   }

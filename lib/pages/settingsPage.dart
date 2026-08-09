@@ -1,5 +1,6 @@
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/billSplitter.dart';
@@ -84,7 +85,6 @@ class MoreActionsPage extends StatefulWidget {
 
 class MoreActionsPageState extends State<MoreActionsPage> {
   GlobalKey<PageFrameworkState> pageState = GlobalKey();
-  String searchValue = "";
   bool _isEditMode = false;
 
   void refreshState() {
@@ -98,8 +98,6 @@ class MoreActionsPageState extends State<MoreActionsPage> {
   void _toggleEditMode() {
     setState(() {
       _isEditMode = !_isEditMode;
-      // Clear search when entering edit mode
-      if (_isEditMode) searchValue = "";
     });
   }
 
@@ -120,44 +118,19 @@ class MoreActionsPageState extends State<MoreActionsPage> {
                       ? Icons.check_circle_outline
                       : Icons.check_circle_rounded)
                   : (appStateSettings["outlinedIcons"]
-                      ? Icons.tune_outlined
-                      : Icons.tune_rounded),
+                      ? Icons.edit_outlined
+                      : Icons.edit_rounded),
             ),
-            tooltip: _isEditMode ? "Done" : "Customize",
+            tooltip: _isEditMode ? "Done" : "Edit",
           ),
         ],
         slivers: [
-          // Global search bar — always visible, hidden in edit mode
-          if (!_isEditMode)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 10, end: 10),
-                child: TextInput(
-                  labelText: "Find settings, preferences & features...",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.search_outlined
-                      : Icons.search_rounded,
-                  onChanged: (value) {
-                    setState(() {
-                      searchValue = value.toLowerCase();
-                    });
-                  },
-                  autoFocus: false,
-                ),
-              ),
-            ),
           SliverToBoxAdapter(
             child: MorePages(
-              searchValue: searchValue,
               isEditMode: _isEditMode,
               onEditModeChanged: (value) => setState(() => _isEditMode = value),
             ),
           ),
-          // SettingsPageContent — hidden in edit mode
-          if (!_isEditMode)
-            SliverToBoxAdapter(
-              child: SettingsPageContent(searchValue: searchValue),
-            ),
         ],
       );
     });
@@ -426,13 +399,13 @@ class _MorePagesState extends State<MorePages> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ──────────────────────────────────────────────────────────────
-          // EDIT MODE: reorderable list showing ALL cards
+          // EDIT MODE: 2-column reorderable grid with + and - badges
           // ──────────────────────────────────────────────────────────────
           if (widget.isEditMode) ...[
             Padding(
-              padding: const EdgeInsetsDirectional.only(start: 8, bottom: 6, top: 4),
+              padding: const EdgeInsetsDirectional.only(start: 8, bottom: 8, top: 4),
               child: Text(
-                "Drag to reorder · Tap eye to show/hide",
+                "Drag cards to reorder · Tap + or - to show/hide",
                 style: TextStyle(
                   fontFamily: appStateSettings["font"],
                   fontFamilyFallback: const ["Inter"],
@@ -441,43 +414,42 @@ class _MorePagesState extends State<MorePages> {
                 ),
               ),
             ),
-            ReorderableListView(
+            ReorderableGridView.count(
+              key: ValueKey("reorder_grid_${orderedKeys.join('_')}"),
+              crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              proxyDecorator: (child, index, animation) => Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(12),
-                color: Theme.of(context).colorScheme.surface,
-                child: child,
-              ),
-              onReorder: (oldIndex, newIndex) {
-                if (newIndex > oldIndex) newIndex--;
+              childAspectRatio: 2.3,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+              onReorder: (oldIndex, newIndex) async {
                 final newOrder = List<String>.from(orderedKeys);
                 final item = newOrder.removeAt(oldIndex);
                 newOrder.insert(newIndex, item);
-                _saveOrder(newOrder);
+                await _saveOrder(newOrder);
                 setState(() {});
+                return true;
               },
               children: [
-                for (int idx = 0; idx < orderedKeys.length; idx++)
-                  if (catalogue.containsKey(orderedKeys[idx]))
-                    _EditModeRow(
-                      key: ValueKey(orderedKeys[idx]),
-                      index: idx,
-                      card: catalogue[orderedKeys[idx]]!,
-                      isVisible: !hidden.contains(orderedKeys[idx]),
-                      onToggle: () => setState(() => _toggleVisibility(orderedKeys[idx], hidden)),
+                for (String key in orderedKeys)
+                  if (catalogue.containsKey(key))
+                    _GridCardWrapper(
+                      key: ValueKey(key),
+                      card: catalogue[key]!,
+                      isEditMode: true,
+                      isVisible: !hidden.contains(key),
+                      onToggleVisibility: () => setState(() => _toggleVisibility(key, hidden)),
                     ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             // Reset order + show-all button
             Tappable(
               borderRadius: 12,
               color: Theme.of(context).colorScheme.secondaryContainer,
               onTap: () async {
                 await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
-                await updateSettings("hiddenMorePageItems", <String>["search"], updateGlobalState: true);
+                await updateSettings("hiddenMorePageItems", <String>[], updateGlobalState: true);
                 settingsPageStateKey.currentState?.refreshState();
                 setState(() {});
               },
@@ -508,7 +480,7 @@ class _MorePagesState extends State<MorePages> {
             const SizedBox(height: 8),
           ] else ...[
             // ────────────────────────────────────────────────────────────
-            // NORMAL / SEARCH MODE: 2-column card grid
+            // NORMAL / SEARCH MODE: 2-column card grid (Uniform Sizing)
             // ────────────────────────────────────────────────────────────
 
             // Featured rows are always visible (not searchable, not hideable)
@@ -537,9 +509,8 @@ class _MorePagesState extends State<MorePages> {
               const SizedBox(height: 8),
             ],
 
-            // Customizable 2-column card grid
+            // Customizable 2-column card grid with uniform card sizing
             Builder(builder: (context) {
-              // Respect order; filter hidden; optionally filter by search
               final visibleCards = orderedKeys
                   .where((k) => catalogue.containsKey(k))
                   .where((k) => !hidden.contains(k))
@@ -556,25 +527,22 @@ class _MorePagesState extends State<MorePages> {
                 final left = visibleCards[i];
                 final right = i + 1 < visibleCards.length ? visibleCards[i + 1] : null;
 
-                if (right == null) {
-                  // Last card is odd → render full width directly
-                  rows.add(
-                    Row(
+                rows.add(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
                       children: [
                         Expanded(child: left.builder(context)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: right != null
+                              ? right.builder(context)
+                              : const SizedBox.shrink(),
+                        ),
                       ],
                     ),
-                  );
-                } else {
-                  rows.add(
-                    Row(
-                      children: [
-                        Expanded(child: left.builder(context)),
-                        Expanded(child: right.builder(context)),
-                      ],
-                    ),
-                  );
-                }
+                  ),
+                );
               }
               return Column(children: rows);
             }),
@@ -603,92 +571,68 @@ class _MorePagesState extends State<MorePages> {
       ),
     );
   }
-
-
 }
 
-// ─── Edit mode row widget ──────────────────────────────────────────────────
+// ─── Grid card wrapper widget ──────────────────────────────────────────────
 
-class _EditModeRow extends StatelessWidget {
-  const _EditModeRow({
+class _GridCardWrapper extends StatelessWidget {
+  const _GridCardWrapper({
     super.key,
-    required this.index,
     required this.card,
+    required this.isEditMode,
     required this.isVisible,
-    required this.onToggle,
+    required this.onToggleVisibility,
   });
-  final int index;
+
   final _ExploreCard card;
+  final bool isEditMode;
   final bool isVisible;
-  final VoidCallback onToggle;
+  final VoidCallback onToggleVisibility;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: isVisible
-            ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)
-            : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        leading: Icon(
-          card.icon,
-          color: isVisible
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
-          size: 22,
-        ),
-        title: Text(
-          card.title,
-          style: TextStyle(
-            fontFamily: appStateSettings["font"],
-            fontFamilyFallback: const ["Inter"],
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: isVisible
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Opacity(
+          opacity: isVisible ? 1.0 : 0.4,
+          child: AbsorbPointer(
+            absorbing: isEditMode,
+            child: card.builder(context),
           ),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: onToggle,
-              icon: Icon(
-                isVisible
-                    ? (appStateSettings["outlinedIcons"]
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_rounded)
-                    : (appStateSettings["outlinedIcons"]
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_off_rounded),
-                size: 20,
-                color: isVisible
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+        if (isEditMode)
+          PositionedDirectional(
+            top: 4,
+            end: 4,
+            child: GestureDetector(
+              onTap: onToggleVisibility,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: isVisible
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  isVisible ? Icons.remove_rounded : Icons.add_rounded,
+                  size: 16,
+                  color: isVisible
+                      ? Theme.of(context).colorScheme.onError
+                      : Theme.of(context).colorScheme.onPrimary,
+                ),
               ),
-              tooltip: isVisible ? "Hide" : "Show",
             ),
-            const SizedBox(width: 4),
-            ReorderableDragStartListener(
-              index: index,
-              child: Icon(
-                Icons.drag_handle_rounded,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                size: 22,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 }

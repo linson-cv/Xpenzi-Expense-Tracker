@@ -104,6 +104,28 @@ class TransactionsListPageState extends State<TransactionsListPage>
     });
   }
 
+  Future<void> selectSort(BuildContext context) async {
+    await openBottomSheet(
+      context,
+      PopupFramework(
+        title: "sort".tr(),
+        hasPadding: false,
+        child: TransactionSortSelection(
+          setSearchFilters: setSearchFilters,
+          searchFilters: searchFilters,
+        ),
+      ),
+    );
+    Future.delayed(const Duration(milliseconds: 250), () {
+      updateSettings(
+        "transactionsListPageSetFiltersString",
+        searchFilters.getFilterString(),
+        updateGlobalState: false,
+      );
+      setState(() {});
+    });
+  }
+
   void setSearchFilters(SearchFilters searchFilters) {
     this.searchFilters = searchFilters;
   }
@@ -136,7 +158,7 @@ class TransactionsListPageState extends State<TransactionsListPage>
         IconButton(
           tooltip: "sort".tr(),
           onPressed: () {
-            selectFilters(context);
+            selectSort(context);
           },
           padding: const EdgeInsetsDirectional.all(15 - 8),
           icon: Icon(
