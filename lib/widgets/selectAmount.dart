@@ -299,7 +299,7 @@ class _SelectAmountState extends State<SelectAmount> {
       if (includesOperations(input, false)) {
         HapticFeedback.mediumImpact();
       } else {
-        HapticFeedback.selectionClick();
+        HapticFeedback.lightImpact();
       }
     }
     // bottomSheetControllerGlobal.snapToExtent(0);
@@ -569,7 +569,7 @@ class _SelectAmountState extends State<SelectAmount> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Flexible(
           child: CustomContextMenu(

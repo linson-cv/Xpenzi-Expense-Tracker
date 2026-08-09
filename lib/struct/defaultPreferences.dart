@@ -232,12 +232,12 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "netSpendingDayTotal": false,
     "extraZerosButton": null, //will be null, 00 or 000
     "numberPadFormat": NumberPadFormat.format123.index,
-    "numberPadHapticFeedback": false,
-    "savingHapticFeedback": false,
-    "closeNavigationHapticFeedback": false,
-    "tabNavigationHapticFeedback": false,
-    "buttonPressHapticFeedback": false,
-    "deleteActionHapticFeedback": false,
+    "numberPadHapticFeedback": true,
+    "savingHapticFeedback": true,
+    "closeNavigationHapticFeedback": true,
+    "tabNavigationHapticFeedback": true,
+    "buttonPressHapticFeedback": true,
+    "deleteActionHapticFeedback": true,
     "percentagePrecision": 0, //number of decimals to round percentages to
     "allSpendingLastPage": 0, //index of the last tab on the all spending page
     "loansLastPage": 0, //index of the last tab on the loans page
