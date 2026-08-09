@@ -43,121 +43,92 @@ class AboutPageState extends State<AboutPage> {
             amountLight: 0.2, amountDark: 0.6)
         : getColor(context, "lightDarkAccent");
 
-    Widget xpenziInformation = Wrap(
-      alignment: WrapAlignment.center,
-      runAlignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        const Image(
-          image: AssetImage("assets/icon/icon-small.png"),
-          height: 70,
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Tappable(
-              borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
-              onLongPress: () {
-                if (allowDebugFlags) {
-                  pushRoute(
-                    context,
-                    const DebugPage(),
-                  );
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsetsDirectional.symmetric(
-                    vertical: 3, horizontal: 10),
-                child: TextFont(
-                  text: globalAppName,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 25,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                ),
+    Widget xpenziInformation = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: containerColor,
+        borderRadius: BorderRadius.circular(getPlatform() == PlatformOS.isIOS ? 14 : 18),
+      ),
+      child: Column(
+        children: [
+          const Image(
+            image: AssetImage("assets/icon/icon-small.png"),
+            height: 76,
+          ),
+          const SizedBox(height: 12),
+          Tappable(
+            borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
+            onLongPress: () {
+              if (allowDebugFlags) {
+                pushRoute(context, const DebugPage());
+              }
+            },
+            child: TextFont(
+              text: globalAppName,
+              fontWeight: FontWeight.bold,
+              fontSize: 26,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: TextFont(
+              text: getVersionString(),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Tappable(
+            borderRadius: 12,
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
+            onTap: () => openUrl('mailto:nav.lin.dev@gmail.com'),
+            onLongPress: () => copyToClipboard("nav.lin.dev@gmail.com"),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    appStateSettings["outlinedIcons"]
+                        ? Icons.code_outlined
+                        : Icons.code_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  TextFont(
+                    text: "Developed by LN.Dev",
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  const SizedBox(width: 4),
+                  TextFont(
+                    text: "• nav.lin.dev@gmail.com",
+                    fontSize: 13,
+                    textColor: getColor(context, "textLight"),
+                  ),
+                ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsetsDirectional.symmetric(
-                  vertical: 0, horizontal: 10),
-              child: TextFont(
-                text: getVersionString(),
-                fontSize: 14,
-                textAlign: TextAlign.center,
-                maxLines: 5,
-              ),
-            ),
-          ],
-        )
-      ],
+          ),
+        ],
+      ),
     );
 
     List<Widget> developmentTeam = [
       Padding(
         padding:
-            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 7),
-        child: Center(
-          child: TextFont(
-            text: "development-team".tr(),
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            textAlign: TextAlign.center,
-            maxLines: 5,
-          ),
-        ),
-      ),
-      Padding(
-        padding:
-            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
-        child: Tappable(
-          onTap: () {
-            openUrl('mailto:nav.lin.dev@gmail.com');
-          },
-          onLongPress: () {
-            copyToClipboard("nav.lin.dev@gmail.com");
-          },
-          color: containerColor,
-          borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: 13, vertical: 15),
-            child: Column(
-              children: [
-                TextFont(
-                  text: "developer".tr(),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                ),
-                TextFont(
-                  text: "LN.Dev",
-                  fontSize: 29,
-                  fontWeight: FontWeight.bold,
-                  textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                ),
-                TextFont(
-                  text: "nav.lin.dev@gmail.com",
-                  fontSize: 16,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                  textColor: getColor(context, "textLight"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      Padding(
-        padding:
             const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
         child: AboutInfoBox(
-          title: "Cashew (Original Fork Repo)",
+          title: "Cashew (Original Fork Baseline)",
           link: "https://github.com/jameskokoska/Cashew",
         ),
       ),
@@ -807,28 +778,6 @@ class AboutLinks extends StatelessWidget {
               onTap: () => openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker"),
               icon: MoreIcons.github,
               text: "app-is-open-source".tr(namedArgs: {"app": globalAppName}),
-            ),
-            const HorizontalBreak(padding: EdgeInsetsDirectional.zero),
-            _buildTappable(
-              context: context,
-              isExternalLink: true,
-              onTap: () {
-                openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md");
-              },
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.live_help_outlined
-                  : Icons.live_help_rounded,
-              text: "guide-and-faq".tr(),
-            ),
-            const HorizontalBreak(padding: EdgeInsetsDirectional.zero),
-            _buildTappable(
-              context: context,
-              isExternalLink: false,
-              onTap: () => openUrl('mailto:nav.lin.dev@gmail.com?subject=Xpenzi Feedback (Beta)'),
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.rate_review_outlined
-                  : Icons.rate_review_rounded,
-              text: "feedback".tr(),
             ),
             const HorizontalBreak(padding: EdgeInsetsDirectional.zero),
             _buildTappable(

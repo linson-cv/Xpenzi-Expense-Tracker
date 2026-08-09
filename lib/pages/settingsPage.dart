@@ -12,6 +12,7 @@ import 'package:budget/pages/homePage/homePageNetWorth.dart';
 import 'package:budget/pages/objectivesListPage.dart';
 import 'package:budget/pages/premiumPage.dart';
 import 'package:budget/pages/transactionsListPage.dart';
+import 'package:budget/pages/transactionsSearchPage.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/languageMap.dart';
@@ -31,7 +32,7 @@ import 'package:budget/pages/exchangeRatesPage.dart';
 import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/recurringHubPage.dart';
 import 'package:budget/pages/aiSettingsPage.dart';
-import 'package:budget/pages/mailboxPage.dart';
+
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/importDB.dart';
 import 'package:budget/widgets/navigationFramework.dart';
@@ -84,9 +85,9 @@ class MoreActionsPage extends StatefulWidget {
 class MoreActionsPageState extends State<MoreActionsPage> {
   GlobalKey<PageFrameworkState> pageState = GlobalKey();
   String searchValue = "";
+  bool _isEditMode = false;
 
   void refreshState() {
-    print("refresh settings");
     setState(() {});
   }
 
@@ -94,232 +95,599 @@ class MoreActionsPageState extends State<MoreActionsPage> {
     pageState.currentState?.scrollToTop();
   }
 
+  void _toggleEditMode() {
+    setState(() {
+      _isEditMode = !_isEditMode;
+      // Clear search when entering edit mode
+      if (_isEditMode) searchValue = "";
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return OrientationBuilder(builder: (context, _) {
       return PageFramework(
         key: pageState,
-        title: "settings".tr(),
+        title: _isEditMode ? "Customize Explore" : "Explore",
         backButton: false,
         horizontalPaddingConstrained: true,
+        actions: [
+          IconButton(
+            onPressed: _toggleEditMode,
+            icon: Icon(
+              _isEditMode
+                  ? (appStateSettings["outlinedIcons"]
+                      ? Icons.check_circle_outline
+                      : Icons.check_circle_rounded)
+                  : (appStateSettings["outlinedIcons"]
+                      ? Icons.tune_outlined
+                      : Icons.tune_rounded),
+            ),
+            tooltip: _isEditMode ? "Done" : "Customize",
+          ),
+        ],
         slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 10, end: 10),
-              child: TextInput(
-                labelText: "Find settings, preferences & features...",
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.search_outlined
-                    : Icons.search_rounded,
-                onChanged: (value) {
-                  setState(() {
-                    searchValue = value.toLowerCase();
-                  });
-                },
-                autoFocus: false,
+          // Global search bar — always visible, hidden in edit mode
+          if (!_isEditMode)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 10, end: 10),
+                child: TextInput(
+                  labelText: "Find settings, preferences & features...",
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.search_outlined
+                      : Icons.search_rounded,
+                  onChanged: (value) {
+                    setState(() {
+                      searchValue = value.toLowerCase();
+                    });
+                  },
+                  autoFocus: false,
+                ),
               ),
             ),
-          ),
           SliverToBoxAdapter(
-            child: SettingsPageContent(searchValue: searchValue),
+            child: MorePages(
+              searchValue: searchValue,
+              isEditMode: _isEditMode,
+              onEditModeChanged: (value) => setState(() => _isEditMode = value),
+            ),
           ),
+          // SettingsPageContent — hidden in edit mode
+          if (!_isEditMode)
+            SliverToBoxAdapter(
+              child: SettingsPageContent(searchValue: searchValue),
+            ),
         ],
       );
     });
   }
 }
 
-class MorePages extends StatelessWidget {
-  const MorePages({super.key});
+
+// ─── _ExploreCard data model ───────────────────────────────────────────────
+
+/// Data model for each card shown in the Explore screen grid.
+class _ExploreCard {
+  const _ExploreCard({
+    required this.key,
+    required this.title,
+    required this.icon,
+    required this.builder,
+  });
+  final String key;
+  final String title;
+  final IconData icon;
+  final Widget Function(BuildContext context) builder;
+
+  bool matchesSearch(String query) {
+    if (query.trim().isEmpty) return true;
+    return title.toLowerCase().contains(query.trim().toLowerCase());
+  }
+}
+
+// ─── Canonical ordered card list (default order) ────────────────────────────
+
+const List<String> _kDefaultCardOrder = [
+  "about", "betaFeedback", "faq", "googleAccount",
+  "calendar", "activityLog", "subscriptions", "scheduled",
+  "goals", "loans", "accounts", "budgets",
+  "billSplitter", "transactions", "search",
+];
+
+// ─── MorePages widget ────────────────────────────────────────────────────────
+
+class MorePages extends StatefulWidget {
+  const MorePages({
+    super.key,
+    this.searchValue = "",
+    this.isEditMode = false,
+    this.onEditModeChanged,
+  });
+  final String searchValue;
+  final bool isEditMode;
+  final ValueChanged<bool>? onEditModeChanged;
+
+  @override
+  State<MorePages> createState() => _MorePagesState();
+}
+
+class _MorePagesState extends State<MorePages> {
+  // ── Card catalogue ────────────────────────────────────────────────────────
+  Map<String, _ExploreCard> _buildCardCatalogue(BuildContext context) {
+    return {
+      "about": _ExploreCard(
+        key: "about",
+        title: "about-app".tr(namedArgs: {"app": globalAppName}),
+        icon: navBarIconsData["about"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const AboutPage(),
+          title: "about-app".tr(namedArgs: {"app": globalAppName}),
+          icon: navBarIconsData["about"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "betaFeedback": _ExploreCard(
+        key: "betaFeedback",
+        title: "Beta Feedback",
+        icon: appStateSettings["outlinedIcons"] ? Icons.rate_review_outlined : Icons.rate_review_rounded,
+        builder: (_) => SettingsContainer(
+          onTap: () => openBottomSheet(context, const RatingPopup(), fullSnap: true),
+          title: "Beta Feedback",
+          icon: appStateSettings["outlinedIcons"] ? Icons.rate_review_outlined : Icons.rate_review_rounded,
+          isOutlined: true,
+        ),
+      ),
+      "faq": _ExploreCard(
+        key: "faq",
+        title: "Guide / FAQ",
+        icon: appStateSettings["outlinedIcons"] ? Icons.help_outline : Icons.help_rounded,
+        builder: (_) => SettingsContainer(
+          onTap: () => openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md"),
+          title: "Guide / FAQ",
+          icon: appStateSettings["outlinedIcons"] ? Icons.help_outline : Icons.help_rounded,
+          isOutlined: true,
+        ),
+      ),
+      "googleAccount": _ExploreCard(
+        key: "googleAccount",
+        title: "Google Account",
+        icon: appStateSettings["outlinedIcons"] ? Icons.account_circle_outlined : Icons.account_circle_rounded,
+        builder: (_) => GoogleAccountLoginButton(
+          key: settingsGoogleAccountLoginButtonKey,
+        ),
+      ),
+      "calendar": _ExploreCard(
+        key: "calendar",
+        title: "Calendar",
+        icon: appStateSettings["outlinedIcons"] ? Icons.calendar_month_outlined : Icons.calendar_month_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const CalendarPage(),
+          title: "Calendar",
+          icon: appStateSettings["outlinedIcons"] ? Icons.calendar_month_outlined : Icons.calendar_month_rounded,
+          isOutlined: true,
+        ),
+      ),
+      "activityLog": _ExploreCard(
+        key: "activityLog",
+        title: "Activity Log",
+        icon: appStateSettings["outlinedIcons"] ? Icons.receipt_long_outlined : Icons.receipt_long_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const ActivityPage(),
+          title: "Activity Log",
+          icon: appStateSettings["outlinedIcons"] ? Icons.receipt_long_outlined : Icons.receipt_long_rounded,
+          isOutlined: true,
+        ),
+      ),
+      "subscriptions": _ExploreCard(
+        key: "subscriptions",
+        title: navBarIconsData["subscriptions"]!.label.tr(),
+        icon: navBarIconsData["subscriptions"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const RecurringHubPage(initialIndex: 0),
+          title: navBarIconsData["subscriptions"]!.label.tr(),
+          icon: navBarIconsData["subscriptions"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "scheduled": _ExploreCard(
+        key: "scheduled",
+        title: navBarIconsData["scheduled"]!.label.tr(),
+        icon: navBarIconsData["scheduled"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const RecurringHubPage(initialIndex: 1),
+          title: navBarIconsData["scheduled"]!.label.tr(),
+          icon: navBarIconsData["scheduled"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "goals": _ExploreCard(
+        key: "goals",
+        title: navBarIconsData["goals"]!.label.tr(),
+        icon: navBarIconsData["goals"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const ObjectivesListPage(backButton: true),
+          title: navBarIconsData["goals"]!.label.tr(),
+          icon: navBarIconsData["goals"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "loans": _ExploreCard(
+        key: "loans",
+        title: navBarIconsData["loans"]!.label.tr(),
+        icon: navBarIconsData["loans"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const CreditDebtTransactions(isCredit: null),
+          title: navBarIconsData["loans"]!.label.tr(),
+          icon: navBarIconsData["loans"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "accounts": _ExploreCard(
+        key: "accounts",
+        title: "Accounts",
+        icon: navBarIconsData["accountDetails"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const EditWalletsPage(),
+          title: "Accounts",
+          icon: navBarIconsData["accountDetails"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "budgets": _ExploreCard(
+        key: "budgets",
+        title: "Budgets",
+        icon: navBarIconsData["budgetDetails"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: appStateSettings["customNavBarShortcut0"] != "budgets" &&
+                  appStateSettings["customNavBarShortcut1"] != "budgets" &&
+                  appStateSettings["customNavBarShortcut2"] != "budgets"
+              ? const BudgetsListPage(enableBackButton: true)
+              : const EditBudgetPage(),
+          title: "Budgets",
+          icon: navBarIconsData["budgetDetails"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "billSplitter": _ExploreCard(
+        key: "billSplitter",
+        title: "Bill Splitter",
+        icon: appStateSettings["outlinedIcons"] ? Icons.summarize_outlined : Icons.summarize_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const BillSplitter(),
+          title: "Bill Splitter",
+          icon: appStateSettings["outlinedIcons"] ? Icons.summarize_outlined : Icons.summarize_rounded,
+          isOutlined: true,
+        ),
+      ),
+      "transactions": _ExploreCard(
+        key: "transactions",
+        title: "transactions".tr(),
+        icon: navBarIconsData["transactions"]!.iconData,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const TransactionsListPage(),
+          title: "transactions".tr(),
+          icon: navBarIconsData["transactions"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "search": _ExploreCard(
+        key: "search",
+        title: "search".tr(),
+        icon: appStateSettings["outlinedIcons"] ? Icons.search_outlined : Icons.search_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const TransactionsSearchPage(),
+          title: "search".tr(),
+          icon: appStateSettings["outlinedIcons"] ? Icons.search_outlined : Icons.search_rounded,
+          isOutlined: true,
+        ),
+      ),
+    };
+  }
+
+  /// Returns the ordered list of keys from preferences, padded with defaults.
+  List<String> _resolveOrder() {
+    final saved = List<String>.from(appStateSettings["morePageCardOrder"] ?? []);
+    // Add any new keys that weren't in the saved order
+    for (final key in _kDefaultCardOrder) {
+      if (!saved.contains(key)) saved.add(key);
+    }
+    // Remove keys that no longer exist
+    saved.removeWhere((k) => !_kDefaultCardOrder.contains(k));
+    return saved;
+  }
+
+  Future<void> _saveOrder(List<String> order) async {
+    await updateSettings("morePageCardOrder", order, updateGlobalState: true);
+    settingsPageStateKey.currentState?.refreshState();
+  }
+
+  Future<void> _toggleVisibility(String key, List<String> hidden) async {
+    final newHidden = List<String>.from(hidden);
+    if (newHidden.contains(key)) {
+      newHidden.remove(key);
+    } else {
+      newHidden.add(key);
+    }
+    await updateSettings("hiddenMorePageItems", newHidden, updateGlobalState: true);
+    settingsPageStateKey.currentState?.refreshState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    bool hasSideNavigation = getIsFullScreen(context);
+    final catalogue = _buildCardCatalogue(context);
+    final orderedKeys = _resolveOrder();
+    final hidden = List<String>.from(appStateSettings["hiddenMorePageItems"] ?? []);
+    final isSearching = widget.searchValue.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Featured Container 1: Settings & Customization
-          SettingsContainerOpenPage(
-            openPage: SettingsPageFramework(
-              key: settingsPageFrameworkStateKey,
+          // ──────────────────────────────────────────────────────────────
+          // EDIT MODE: reorderable list showing ALL cards
+          // ──────────────────────────────────────────────────────────────
+          if (widget.isEditMode) ...[
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 8, bottom: 6, top: 4),
+              child: Text(
+                "Drag to reorder · Tap eye to show/hide",
+                style: TextStyle(
+                  fontFamily: appStateSettings["font"],
+                  fontFamilyFallback: const ["Inter"],
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
             ),
-            title: "Settings & Customization",
-            description: "Theme, Language, Import/Export CSV",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.settings_outlined
-                : Icons.settings_rounded,
-            isOutlined: true,
-            isWideOutlined: true,
-          ),
-          const SizedBox(height: 6),
-          // Featured Container 2: All Spending Summary
-          SettingsContainerOpenPage(
-            openPage: const WalletDetailsPage(wallet: null),
-            title: navBarIconsData["allSpending"]!.labelLong.tr(),
-            description: "Your spending statistics all in one place",
-            icon: navBarIconsData["allSpending"]!.iconData,
-            isOutlined: true,
-            isWideOutlined: true,
-          ),
-          const SizedBox(height: 8),
-          // 2-Column Grid
-          Row(
-            children: [
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const AboutPage(),
-                  title: "about-app".tr(namedArgs: {"app": globalAppName}),
-                  icon: navBarIconsData["about"]!.iconData,
-                  isOutlined: true,
+            ReorderableListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              proxyDecorator: (child, index, animation) => Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).colorScheme.surface,
+                child: child,
+              ),
+              onReorder: (oldIndex, newIndex) {
+                if (newIndex > oldIndex) newIndex--;
+                final newOrder = List<String>.from(orderedKeys);
+                final item = newOrder.removeAt(oldIndex);
+                newOrder.insert(newIndex, item);
+                _saveOrder(newOrder);
+                setState(() {});
+              },
+              children: [
+                for (int idx = 0; idx < orderedKeys.length; idx++)
+                  if (catalogue.containsKey(orderedKeys[idx]))
+                    _EditModeRow(
+                      key: ValueKey(orderedKeys[idx]),
+                      index: idx,
+                      card: catalogue[orderedKeys[idx]]!,
+                      isVisible: !hidden.contains(orderedKeys[idx]),
+                      onToggle: () => setState(() => _toggleVisibility(orderedKeys[idx], hidden)),
+                    ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Reset order + show-all button
+            Tappable(
+              borderRadius: 12,
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              onTap: () async {
+                await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
+                await updateSettings("hiddenMorePageItems", <String>["search"], updateGlobalState: true);
+                settingsPageStateKey.currentState?.refreshState();
+                setState(() {});
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      appStateSettings["outlinedIcons"]
+                          ? Icons.refresh_outlined
+                          : Icons.refresh_rounded,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Reset to Defaults",
+                      style: TextStyle(
+                        fontFamily: appStateSettings["font"],
+                        fontFamilyFallback: const ["Inter"],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.symmetric(horizontal: 2),
-                  child: SettingsContainer(
-                    onTap: () {
-                      openBottomSheet(context, const RatingPopup(), fullSnap: true);
-                    },
-                    title: "Beta Feedback",
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.rate_review_outlined
-                        : Icons.rate_review_rounded,
-                    isOutlined: true,
-                  ),
+            ),
+            const SizedBox(height: 8),
+          ] else ...[
+            // ────────────────────────────────────────────────────────────
+            // NORMAL / SEARCH MODE: 2-column card grid
+            // ────────────────────────────────────────────────────────────
+
+            // Featured rows are always visible (not searchable, not hideable)
+            if (!isSearching) ...[
+              SettingsContainerOpenPage(
+                openPage: SettingsPageFramework(
+                  key: settingsPageFrameworkStateKey,
                 ),
+                title: "Settings & Customization",
+                description: "Theme, Language, Import/Export CSV",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.settings_outlined
+                    : Icons.settings_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
+              const SizedBox(height: 6),
+              SettingsContainerOpenPage(
+                openPage: const WalletDetailsPage(wallet: null),
+                title: navBarIconsData["allSpending"]!.labelLong.tr(),
+                description: "Your spending statistics all in one place",
+                icon: navBarIconsData["allSpending"]!.iconData,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // Customizable 2-column card grid
+            Builder(builder: (context) {
+              // Respect order; filter hidden; optionally filter by search
+              final visibleCards = orderedKeys
+                  .where((k) => catalogue.containsKey(k))
+                  .where((k) => !hidden.contains(k))
+                  .map((k) => catalogue[k]!)
+                  .where((c) => c.matchesSearch(widget.searchValue))
+                  .toList();
+
+              if (visibleCards.isEmpty && isSearching) {
+                return const SizedBox.shrink();
+              }
+
+              final List<Widget> rows = [];
+              for (int i = 0; i < visibleCards.length; i += 2) {
+                final left = visibleCards[i];
+                final right = i + 1 < visibleCards.length ? visibleCards[i + 1] : null;
+
+                if (right == null) {
+                  // Last card is odd → render full width directly
+                  rows.add(
+                    Row(
+                      children: [
+                        Expanded(child: left.builder(context)),
+                      ],
+                    ),
+                  );
+                } else {
+                  rows.add(
+                    Row(
+                      children: [
+                        Expanded(child: left.builder(context)),
+                        Expanded(child: right.builder(context)),
+                      ],
+                    ),
+                  );
+                }
+              }
+              return Column(children: rows);
+            }),
+
+            // Always-visible bottom action (hidden during search)
+            if (!isSearching) ...[
+              const SizedBox(height: 6),
+              SettingsContainer(
+                onTap: () {
+                  openBottomSheet(
+                    context,
+                    const EditDataOverviewPage(),
+                  );
+                },
+                title: "Edit, Delete, and Reorder Data",
+                description: "For accounts, categories, titles, budgets, goals, loans",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.edit_note_outlined
+                    : Icons.edit_note_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
               ),
             ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: SettingsContainer(
-                  onTap: () {
-                    openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md");
-                  },
-                  title: "Guide / FAQ",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.help_outline
-                      : Icons.help_rounded,
-                  isOutlined: true,
-                ),
-              ),
-              Expanded(
-                child: GoogleAccountLoginButton(
-                  key: settingsGoogleAccountLoginButtonKey,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const CalendarPage(),
-                  title: "Calendar",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.calendar_month_outlined
-                      : Icons.calendar_month_rounded,
-                  isOutlined: true,
-                ),
-              ),
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const ActivityPage(),
-                  title: "Activity Log",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.receipt_long_outlined
-                      : Icons.receipt_long_rounded,
-                  isOutlined: true,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const RecurringHubPage(initialIndex: 0),
-                  title: navBarIconsData["subscriptions"]!.label.tr(),
-                  icon: navBarIconsData["subscriptions"]!.iconData,
-                  isOutlined: true,
-                ),
-              ),
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const RecurringHubPage(initialIndex: 1),
-                  title: navBarIconsData["scheduled"]!.label.tr(),
-                  icon: navBarIconsData["scheduled"]!.iconData,
-                  isOutlined: true,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const ObjectivesListPage(backButton: true),
-                  title: navBarIconsData["goals"]!.label.tr(),
-                  icon: navBarIconsData["goals"]!.iconData,
-                  isOutlined: true,
-                ),
-              ),
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const CreditDebtTransactions(isCredit: null),
-                  title: navBarIconsData["loans"]!.label.tr(),
-                  icon: navBarIconsData["loans"]!.iconData,
-                  isOutlined: true,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: const EditWalletsPage(),
-                  title: "Accounts",
-                  icon: navBarIconsData["accountDetails"]!.iconData,
-                  isOutlined: true,
-                ),
-              ),
-              Expanded(
-                child: SettingsContainerOpenPage(
-                  openPage: appStateSettings["customNavBarShortcut0"] != "budgets" &&
-                          appStateSettings["customNavBarShortcut1"] != "budgets" &&
-                          appStateSettings["customNavBarShortcut2"] != "budgets"
-                      ? const BudgetsListPage(enableBackButton: true)
-                      : const EditBudgetPage(),
-                  title: "Budgets",
-                  icon: navBarIconsData["budgetDetails"]!.iconData,
-                  isOutlined: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // Bottom Container: Edit, Delete, and Reorder Data
-          SettingsContainer(
-            onTap: () {
-              openBottomSheet(
-                context,
-                const EditDataOverviewPage(),
-              );
-            },
-            title: "Edit, Delete, and Reorder Data",
-            description: "For accounts, categories, titles, budgets, goals, loans",
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.edit_note_outlined
-                : Icons.edit_note_rounded,
-            isOutlined: true,
-            isWideOutlined: true,
-          ),
+          ],
         ],
+      ),
+    );
+  }
+
+
+}
+
+// ─── Edit mode row widget ──────────────────────────────────────────────────
+
+class _EditModeRow extends StatelessWidget {
+  const _EditModeRow({
+    super.key,
+    required this.index,
+    required this.card,
+    required this.isVisible,
+    required this.onToggle,
+  });
+  final int index;
+  final _ExploreCard card;
+  final bool isVisible;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: isVisible
+            ? Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5)
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.2),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        leading: Icon(
+          card.icon,
+          color: isVisible
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+          size: 22,
+        ),
+        title: Text(
+          card.title,
+          style: TextStyle(
+            fontFamily: appStateSettings["font"],
+            fontFamilyFallback: const ["Inter"],
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isVisible
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: onToggle,
+              icon: Icon(
+                isVisible
+                    ? (appStateSettings["outlinedIcons"]
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_rounded)
+                    : (appStateSettings["outlinedIcons"]
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_off_rounded),
+                size: 20,
+                color: isVisible
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+              ),
+              tooltip: isVisible ? "Hide" : "Show",
+            ),
+            const SizedBox(width: 4),
+            ReorderableDragStartListener(
+              index: index,
+              child: Icon(
+                Icons.drag_handle_rounded,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                size: 22,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -692,9 +1060,9 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Tools & Extras", "", ["bill", "splitter", "experimental", "beta", "labs"]) || 
+                    _match("Tools & Extras", "", ["bill", "splitter", "display", "preferences", "visual", "layout"]) || 
                     _match("Bill Splitter", "", ["bill", "splitter", "split", "divide bill", "group bill"]) || 
-                    _match("Experimental Features", "", ["experimental", "beta", "labs", "test", "features"]),
+                    _match("Display Preferences", "", ["display", "preferences", "visual", "layout", "cards", "icons", "animations"]),
             child: SettingsGroupCard(
               title: "Tools & Extras",
               icon: appStateSettings["outlinedIcons"]
@@ -712,13 +1080,13 @@ class SettingsPageContent extends StatelessWidget {
                   ),
                 ),
                 AnimatedExpanded(
-                  expand: _match("Tools & Extras", "") || _match("Experimental Features", "", ["experimental", "beta", "labs", "test", "features"]),
+                  expand: _match("Tools & Extras", "") || _match("Display Preferences", "", ["display", "preferences", "visual", "layout", "cards", "icons", "animations"]),
                   child: SettingsContainerOpenPage(
                     openPage: const ExperimentalFeaturesSubPage(),
-                    title: "Experimental Features",
+                    title: "Display Preferences",
                     icon: appStateSettings["outlinedIcons"]
-                        ? Icons.science_outlined
-                        : Icons.science_rounded,
+                        ? Icons.tune_outlined
+                        : Icons.tune_rounded,
                   ),
                 ),
               ],
@@ -1151,32 +1519,6 @@ class TransactionsSettingsSubPage extends StatelessWidget {
           ],
         ),
 
-        // Smart Automation & Intelligence Section
-        SettingsGroupCard(
-          title: "Xpenzi Intelligence & Automation",
-          icon: Icons.auto_awesome_rounded,
-          children: [
-            SettingsContainerOpenPage(
-              openPage: const AiSettingsPage(),
-              title: "Xpenzi Intelligence",
-              description: "Configure Google Gemini AI for smart transaction parsing",
-              icon: Icons.psychology_rounded,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const AutoTransactionsPageNotifications(),
-              title: "Notification Transactions",
-              description: "Auto-create transactions from incoming SMS & app alerts",
-              icon: Icons.notifications_active_rounded,
-            ),
-            SettingsContainerOpenPage(
-              openPage: const MailboxPage(),
-              title: "Mailbox",
-              description: "Google Sheets Inbox & Drive CSV Outbox synchronization",
-              icon: Icons.mark_email_unread_rounded,
-            ),
-          ],
-        ),
-
         // Pinned & Logs Section
         SettingsGroupCard(
           title: "Pinned Transactions",
@@ -1435,14 +1777,14 @@ class ExperimentalFeaturesSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "Experimental Features",
+      title: "Display Preferences",
       dragDownToDismiss: true,
       listWidgets: [
         SettingsGroupCard(
-          title: "Laboratory",
+          title: "Visual & Layout Options",
           icon: appStateSettings["outlinedIcons"]
-              ? Icons.science_outlined
-              : Icons.science_rounded,
+              ? Icons.tune_outlined
+              : Icons.tune_rounded,
           children: [
             SettingsContainerSwitch(
               title: "Detailed Transaction Cards",

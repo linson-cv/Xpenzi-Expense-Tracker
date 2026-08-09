@@ -25,6 +25,9 @@ import 'package:budget/widgets/util/multiDirectionalInfiniteScroll.dart';
 import 'package:budget/widgets/sliverStickyHeaderIfTall.dart';
 import 'package:budget/widgets/changePagesArrows.dart';
 
+import 'package:budget/widgets/selectChips.dart';
+import 'package:budget/colors.dart';
+
 class TransactionsListPage extends StatefulWidget {
   const TransactionsListPage({super.key});
 
@@ -131,6 +134,18 @@ class TransactionsListPageState extends State<TransactionsListPage>
       scrollbar: false,
       actions: [
         IconButton(
+          tooltip: "sort".tr(),
+          onPressed: () {
+            selectFilters(context);
+          },
+          padding: const EdgeInsetsDirectional.all(15 - 8),
+          icon: Icon(
+            appStateSettings["outlinedIcons"]
+                ? Icons.sort_outlined
+                : Icons.sort_rounded,
+          ),
+        ),
+        IconButton(
           tooltip: "filters".tr(),
           onPressed: () {
             selectFilters(context);
@@ -195,6 +210,29 @@ class TransactionsListPageState extends State<TransactionsListPage>
                             },
                           ),
                         ),
+                        if (appStateSettings["showWalletSwitcher"] == true)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 5),
+                              child: PinnedAccountFilterChips(
+                                searchFilters: searchFilters,
+                                onWalletSelected: (walletPk) {
+                                  setState(() {
+                                    if (searchFilters.walletPks.contains(walletPk)) {
+                                      searchFilters.walletPks.remove(walletPk);
+                                    } else {
+                                      searchFilters.walletPks.add(walletPk);
+                                    }
+                                  });
+                                  updateSettings(
+                                    "transactionsListPageSetFiltersString",
+                                    searchFilters.getFilterString(),
+                                    updateGlobalState: false,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         const SliverToBoxAdapter(child: SizedBox(height: 5)),
                         SliverToBoxAdapter(
                           child: AppliedFilterChips(
@@ -328,7 +366,28 @@ class TransactionsSettings extends StatelessWidget {
         NetSpendingDayTotalSetting(),
         ShowTransactionsMonthlySpendingSummarySettingToggle(),
         ShowTransactionsBalanceTransferTabSettingToggle(),
+        PinAccountFilterSettingToggle(),
       ],
+    );
+  }
+}
+
+class PinAccountFilterSettingToggle extends StatelessWidget {
+  const PinAccountFilterSettingToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsContainerSwitch(
+      title: "Pin Account Filter",
+      description: "Keep account filter persistent across transaction views",
+      onSwitched: (value) {
+        updateSettings("showWalletSwitcher", value,
+            updateGlobalState: true, pagesNeedingRefresh: [1]);
+      },
+      initialValue: appStateSettings["showWalletSwitcher"] ?? false,
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.push_pin_outlined
+          : Icons.push_pin_rounded,
     );
   }
 }
@@ -424,3 +483,47 @@ class NetSpendingDayTotalSetting extends StatelessWidget {
     );
   }
 }
+
+class PinnedAccountFilterChips extends StatelessWidget {
+  const PinnedAccountFilterChips({
+    required this.searchFilters,
+    required this.onWalletSelected,
+    super.key,
+  });
+
+  final SearchFilters searchFilters;
+  final Function(String walletPk) onWalletSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final wallets = Provider.of<AllWallets>(context).list;
+    if (wallets.isEmpty) return const SizedBox.shrink();
+
+    return SelectChips(
+      items: wallets,
+      getLabel: (TransactionWallet item) {
+        return getWalletStringName(Provider.of<AllWallets>(context), item);
+      },
+      onSelected: (TransactionWallet item) {
+        onWalletSelected(item.walletPk);
+      },
+      getSelected: (TransactionWallet item) {
+        return searchFilters.walletPks.contains(item.walletPk);
+      },
+      getCustomBorderColor: (TransactionWallet item) {
+        return dynamicPastel(
+          context,
+          lightenPastel(
+            HexColor(
+              item.colour,
+              defaultColor: Theme.of(context).colorScheme.primary,
+            ),
+            amount: 0.3,
+          ),
+          amount: 0.4,
+        );
+      },
+    );
+  }
+}
+

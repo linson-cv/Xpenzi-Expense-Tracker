@@ -26,6 +26,11 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.3
+    (A) Redesigned Explore screen with customizable 2-column grid cards, search, and live drag-to-reorder
+    (A) Fixed account type persistence (Bank Account, Credit Card, Meal Card, Cash, Savings)
+    (A) Added quick Sort action and Pinned Account Filter bar under Month Selector on Transactions
+    (A) Revamped About screen with unified app hero header and streamlined credits
     < 1.1.2
     (A) Redesigned Calendar view with month selector, top totals banner, and compact daily amounts on day cells
     (A) Added In-App GitHub Markdown Viewer for native, offline-capable FAQ, User Guide & Policy reading
@@ -92,6 +97,20 @@ end""";
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
+    "< 1.1.3": [
+      MajorChanges(
+        "Customizable Explore Screen",
+        Icons.explore_rounded,
+        info: [
+          "Organize your shortcuts with customizable 2-column grid cards",
+          "Drag-to-reorder cards and toggle visibility in real-time",
+          "Always-on global search across cards and settings preferences",
+        ],
+        onTap: (context) {
+          popRoute(context);
+        },
+      ),
+    ],
     "< 1.1.1": [
       MajorChanges(
         "Monthly Calendar View",

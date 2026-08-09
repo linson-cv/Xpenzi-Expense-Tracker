@@ -123,6 +123,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
       order: widget.wallet != null ? widget.wallet!.order : numberOfWallets,
       currency: selectedCurrency,
       decimals: selectedDecimals,
+      currencyFormat: selectedAccountType, // persist account type
       homePageWidgetDisplay: widget.wallet != null
           ? widget.wallet!.homePageWidgetDisplay
           : defaultWalletHomePageWidgetDisplay,
@@ -165,6 +166,12 @@ class _AddWalletPageState extends State<AddWalletPage> {
           : HexColor(widget.wallet!.colour);
       selectedCurrency = widget.wallet!.currency ?? "usd";
       selectedDecimals = widget.wallet!.decimals;
+      // Restore account type from currencyFormat field
+      if (widget.wallet!.currencyFormat != null &&
+          ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
+              .contains(widget.wallet!.currencyFormat)) {
+        selectedAccountType = widget.wallet!.currencyFormat!;
+      }
     }
     populateCurrencies();
     Future.delayed(Duration.zero, () async {

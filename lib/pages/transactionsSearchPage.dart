@@ -3,8 +3,6 @@ import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/transactionFilters.dart';
 import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/widgets/exportCSV.dart';
-import 'package:budget/widgets/exportPDF.dart';
 import 'package:budget/widgets/fab.dart';
 import 'package:budget/widgets/fadeIn.dart';
 import 'package:budget/widgets/openPopup.dart';
@@ -280,9 +278,7 @@ class TransactionsSearchPageState extends State<TransactionsSearchPage>
                             : Icons.filter_alt_rounded,
                       ),
                     ),
-                    const ExportPDF(),
-                    const ExportCSV(),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 15),
                   ],
                 ),
               ),

@@ -106,9 +106,9 @@ Map<String, NavBarIconData> getNavBarIconsData() {
     ),
     "more": NavBarIconData(
       iconData: appStateSettings["outlinedIcons"]
-          ? Icons.more_horiz_outlined
-          : Icons.more_horiz_rounded,
-      label: "more",
+          ? Icons.explore_outlined
+          : Icons.explore_rounded,
+      label: "explore",
       navigationIndexedStackIndex: 4,
     ),
     "about": NavBarIconData(
