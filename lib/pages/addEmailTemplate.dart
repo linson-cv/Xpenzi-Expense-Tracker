@@ -85,23 +85,47 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           getSelectedCategory = await database.getCategoryInstance("0");
         } catch (_) {}
       }
-      setState(() {
-        selectedCategory = getSelectedCategory;
-      });
+      if (mounted) {
+        setState(() {
+          selectedCategory = getSelectedCategory;
+        });
+      }
       templateInitial = createTemplate();
       determineBottomButton();
     }
   }
 
-  void showDiscardChangesPopupIfNotEditing() {
-    ScannerTemplate templateCreated = createTemplate();
-    if (templateInitial != null &&
-        templateCreated != templateInitial &&
-        widget.scannerTemplate == null) {
-      discardChangesPopup(context, forceShow: true);
+  bool _hasChanges() {
+    if (widget.scannerTemplate == null) {
+      return (selectedName != null && selectedName!.trim().isNotEmpty) ||
+          selectedMessageString != null ||
+          selectedSubject != null;
+    }
+    final initial = templateInitial ?? widget.scannerTemplate;
+    if (initial == null) return false;
+    return (selectedName ?? "") != initial.templateName ||
+        (selectedSubject ?? "") != initial.contains ||
+        (selectedCategory?.categoryPk ?? initial.defaultCategoryFk) != initial.defaultCategoryFk ||
+        (selectedWalletPk ?? initial.walletFk) != initial.walletFk ||
+        (amountTransactionBefore ?? "") != initial.amountTransactionBefore ||
+        (amountTransactionAfter ?? "") != initial.amountTransactionAfter ||
+        (titleTransactionBefore ?? "") != initial.titleTransactionBefore ||
+        (titleTransactionAfter ?? "") != initial.titleTransactionAfter;
+  }
+
+  void _handleBack() {
+    if (_hasChanges()) {
+      discardChangesPopup(
+        context,
+        forceShow: true,
+      );
     } else {
       popRoute(context);
     }
+  }
+
+  void showDiscardChangesPopupIfNotEditing() {
+    _handleBack();
   }
 
   @override
@@ -110,65 +134,20 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   }
 
   determineBottomButton() {
-    if (getTransactionAmountFromEmail(
-              selectedMessageString ?? "",
-              amountTransactionBefore ?? "",
-              amountTransactionAfter ?? "",
-            ) ==
-            null &&
-        selectedMessageString != null) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-    if (selectedTitle == null && selectedMessageString != null) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-
     if (selectedName == null || (selectedName?.trim().isEmpty ?? true)) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-    if (selectedCategory == null) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-    if (amountTransactionBefore == null) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-    if (amountTransactionAfter == null) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-    if (titleTransactionBefore == null) {
-      setState(() {
-        canAddTemplate = false;
-      });
-      return;
-    }
-    if (titleTransactionAfter == null) {
-      setState(() {
-        canAddTemplate = false;
-      });
+      if (mounted) {
+        setState(() {
+          canAddTemplate = false;
+        });
+      }
       return;
     }
 
-    setState(() {
-      canAddTemplate = true;
-    });
+    if (mounted) {
+      setState(() {
+        canAddTemplate = true;
+      });
+    }
     return true;
   }
 
@@ -444,15 +423,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (widget.scannerTemplate != null) {
-          discardChangesPopup(
-            context,
-            previousObject: templateInitial ?? widget.scannerTemplate,
-            currentObject: createTemplate(),
-          );
-        } else {
-          showDiscardChangesPopupIfNotEditing();
-        }
+        _handleBack();
         return false;
       },
       child: PageFramework(
@@ -474,26 +445,10 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
         title:
             widget.scannerTemplate == null ? "Add Template" : "Edit Template",
         onBackButton: () async {
-          if (widget.scannerTemplate != null) {
-            discardChangesPopup(
-              context,
-              previousObject: templateInitial ?? widget.scannerTemplate,
-              currentObject: createTemplate(),
-            );
-          } else {
-            showDiscardChangesPopupIfNotEditing();
-          }
+          _handleBack();
         },
         onDragDownToDismiss: () async {
-          if (widget.scannerTemplate != null) {
-            discardChangesPopup(
-              context,
-              previousObject: templateInitial ?? widget.scannerTemplate,
-              currentObject: createTemplate(),
-            );
-          } else {
-            showDiscardChangesPopupIfNotEditing();
-          }
+          _handleBack();
         },
         listWidgets: [
           Container(height: 10),

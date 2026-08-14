@@ -26,6 +26,12 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.1
+    (A) Instant Theme Engine: Streamlined application state reconciliation for instantaneous, seamless theme and accent palette transitions
+    (A) Universal Database Resilience: Eliminated all single-query exceptions across categories, budgets, and objectives with automatic fallback recovery
+    (A) Refined Template Studio: Always-available Save action and clean, intelligent back navigation
+    (A) Enhanced System Back Navigation: Implemented 5-layer back hierarchy preventing premature app exits across dialogs, sheets, and tabs
+    (A) Google Services & Web Configuration: Aligned client IDs and isolated platform options to the dedicated Xpenzi project
     < 1.2.0
     (A) Seamless Real-Time Theming: Eliminated MaterialApp element recreation so theme, accent color, and AMOLED Black switch smoothly without page reload or navigator reset
     (A) Stream Stability Enhancements: Fixed stream re-listening exceptions on global wallet providers during live configuration updates

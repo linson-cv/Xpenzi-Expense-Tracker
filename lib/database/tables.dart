@@ -3082,7 +3082,20 @@ class FinanceDatabase extends _$FinanceDatabase {
 
   Stream<TransactionCategory> watchCategory(String categoryPk) {
     return (select(categories)..where((t) => t.categoryPk.equals(categoryPk)))
-        .watchSingle();
+        .watchSingleOrNull()
+        .map((category) =>
+            category ??
+            TransactionCategory(
+              categoryPk: categoryPk,
+              name: "Default",
+              colour: null,
+              iconName: null,
+              emojiIconName: null,
+              order: 0,
+              income: false,
+              dateCreated: DateTime.now(),
+              dateTimeModified: null,
+            ));
   }
 
   Stream<TransactionCategory?> watchBalanceCorrectionCategory() {
@@ -3094,7 +3107,33 @@ class FinanceDatabase extends _$FinanceDatabase {
       String categoryPk) {
     final SimpleSelectStatement<$CategoriesTable, TransactionCategory> query =
         (select(categories)..where((c) => c.categoryPk.equals(categoryPk)));
-    return (query.watchSingle(), query.getSingle());
+    final stream = query.watchSingleOrNull().map((c) =>
+        c ??
+        TransactionCategory(
+          categoryPk: categoryPk,
+          name: "Default",
+          colour: null,
+          iconName: null,
+          emojiIconName: null,
+          order: 0,
+          income: false,
+          dateCreated: DateTime.now(),
+          dateTimeModified: null,
+        ));
+    final future = query.getSingleOrNull().then((c) =>
+        c ??
+        TransactionCategory(
+          categoryPk: categoryPk,
+          name: "Default",
+          colour: null,
+          iconName: null,
+          emojiIconName: null,
+          order: 0,
+          income: false,
+          dateCreated: DateTime.now(),
+          dateTimeModified: null,
+        ));
+    return (stream, future);
   }
 
   (Stream<TransactionAssociatedTitle>, Future<TransactionAssociatedTitle>)
@@ -3102,7 +3141,29 @@ class FinanceDatabase extends _$FinanceDatabase {
     final SimpleSelectStatement<$AssociatedTitlesTable,
         TransactionAssociatedTitle> query = (select(associatedTitles)
       ..where((t) => t.associatedTitlePk.equals(associatedTitlePk)));
-    return (query.watchSingle(), query.getSingle());
+    final stream = query.watchSingleOrNull().map((t) =>
+        t ??
+        TransactionAssociatedTitle(
+          associatedTitlePk: associatedTitlePk,
+          categoryFk: "0",
+          title: "",
+          dateCreated: DateTime.now(),
+          dateTimeModified: null,
+          order: 0,
+          isExactMatch: false,
+        ));
+    final future = query.getSingleOrNull().then((t) =>
+        t ??
+        TransactionAssociatedTitle(
+          associatedTitlePk: associatedTitlePk,
+          categoryFk: "0",
+          title: "",
+          dateCreated: DateTime.now(),
+          dateTimeModified: null,
+          order: 0,
+          isExactMatch: false,
+        ));
+    return (stream, future);
   }
 
   (Stream<List<CategoryBudgetLimit>>, Future<List<CategoryBudgetLimit>>)
@@ -4272,9 +4333,23 @@ class FinanceDatabase extends _$FinanceDatabase {
   }
 
   // get category given key
-  Future<TransactionCategory> getCategoryInstance(String categoryPk) {
-    return (select(categories)..where((c) => c.categoryPk.equals(categoryPk)))
-        .getSingle();
+  Future<TransactionCategory> getCategoryInstance(String categoryPk) async {
+    final category = await getCategoryInstanceOrNull(categoryPk);
+    if (category != null) return category;
+    final firstCategory =
+        await (select(categories)..limit(1)).getSingleOrNull();
+    if (firstCategory != null) return firstCategory;
+    return TransactionCategory(
+      categoryPk: categoryPk,
+      name: "Default",
+      colour: null,
+      iconName: null,
+      emojiIconName: null,
+      order: 0,
+      income: false,
+      dateCreated: DateTime.now(),
+      dateTimeModified: null,
+    );
   }
 
   Future<TransactionCategory?> getCategoryInstanceOrNull(String categoryPk) {
@@ -4283,14 +4358,66 @@ class FinanceDatabase extends _$FinanceDatabase {
   }
 
   // get budget given key
-  Future<Budget> getBudgetInstance(String budgetPk) {
-    return (select(budgets)..where((t) => t.budgetPk.equals(budgetPk)))
-        .getSingle();
+  Future<Budget> getBudgetInstance(String budgetPk) async {
+    final budget = await (select(budgets)..where((t) => t.budgetPk.equals(budgetPk)))
+        .getSingleOrNull();
+    if (budget != null) return budget;
+    final first = await (select(budgets)..limit(1)).getSingleOrNull();
+    if (first != null) return first;
+    return Budget(
+      budgetPk: budgetPk,
+      name: "Default",
+      colour: null,
+      dateCreated: DateTime.now(),
+      dateTimeModified: null,
+      amount: 0,
+      order: 0,
+      walletFk: "0",
+      walletFks: [],
+      categoryFks: [],
+      categoryFksExclude: [],
+      startDate: DateTime.now(),
+      endDate: DateTime.now(),
+      periodLength: 1,
+      reoccurrence: BudgetReoccurence.monthly,
+      budgetTransactionFilters: [],
+      memberTransactionFilters: [],
+      sharedKey: null,
+      sharedOwnerMember: null,
+      sharedDateUpdated: null,
+      sharedMembers: [],
+      sharedAllMembersEver: [],
+      income: false,
+      pinned: false,
+      archived: false,
+      addedTransactionsOnly: false,
+      isAbsoluteSpendingLimit: false,
+    );
   }
 
-  Future<Objective> getObjectiveInstance(String objectivePk) {
-    return (select(objectives)..where((t) => t.objectivePk.equals(objectivePk)))
-        .getSingle();
+  Future<Objective> getObjectiveInstance(String objectivePk) async {
+    final objective = await (select(objectives)..where((t) => t.objectivePk.equals(objectivePk)))
+        .getSingleOrNull();
+    if (objective != null) return objective;
+    final first = await (select(objectives)..limit(1)).getSingleOrNull();
+    if (first != null) return first;
+    return Objective(
+      objectivePk: objectivePk,
+      name: "Default",
+      colour: null,
+      dateCreated: DateTime.now(),
+      dateTimeModified: null,
+      amount: 0,
+      order: 0,
+      walletFk: "0",
+      endDate: null,
+      income: false,
+      pinned: false,
+      archived: false,
+      iconName: null,
+      emojiIconName: null,
+      type: ObjectiveType.goal,
+    );
   }
 
   // getIsDifferenceOnlyLoan(objective)

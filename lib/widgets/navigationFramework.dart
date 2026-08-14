@@ -220,31 +220,42 @@ class HandleWillPopScope extends StatelessWidget {
     return WillPopScope(
       child: child,
       onWillPop: () async {
+        // 1. If in Explore customization mode, exit edit mode first
+        if (isExploreEditingNotifier.value == true) {
+          isExploreEditingNotifier.value = false;
+          return false;
+        }
+
+        // 2. If any sub-route, sheet, or dialog is open, pop it first
         bool popResult = await maybePopRoute(navigatorKey.currentContext);
         if (popResult == true) return false;
 
-        // Deselect selected transactions
+        if (navigatorKey.currentContext != null &&
+            Navigator.of(navigatorKey.currentContext!, rootNavigator: true).canPop()) {
+          Navigator.of(navigatorKey.currentContext!, rootNavigator: true).pop();
+          return false;
+        }
+
+        // 3. Deselect selected transactions if any
         int notEmpty = 0;
         for (String key in globalSelectedID.value.keys) {
           if (globalSelectedID.value[key]?.isNotEmpty == true) notEmpty++;
           globalSelectedID.value[key] = [];
         }
-        globalSelectedID.notifyListeners();
-
-        // Allow the back button to exit the app when on home
-        if (notEmpty <= 0) {
-          if (pageNavigationFrameworkKey.currentState?.currentPage == 0) {
-            return true;
-          } else {
-            // Allow back button deselect a selected category first on All Spending page
-            if (pageNavigationFrameworkKey.currentState?.currentPage == 7 &&
-                categoryIsSelectedOnAllSpending) {
-              return true;
-            }
-            pageNavigationFrameworkKey.currentState?.changePage(0);
-          }
+        if (notEmpty > 0) {
+          globalSelectedID.notifyListeners();
+          return false;
         }
-        return false;
+
+        // 4. If on another navigation tab (Transactions, Budgets, Explore, etc.), return to Home first
+        if (pageNavigationFrameworkKey.currentState?.currentPage != null &&
+            pageNavigationFrameworkKey.currentState!.currentPage != 0) {
+          pageNavigationFrameworkKey.currentState?.changePage(0);
+          return false;
+        }
+
+        // 5. Allow back button to exit app only when already on Home page (tab 0)
+        return true;
       },
     );
   }

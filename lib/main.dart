@@ -108,17 +108,10 @@ class InitializeApp extends StatefulWidget {
 
 class _InitializeAppState extends State<InitializeApp> {
   void refreshAppState() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return const App(key: ValueKey("Main App"));
-  }
-}
-
-class App extends StatelessWidget {
-  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +126,6 @@ class App extends StatelessWidget {
       shortcuts: shortcuts,
       actions: keyboardIntents,
       themeAnimationDuration: Duration.zero,
-      key: const ValueKey("XpenziApp"),
       title: 'Xpenzi: Expense Tracker',
       theme: getLightTheme(),
       darkTheme: getDarkTheme(),
