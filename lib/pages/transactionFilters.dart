@@ -1663,18 +1663,31 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
   void updateSort(TransactionSortOption option) {
     setState(() {
       selectedSortOption = option;
-      widget.searchFilters.sortOption = option;
-      widget.searchFilters.sortAscending = selectedSortAscending;
     });
-    widget.setSearchFilters(widget.searchFilters);
   }
 
   void updateAscending(bool ascending) {
     setState(() {
       selectedSortAscending = ascending;
-      widget.searchFilters.sortAscending = ascending;
     });
+  }
+
+  void applySort() {
+    widget.searchFilters.sortOption = selectedSortOption;
+    widget.searchFilters.sortAscending = selectedSortAscending;
     widget.setSearchFilters(widget.searchFilters);
+    Navigator.of(context).maybePop();
+  }
+
+  void clearSort() {
+    setState(() {
+      selectedSortOption = TransactionSortOption.dateCreated;
+      selectedSortAscending = false;
+    });
+    widget.searchFilters.sortOption = TransactionSortOption.dateCreated;
+    widget.searchFilters.sortAscending = false;
+    widget.setSearchFilters(widget.searchFilters);
+    Navigator.of(context).maybePop();
   }
 
   @override
@@ -1688,7 +1701,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
             child: TextFont(
-              text: "sort-by".tr(),
+              text: "Sort By",
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -1714,7 +1727,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
             child: TextFont(
-              text: "order".tr(),
+              text: "Order",
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -1726,6 +1739,26 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
               return ascending ? "Ascending".tr() : "Descending".tr();
             },
             onChanged: (ascending) => updateAscending(ascending),
+          ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              Expanded(
+                child: Button(
+                  label: "clear".tr().capitalizeFirst,
+                  color: Theme.of(context).colorScheme.secondaryContainer,
+                  textColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                  onTap: clearSort,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Button(
+                  label: "apply".tr().capitalizeFirst,
+                  onTap: applySort,
+                ),
+              ),
+            ],
           ),
         ],
       ),

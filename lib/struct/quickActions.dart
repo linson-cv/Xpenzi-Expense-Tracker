@@ -16,13 +16,20 @@ import "package:quick_actions/quick_actions.dart";
 import 'package:budget/pages/addWalletPage.dart';
 
 Throttler quickActionThrottler =
-    Throttler(duration: const Duration(milliseconds: 350));
+    Throttler(duration: const Duration(milliseconds: 1000));
+bool _quickActionsInitialized = false;
+String? _lastHandledQuickAction;
 
 void runQuickActionsPayLoads(context) async {
   if (kIsWeb) return;
+  if (_quickActionsInitialized) return;
+  _quickActionsInitialized = true;
+
   const QuickActions quickActions = QuickActions();
   quickActions.initialize((String quickAction) async {
-    if (!quickActionThrottler.canProceed()) return;
+    if (_lastHandledQuickAction == quickAction && !quickActionThrottler.canProceed()) return;
+    _lastHandledQuickAction = quickAction;
+    quickActionThrottler.canProceed();
 
     if (Navigator.of(context).canPop() == false || entireAppLoaded) {
       if (quickAction == "addTransaction") {

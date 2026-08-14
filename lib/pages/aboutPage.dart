@@ -92,27 +92,32 @@ class AboutPageState extends State<AboutPage> {
             onTap: () => openUrl('mailto:nav.lin.dev@gmail.com'),
             onLongPress: () => copyToClipboard("nav.lin.dev@gmail.com"),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    appStateSettings["outlinedIcons"]
-                        ? Icons.code_outlined
-                        : Icons.code_rounded,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        appStateSettings["outlinedIcons"]
+                            ? Icons.code_outlined
+                            : Icons.code_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      TextFont(
+                        text: "Developed by LN.Dev",
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(height: 2),
                   TextFont(
-                    text: "Developed by LN.Dev",
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  const SizedBox(width: 4),
-                  TextFont(
-                    text: "• nav.lin.dev@gmail.com",
-                    fontSize: 13,
+                    text: "nav.lin.dev@gmail.com",
+                    fontSize: 12,
                     textColor: getColor(context, "textLight"),
                   ),
                 ],

@@ -1,5 +1,6 @@
 import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
+import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
@@ -54,7 +55,7 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
       listWidgets: [
         // Header Overview Card
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: SettingsGroupCard(
             title: "Xpenzi Intelligence Overview",
             icon: Icons.auto_awesome_rounded,
@@ -87,7 +88,7 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
 
         // Gemini Model Provider Container
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: SettingsGroupCard(
             title: "Google Gemini Model",
             icon: Icons.psychology_rounded,
@@ -188,7 +189,7 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
 
         // Intelligence Settings Section
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: SettingsGroupCard(
             title: "Intelligence Settings",
             icon: Icons.tune_rounded,
@@ -242,9 +243,36 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
           ),
         ),
 
+        // Offline Intelligence Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: SettingsGroupCard(
+            title: "Offline Intelligence (100% Private)",
+            icon: Icons.shield_rounded,
+            children: [
+              SettingsContainerOpenPage(
+                openPage: const OfflineIntelligencePage(),
+                title: "Offline Notification Transactions",
+                description: "Auto-detect bank SMS, payment alerts, and manage templates",
+                icon: Icons.notifications_active_rounded,
+              ),
+              const Divider(height: 1),
+              SettingsContainerSwitch(
+                title: "Local Regex NLP Parser",
+                description: "Fast offline extraction of merchant, amount, and category without cloud AI",
+                icon: Icons.bolt_rounded,
+                initialValue: appStateSettings["localNlpParsing"] ?? true,
+                onSwitched: (val) {
+                  updateSettings("localNlpParsing", val, updateGlobalState: true);
+                },
+              ),
+            ],
+          ),
+        ),
+
         // Shared Information Section
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: SettingsGroupCard(
             title: "Shared Information",
             icon: Icons.privacy_tip_rounded,

@@ -18,6 +18,8 @@ import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/pages/addTransactionPage.dart';
+import 'package:budget/pages/autoTransactionsPageEmail.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -130,6 +132,36 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       await generatePreviewData();
       popRoute(context);
     }
+
+    if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid &&
+        appStateSettings["notificationScanning"] != true &&
+        !widget.popNavigationWhenDone) {
+      bool isGranted = await NotificationListenerService.isPermissionGranted();
+      if (!isGranted && context.mounted) {
+        await openPopup(
+          context,
+          icon: Icons.notifications_active_rounded,
+          title: "Auto-Detect Bank SMS & Alerts?",
+          description:
+              "Xpenzi can automatically capture and parse bank SMS, UPI payments, and card alerts into transactions on this device.\n\n🔒 100% Private: All parsing happens on your phone. No data is sent to external servers.",
+          onSubmitLabel: "Enable Auto-Detect",
+          onCancelLabel: "Skip for Now",
+          onSubmit: () async {
+            popRoute(context);
+            bool status = await requestReadNotificationPermission(context: context);
+            if (status) {
+              await updateSettings("notificationScanning", true,
+                  updateGlobalState: false);
+              initNotificationScanning();
+            }
+          },
+          onCancel: () {
+            popRoute(context);
+          },
+        );
+      }
+    }
+
     if (widget.popNavigationWhenDone) {
       popRoute(context);
     } else {
@@ -139,8 +171,8 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
   }
 
   Future<void> continueWithoutSignInWithForcedName(BuildContext context) async {
-    if (appStateSettings["username"] == null ||
-        appStateSettings["username"].toString().trim().isEmpty) {
+    String currentName = (appStateSettings["username"] ?? "").toString().trim();
+    if (currentName.isEmpty) {
       await openBottomSheet(
         context,
         popupWithKeyboard: true,
@@ -166,8 +198,8 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       );
     }
 
-    if (appStateSettings["username"] == null ||
-        appStateSettings["username"].toString().trim().isEmpty) {
+    String finalName = (appStateSettings["username"] ?? "").toString().trim();
+    if (finalName.isEmpty) {
       openSnackbar(
         SnackbarMessage(
           title: "Please enter your name to continue",
@@ -177,7 +209,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       return;
     }
 
-    nextNavigation();
+    await nextNavigation();
   }
 
   final FocusNode _focusNode = FocusNode();

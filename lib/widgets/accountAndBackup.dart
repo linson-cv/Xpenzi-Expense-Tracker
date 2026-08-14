@@ -134,7 +134,10 @@ Future<bool> signInGoogle(
           ? signIn.GoogleSignIn(
               clientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
               scopes: scopes)
-          : signIn.GoogleSignIn.standard(scopes: scopes);
+          : signIn.GoogleSignIn(
+              serverClientId: "722336458062-qus0b9e1ffrah6t2sc2aoecnke5aaasr.apps.googleusercontent.com",
+              scopes: scopes,
+            );
       // googleSignIn?.currentUser?.clearAuthCache();
 
       final signIn.GoogleSignInAccount? account = silentSignIn == true

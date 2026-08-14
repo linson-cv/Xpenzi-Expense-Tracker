@@ -26,6 +26,17 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.5
+    (A) Added Offline Intelligence on-device notification parsing under Xpenzi Intelligence
+    (A) Added live captured notification logs inspector, retention controls, and customizable parsing templates
+    (A) Added 1-tap default preset installer for UPI alerts, Debit/Credit SMS, and Card transactions
+    (A) Added direct Pinned Account Filter quick toggle button on Transactions List header
+    (A) Added tactile vibration and jiggle wobble animation when editing Explore cards
+    (A) Added dedicated Category Icon Pack & Gallery catalogue browser with 450+ HD icons and quick category filter tabs
+    (A) Added dynamic context & day-aware greetings and weekly financial milestone subtitles on Home Screen
+    (A) Added Offline Intelligence 1-tap shortcut to Explore screen grid and unified In-App FAQ reader
+    (A) Added seamless Onboarding notification permission setup and resolved Google Sign-In authentication
+    (A) Refreshed official app launcher icon with a sleek modern 2D minimalist X-Growth symbol
     < 1.1.4
     (A) Dedicated Transactions sorting modal by Date Created, Date Updated, Amount & Title
     (A) In-grid Explore page customization with live + and - action badges and 2-column reordering
@@ -103,6 +114,21 @@ end""";
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
+    "< 1.1.5": [
+      MajorChanges(
+        "Offline Intelligence & Icon Gallery",
+        Icons.shield_rounded,
+        info: [
+          "100% private offline bank SMS & payment notification parsing",
+          "Inspect captured notification logs & load default UPI/Bank templates",
+          "Quick toggle for pinned account filters directly on Transactions header",
+          "Preview 450+ category icons in the dedicated icon gallery browser",
+        ],
+        onTap: (context) {
+          popRoute(context);
+        },
+      ),
+    ],
     "< 1.1.4": [
       MajorChanges(
         "Smart Transactions Sort & In-Grid Explore Editing",

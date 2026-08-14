@@ -60,7 +60,7 @@ class ObjectivesListPageState extends State<ObjectivesListPage> {
     return PageFramework(
       key: pageState,
       dragDownToDismiss: true,
-      title: "savings-goals".tr(),
+      title: "Savings Goals",
       backButton: widget.backButton,
       horizontalPaddingConstrained: enableDoubleColumn(context) == false,
       actions: [

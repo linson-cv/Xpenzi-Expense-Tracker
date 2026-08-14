@@ -43,8 +43,17 @@ class _NotificationPermissionBannerState
       return const SizedBox.shrink();
     }
     if (isPermissionGranted ||
-        appStateSettings["dismissedNotificationPermissionBanner"] == true) {
+        appStateSettings["neverShowNotificationPermissionBanner"] == true) {
       return const SizedBox.shrink();
+    }
+
+    // Check periodic snooze (e.g., re-prompt after 14 days if user chose "Remind Later")
+    if (appStateSettings["snoozedNotificationBannerUntil"] != null) {
+      DateTime? snoozeUntil = DateTime.tryParse(
+          appStateSettings["snoozedNotificationBannerUntil"].toString());
+      if (snoozeUntil != null && DateTime.now().isBefore(snoozeUntil)) {
+        return const SizedBox.shrink();
+      }
     }
 
     return Padding(
@@ -92,14 +101,26 @@ class _NotificationPermissionBannerState
                         },
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Button(
-                      label: "Maybe Later",
+                      label: "Remind Later",
                       color: Colors.transparent,
                       textColor: getColor(context, "textLight"),
                       onTap: () {
+                        DateTime remindDate = DateTime.now().add(const Duration(days: 14));
                         updateSettings(
-                            "dismissedNotificationPermissionBanner", true,
+                            "snoozedNotificationBannerUntil", remindDate.toIso8601String(),
+                            updateGlobalState: true);
+                        setState(() {});
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      tooltip: "Never Ask Again",
+                      icon: Icon(Icons.close_rounded, size: 18, color: getColor(context, "textLight")),
+                      onPressed: () {
+                        updateSettings(
+                            "neverShowNotificationPermissionBanner", true,
                             updateGlobalState: true);
                         setState(() {});
                       },

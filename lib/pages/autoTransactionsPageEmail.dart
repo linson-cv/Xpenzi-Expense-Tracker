@@ -93,7 +93,10 @@ Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
 onNotification(ServiceNotificationEvent event) async {
   String messageString = getNotificationMessage(event);
   recentCapturedNotifications.insert(0, messageString);
-  recentCapturedNotifications.take(50);
+  int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "50") ?? 50;
+  if (recentCapturedNotifications.length > maxCount) {
+    recentCapturedNotifications.removeRange(maxCount, recentCapturedNotifications.length);
+  }
   queueTransactionFromMessage(messageString);
 }
 

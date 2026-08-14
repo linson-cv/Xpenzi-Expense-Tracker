@@ -1,10 +1,13 @@
+import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/premiumPage.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
+import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
+import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/ratingPopup.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/struct/iconObjects.dart';
@@ -514,6 +517,193 @@ class ImageIcon extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class CategoryIconPackGalleryPage extends StatefulWidget {
+  const CategoryIconPackGalleryPage({super.key});
+
+  @override
+  State<CategoryIconPackGalleryPage> createState() =>
+      _CategoryIconPackGalleryPageState();
+}
+
+class _CategoryIconPackGalleryPageState
+    extends State<CategoryIconPackGalleryPage> {
+  String search = "";
+  String? selectedCategoryFilter;
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<String> popularCategories = const [
+    "All",
+    "Food",
+    "Shopping",
+    "Transportation",
+    "Entertainment",
+    "Bills",
+    "Health",
+    "Finance",
+    "Travel",
+    "Education",
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredIcons = iconObjects.where((item) {
+      if (selectedCategoryFilter != null && selectedCategoryFilter != "All") {
+        final cat = selectedCategoryFilter!.toLowerCase();
+        final matchesCat = (item.mostLikelyCategoryName?.toLowerCase().contains(cat) ?? false) ||
+            item.tags.any((t) => t.toLowerCase().contains(cat));
+        if (!matchesCat) return false;
+      }
+      if (search.trim().isEmpty) return true;
+      final q = search.toLowerCase().trim();
+      return item.icon.toLowerCase().contains(q) ||
+          item.tags.any((t) => t.toLowerCase().contains(q)) ||
+          (item.mostLikelyCategoryName?.toLowerCase().contains(q) ?? false);
+    }).toList();
+
+    return PageFramework(
+      title: "Icon Packs & Gallery",
+      dragDownToDismiss: true,
+      listWidgets: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: TextInput(
+            labelText: "Search ${iconObjects.length}+ Icons...",
+            icon: Icons.search_rounded,
+            controller: _searchController,
+            onChanged: (val) => setState(() => search = val),
+          ),
+        ),
+        // Category Filter Chips
+        SizedBox(
+          height: 38,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: popularCategories.length,
+            itemBuilder: (context, index) {
+              final cat = popularCategories[index];
+              final isSelected = (selectedCategoryFilter == null && cat == "All") ||
+                  selectedCategoryFilter == cat;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ChoiceChip(
+                  label: TextFont(
+                    text: cat,
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    textColor: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                  selected: isSelected,
+                  selectedColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: getColor(context, "lightDarkAccent"),
+                  onSelected: (selected) {
+                    setState(() {
+                      selectedCategoryFilter = cat == "All" ? null : cat;
+                    });
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withOpacity(0.4),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const TextFont(
+                        text: "All 450+ HD Icons Available",
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: 2),
+                      TextFont(
+                        text: "Tap any icon to view preview. Pro icons are unlocked for premium subscribers.",
+                        fontSize: 11.5,
+                        textColor: getColor(context, "textLight"),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1,
+            ),
+            itemCount: filteredIcons.length,
+            itemBuilder: (context, index) {
+              final iconObj = filteredIcons[index];
+              return Tappable(
+                color: getColor(context, "lightDarkAccent"),
+                borderRadius: 14,
+                onTap: () {
+                  openPopup(
+                    context,
+                    title: iconObj.mostLikelyCategoryName ?? "Category Icon",
+                    description: "Tags: ${iconObj.tags.take(5).join(', ')}",
+                    beforeDescriptionWidget: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image(
+                        image: AssetImage("assets/categories/${iconObj.icon}"),
+                        width: 64,
+                        height: 64,
+                      ),
+                    ),
+                    onSubmit: () => popRoute(context),
+                    onSubmitLabel: "Done",
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Image(
+                    image: AssetImage("assets/categories/${iconObj.icon}"),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

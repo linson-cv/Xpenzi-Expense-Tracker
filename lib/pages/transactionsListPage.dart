@@ -156,6 +156,29 @@ class TransactionsListPageState extends State<TransactionsListPage>
       scrollbar: false,
       actions: [
         IconButton(
+          tooltip: appStateSettings["pinAccountFilters"] == true
+              ? "Hide Pinned Filters"
+              : "Show Pinned Filters",
+          onPressed: () {
+            bool current = appStateSettings["pinAccountFilters"] == true;
+            updateSettings("pinAccountFilters", !current, updateGlobalState: true);
+            setState(() {});
+          },
+          padding: const EdgeInsetsDirectional.all(15 - 8),
+          icon: Icon(
+            appStateSettings["pinAccountFilters"] == true
+                ? (appStateSettings["outlinedIcons"]
+                    ? Icons.push_pin_outlined
+                    : Icons.push_pin_rounded)
+                : (appStateSettings["outlinedIcons"]
+                    ? Icons.pin_outlined
+                    : Icons.pin_drop_outlined),
+            color: appStateSettings["pinAccountFilters"] == true
+                ? Theme.of(context).colorScheme.primary
+                : null,
+          ),
+        ),
+        IconButton(
           tooltip: "sort".tr(),
           onPressed: () {
             selectSort(context);
@@ -232,7 +255,8 @@ class TransactionsListPageState extends State<TransactionsListPage>
                             },
                           ),
                         ),
-                        if (appStateSettings["showWalletSwitcher"] == true)
+                        if (appStateSettings["pinAccountFilters"] == true ||
+                            appStateSettings["showWalletSwitcher"] == true)
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.only(top: 5),

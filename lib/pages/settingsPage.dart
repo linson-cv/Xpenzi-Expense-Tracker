@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
@@ -33,6 +34,8 @@ import 'package:budget/pages/exchangeRatesPage.dart';
 import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/recurringHubPage.dart';
 import 'package:budget/pages/aiSettingsPage.dart';
+import 'package:budget/pages/offlineIntelligencePage.dart';
+import 'package:budget/pages/faqPage.dart';
 
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/importDB.dart';
@@ -47,6 +50,7 @@ import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/ratingPopup.dart';
 import 'package:budget/widgets/restartApp.dart';
 import 'package:budget/widgets/selectAmount.dart';
+import 'package:budget/widgets/selectCategoryImage.dart';
 import 'package:budget/widgets/selectColor.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
@@ -96,6 +100,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
   }
 
   void _toggleEditMode() {
+    HapticFeedback.heavyImpact();
     setState(() {
       _isEditMode = !_isEditMode;
     });
@@ -161,8 +166,10 @@ class _ExploreCard {
 
 // ─── Canonical ordered card list (default order) ────────────────────────────
 
+// ─── Canonical ordered card list (default order) ────────────────────────────
+
 const List<String> _kDefaultCardOrder = [
-  "about", "betaFeedback", "faq", "googleAccount",
+  "premium", "about", "betaFeedback", "faq", "googleAccount",
   "calendar", "activityLog", "subscriptions", "scheduled",
   "goals", "loans", "accounts", "budgets",
   "billSplitter", "transactions", "search",
@@ -189,6 +196,21 @@ class _MorePagesState extends State<MorePages> {
   // ── Card catalogue ────────────────────────────────────────────────────────
   Map<String, _ExploreCard> _buildCardCatalogue(BuildContext context) {
     return {
+      "premium": _ExploreCard(
+        key: "premium",
+        title: "Xpenzi Premium",
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.star_outline_rounded
+            : Icons.star_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const PremiumPage(popRouteWithPurchase: false),
+          title: "Xpenzi Premium",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.star_outline_rounded
+              : Icons.star_rounded,
+          isOutlined: true,
+        ),
+      ),
       "about": _ExploreCard(
         key: "about",
         title: "about-app".tr(namedArgs: {"app": globalAppName}),
@@ -215,8 +237,8 @@ class _MorePagesState extends State<MorePages> {
         key: "faq",
         title: "Guide / FAQ",
         icon: appStateSettings["outlinedIcons"] ? Icons.help_outline : Icons.help_rounded,
-        builder: (_) => SettingsContainer(
-          onTap: () => openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md"),
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const FAQPage(),
           title: "Guide / FAQ",
           icon: appStateSettings["outlinedIcons"] ? Icons.help_outline : Icons.help_rounded,
           isOutlined: true,
@@ -276,22 +298,22 @@ class _MorePagesState extends State<MorePages> {
       ),
       "goals": _ExploreCard(
         key: "goals",
-        title: navBarIconsData["goals"]!.label.tr(),
+        title: navBarIconsData["goals"]!.label,
         icon: navBarIconsData["goals"]!.iconData,
         builder: (_) => SettingsContainerOpenPage(
           openPage: const ObjectivesListPage(backButton: true),
-          title: navBarIconsData["goals"]!.label.tr(),
+          title: navBarIconsData["goals"]!.label,
           icon: navBarIconsData["goals"]!.iconData,
           isOutlined: true,
         ),
       ),
       "loans": _ExploreCard(
         key: "loans",
-        title: navBarIconsData["loans"]!.label.tr(),
+        title: navBarIconsData["loans"]!.label,
         icon: navBarIconsData["loans"]!.iconData,
         builder: (_) => SettingsContainerOpenPage(
           openPage: const CreditDebtTransactions(isCredit: null),
-          title: navBarIconsData["loans"]!.label.tr(),
+          title: navBarIconsData["loans"]!.label,
           icon: navBarIconsData["loans"]!.iconData,
           isOutlined: true,
         ),
@@ -344,6 +366,17 @@ class _MorePagesState extends State<MorePages> {
           isOutlined: true,
         ),
       ),
+      "offlineIntelligence": _ExploreCard(
+        key: "offlineIntelligence",
+        title: "Offline Intelligence",
+        icon: Icons.shield_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const OfflineIntelligencePage(),
+          title: "Offline Intelligence",
+          icon: Icons.shield_rounded,
+          isOutlined: true,
+        ),
+      ),
       "search": _ExploreCard(
         key: "search",
         title: "search".tr(),
@@ -361,11 +394,9 @@ class _MorePagesState extends State<MorePages> {
   /// Returns the ordered list of keys from preferences, padded with defaults.
   List<String> _resolveOrder() {
     final saved = List<String>.from(appStateSettings["morePageCardOrder"] ?? []);
-    // Add any new keys that weren't in the saved order
     for (final key in _kDefaultCardOrder) {
       if (!saved.contains(key)) saved.add(key);
     }
-    // Remove keys that no longer exist
     saved.removeWhere((k) => !_kDefaultCardOrder.contains(k));
     return saved;
   }
@@ -376,6 +407,7 @@ class _MorePagesState extends State<MorePages> {
   }
 
   Future<void> _toggleVisibility(String key, List<String> hidden) async {
+    HapticFeedback.lightImpact();
     final newHidden = List<String>.from(hidden);
     if (newHidden.contains(key)) {
       newHidden.remove(key);
@@ -392,6 +424,7 @@ class _MorePagesState extends State<MorePages> {
     final orderedKeys = _resolveOrder();
     final hidden = List<String>.from(appStateSettings["hiddenMorePageItems"] ?? []);
     final isSearching = widget.searchValue.trim().isNotEmpty;
+    final visibleCount = orderedKeys.length - hidden.length;
 
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
@@ -423,6 +456,7 @@ class _MorePagesState extends State<MorePages> {
               crossAxisSpacing: 6,
               mainAxisSpacing: 6,
               onReorder: (oldIndex, newIndex) async {
+                HapticFeedback.mediumImpact();
                 final newOrder = List<String>.from(orderedKeys);
                 final item = newOrder.removeAt(oldIndex);
                 newOrder.insert(newIndex, item);
@@ -442,48 +476,66 @@ class _MorePagesState extends State<MorePages> {
                     ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Reset order + show-all button
-            Tappable(
-              borderRadius: 12,
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              onTap: () async {
-                await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
-                await updateSettings("hiddenMorePageItems", <String>[], updateGlobalState: true);
-                settingsPageStateKey.currentState?.refreshState();
-                setState(() {});
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      appStateSettings["outlinedIcons"]
-                          ? Icons.refresh_outlined
-                          : Icons.refresh_rounded,
-                      size: 18,
+            const SizedBox(height: 16),
+            // Bottom floating edit toolbar with details, reset & tick buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.dashboard_customize_rounded,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  TextFont(
+                    text: "$visibleCount/${orderedKeys.length} Visible",
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: "Reset Defaults",
+                    icon: const Icon(Icons.refresh_rounded),
+                    onPressed: () async {
+                      HapticFeedback.mediumImpact();
+                      await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
+                      await updateSettings("hiddenMorePageItems", <String>[], updateGlobalState: true);
+                      settingsPageStateKey.currentState?.refreshState();
+                      setState(() {});
+                    },
+                  ),
+                  IconButton(
+                    tooltip: "Done",
+                    icon: Icon(
+                      Icons.check_circle_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Reset to Defaults",
-                      style: TextStyle(
-                        fontFamily: appStateSettings["font"],
-                        fontFamilyFallback: const ["Inter"],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      widget.onEditModeChanged?.call(false);
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
           ] else ...[
             // ────────────────────────────────────────────────────────────
-            // NORMAL / SEARCH MODE: 2-column card grid (Uniform Sizing)
+            // NORMAL / SEARCH MODE: 2-column card grid (Strict Sizing)
             // ────────────────────────────────────────────────────────────
-
-            // Featured rows are always visible (not searchable, not hideable)
             if (!isSearching) ...[
               SettingsContainerOpenPage(
                 openPage: SettingsPageFramework(
@@ -509,7 +561,6 @@ class _MorePagesState extends State<MorePages> {
               const SizedBox(height: 8),
             ],
 
-            // Customizable 2-column card grid with uniform card sizing
             Builder(builder: (context) {
               final visibleCards = orderedKeys
                   .where((k) => catalogue.containsKey(k))
@@ -532,11 +583,19 @@ class _MorePagesState extends State<MorePages> {
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       children: [
-                        Expanded(child: left.builder(context)),
+                        Expanded(
+                          child: SizedBox(
+                            height: 64,
+                            child: left.builder(context),
+                          ),
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: right != null
-                              ? right.builder(context)
+                              ? SizedBox(
+                                  height: 64,
+                                  child: right.builder(context),
+                                )
                               : const SizedBox.shrink(),
                         ),
                       ],
@@ -547,7 +606,6 @@ class _MorePagesState extends State<MorePages> {
               return Column(children: rows);
             }),
 
-            // Always-visible bottom action (hidden during search)
             if (!isSearching) ...[
               const SizedBox(height: 6),
               SettingsContainer(
@@ -573,9 +631,9 @@ class _MorePagesState extends State<MorePages> {
   }
 }
 
-// ─── Grid card wrapper widget ──────────────────────────────────────────────
+// ─── Grid card wrapper widget with Wiggle Animation ─────────────────────────
 
-class _GridCardWrapper extends StatelessWidget {
+class _GridCardWrapper extends StatefulWidget {
   const _GridCardWrapper({
     super.key,
     required this.card,
@@ -590,49 +648,105 @@ class _GridCardWrapper extends StatelessWidget {
   final VoidCallback onToggleVisibility;
 
   @override
+  State<_GridCardWrapper> createState() => _GridCardWrapperState();
+}
+
+class _GridCardWrapperState extends State<_GridCardWrapper> with SingleTickerProviderStateMixin {
+  late AnimationController _wiggleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _wiggleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 140),
+    );
+    if (widget.isEditMode) {
+      _wiggleController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _GridCardWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isEditMode && !_wiggleController.isAnimating) {
+      _wiggleController.repeat(reverse: true);
+    } else if (!widget.isEditMode && _wiggleController.isAnimating) {
+      _wiggleController.stop();
+      _wiggleController.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _wiggleController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Opacity(
-          opacity: isVisible ? 1.0 : 0.4,
-          child: AbsorbPointer(
-            absorbing: isEditMode,
-            child: card.builder(context),
+    return AnimatedBuilder(
+      animation: _wiggleController,
+      builder: (context, child) {
+        final angle = widget.isEditMode ? (sin(_wiggleController.value * pi * 2) * 0.016) : 0.0;
+        final offsetY = widget.isEditMode ? (cos(_wiggleController.value * pi * 2) * 0.8) : 0.0;
+        return Transform.translate(
+          offset: Offset(0, offsetY),
+          child: Transform.rotate(
+            angle: angle,
+            child: child,
           ),
-        ),
-        if (isEditMode)
-          PositionedDirectional(
-            top: 4,
-            end: 4,
-            child: GestureDetector(
-              onTap: onToggleVisibility,
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: isVisible
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  isVisible ? Icons.remove_rounded : Icons.add_rounded,
-                  size: 16,
-                  color: isVisible
-                      ? Theme.of(context).colorScheme.onError
-                      : Theme.of(context).colorScheme.onPrimary,
-                ),
+        );
+      },
+      child: SizedBox(
+        height: 64,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Opacity(
+              opacity: widget.isVisible ? 1.0 : 0.4,
+              child: AbsorbPointer(
+                absorbing: widget.isEditMode,
+                child: widget.card.builder(context),
               ),
             ),
-          ),
-      ],
+            if (widget.isEditMode)
+              PositionedDirectional(
+                top: 4,
+                end: 4,
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    widget.onToggleVisibility();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: widget.isVisible
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      widget.isVisible ? Icons.remove_rounded : Icons.add_rounded,
+                      size: 16,
+                      color: widget.isVisible
+                          ? Theme.of(context).colorScheme.onError
+                          : Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1283,15 +1397,13 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
               },
               getLabel: (item) => item,
             ),
-            SettingsContainer(
-              title: "Category Icon Pack",
-              description: "Unlock premium icons for categories",
+            SettingsContainerOpenPage(
+              openPage: const CategoryIconPackGalleryPage(),
+              title: "Category Icon Pack & Gallery",
+              description: "Browse 450+ category icons & packs",
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.category_outlined
                   : Icons.category_rounded,
-              onTap: () {
-                pushRoute(context, const PremiumPage(popRouteWithPurchase: false));
-              },
             ),
             SettingsContainerDropdown(
               title: "Net Total Style",
@@ -1414,6 +1526,17 @@ class TransactionsSettingsSubPage extends StatelessWidget {
                   : Icons.edit_note_rounded,
               onSwitched: (value) {
                 updateSettings("askForTransactionTitle", value, updateGlobalState: true);
+              },
+            ),
+            SettingsContainerSwitch(
+              title: "Pin Account Filters",
+              description: "Show quick account filter chips on transactions list under month selector",
+              initialValue: appStateSettings["pinAccountFilters"] ?? false,
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.account_balance_wallet_outlined
+                  : Icons.account_balance_wallet_rounded,
+              onSwitched: (value) {
+                updateSettings("pinAccountFilters", value, updateGlobalState: true);
               },
             ),
           ],
@@ -1700,7 +1823,7 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
         if (value == "black") {
           await updateSettings("forceFullDarkBackground", true,
               updateGlobalState: false);
-        } else if (value == "dark") {
+        } else {
           await updateSettings("forceFullDarkBackground", false,
               updateGlobalState: false);
         }
@@ -3184,15 +3307,24 @@ class PermissionsSettingsSubPage extends StatelessWidget {
                   openSnackbar(
                     SnackbarMessage(
                       title: "Permission Already Granted",
-                      description: "You can revoke this via Android Settings -> Apps -> Special app access -> Device & app notifications",
+                      description: "You can revoke or manage this in Android Device & App Notification settings.",
                       icon: Icons.check_circle_rounded,
                     )
                   );
-                  // Optionally request again which opens the settings page where they can turn it off
                   NotificationListenerService.requestPermission();
                 } else {
                   promptNotificationPermissionPopup(context);
                 }
+              },
+            ),
+            SettingsContainer(
+              title: "Battery Optimization",
+              description: "Allow unrestricted background running for notification capture",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.battery_saver_outlined
+                  : Icons.battery_saver_rounded,
+              onTap: () {
+                AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
               },
             ),
             SettingsContainer(

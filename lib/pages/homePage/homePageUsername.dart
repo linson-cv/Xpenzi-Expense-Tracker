@@ -50,39 +50,10 @@ class HomePageUsername extends StatelessWidget {
                 child: PartyHat(
                   size: 23,
                   enabled: showUsername,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFont(
-                        text: getWelcomeMessage(),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                      StreamBuilder<double?>(
-                        stream: database.watchTotalSpentInTimeRangeFromCategories(
-                          allWallets: Provider.of<AllWallets>(context),
-                          start: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
-                          end: DateTime.now(),
-                          categoryFks: null,
-                          categoryFksExclude: null,
-                          budgetTransactionFilters: null,
-                          memberTransactionFilters: null,
-                        ),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData && snapshot.data != null && snapshot.data! > 0) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 2.0),
-                              child: TextFont(
-                                text: "You've spent ${convertToMoney(Provider.of<AllWallets>(context), snapshot.data!)} so far this week. Keep it up!",
-                                fontSize: 13,
-                                textColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        }
-                      ),
-                    ],
+                  child: TextFont(
+                    text: getWelcomeMessage(),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
               ),
@@ -121,14 +92,50 @@ class HomePageUsername extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   fontSize: 33,
                   textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  // textColor: showGreeting && showUsername
-                  //     ? Theme.of(context).colorScheme.onPrimaryContainer
-                  //     : Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
               ),
             ),
           ),
         ),
+        if (showUsername && showGreeting)
+          Padding(
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 9),
+            child: StreamBuilder<double?>(
+              stream: database.watchTotalSpentInTimeRangeFromCategories(
+                allWallets: Provider.of<AllWallets>(context),
+                start: DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1)),
+                end: DateTime.now(),
+                categoryFks: null,
+                categoryFksExclude: null,
+                budgetTransactionFilters: null,
+                memberTransactionFilters: null,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data != null) {
+                  final spent = snapshot.data!;
+                  final spentFormatted = convertToMoney(Provider.of<AllWallets>(context), spent);
+                  String message;
+                  if (spent == 0) {
+                    message = "✨ No expenses logged yet this week. Great start!";
+                  } else if (DateTime.now().weekday >= 5) {
+                    message = "📊 $spentFormatted spent this week. Keep your goals in focus!";
+                  } else {
+                    message = "🎯 $spentFormatted spent so far this week. Stay on track!";
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 2.0, bottom: 4.0),
+                    child: TextFont(
+                      text: message,
+                      fontSize: 13,
+                      textColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
       ],
     );
   }

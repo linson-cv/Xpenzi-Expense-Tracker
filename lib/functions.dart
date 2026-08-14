@@ -719,42 +719,74 @@ int daysBetween(DateTime from, DateTime to) {
 }
 
 String getWelcomeMessage() {
-  int h24 = DateTime.now().hour;
-  List<String> greetings = [
-    "greetings-general-1".tr(),
-    "greetings-general-2".tr(),
-    "greetings-general-3".tr(),
-    "greetings-general-4".tr(),
-    "greetings-general-5".tr(),
-    "greetings-general-6".tr(),
-    "greetings-general-7".tr(),
-  ];
+  final now = DateTime.now();
+  int h24 = now.hour;
+  int weekday = now.weekday; // 1 = Mon, ..., 5 = Fri, 6 = Sat, 7 = Sun
+
   List<String> greetingsMorning = [
     "greetings-morning-1".tr(),
     "greetings-morning-2".tr(),
+    "Rise & shine 🌅",
+    "Ready for the day ahead ☕",
+    "Good morning ☀️",
   ];
   List<String> greetingsAfternoon = [
     "greetings-afternoon-1".tr(),
     "greetings-afternoon-2".tr(),
+    "Keep up the momentum ⚡",
+    "Good afternoon 🌤️",
+    "Midday check-in 📊",
   ];
-  List<String> greetingsEvening = ["greetings-evening-1".tr()];
+  List<String> greetingsEvening = [
+    "greetings-evening-1".tr(),
+    "Good evening 🌙",
+    "Wrapping up the day ✨",
+    "Evening review ☕",
+  ];
   List<String> greetingsLate = [
     "greetings-late-1".tr(),
-    "greetings-late-2".tr()
+    "greetings-late-2".tr(),
+    "Night owl mode 🦉",
+    "Rest well tonight 💤",
   ];
-  if (randomInt[0] % 2 == 0) {
-    if (h24 <= 12 && h24 >= 6) {
-      return greetingsMorning[randomInt[0] % (greetingsMorning.length)];
-    } else if (h24 <= 16 && h24 >= 13)
-      return greetingsAfternoon[randomInt[0] % (greetingsAfternoon.length)];
-    else if (h24 <= 22 && h24 >= 19)
-      return greetingsEvening[randomInt[0] % (greetingsEvening.length)];
-    else if (h24 >= 23 || h24 <= 5)
-      return greetingsLate[randomInt[0] % (greetingsLate.length)];
-    else
-      return greetings[randomInt[0] % (greetings.length)];
+
+  // Specific Day Motivations (occasionally picked)
+  List<String> weekendGreetings = [
+    "Happy weekend 🎉",
+    "Enjoy your weekend ☕",
+    "Weekend vibes 🌴",
+  ];
+  List<String> fridayGreetings = [
+    "Happy Friday 🙌",
+    "Almost the weekend 🚀",
+  ];
+  List<String> mondayGreetings = [
+    "Fresh week ahead 🎯",
+    "Let's conquer this week 💪",
+  ];
+
+  int roll = randomInt[0] % 10;
+
+  // 30% chance of day-specific greeting if relevant
+  if (roll <= 2) {
+    if (weekday == DateTime.monday) {
+      return mondayGreetings[randomInt[0] % mondayGreetings.length];
+    } else if (weekday == DateTime.friday) {
+      return fridayGreetings[randomInt[0] % fridayGreetings.length];
+    } else if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
+      return weekendGreetings[randomInt[0] % weekendGreetings.length];
+    }
+  }
+
+  // Time of Day Dynamic Greetings
+  if (h24 >= 5 && h24 <= 11) {
+    return greetingsMorning[randomInt[0] % greetingsMorning.length];
+  } else if (h24 >= 12 && h24 <= 16) {
+    return greetingsAfternoon[randomInt[0] % greetingsAfternoon.length];
+  } else if (h24 >= 17 && h24 <= 21) {
+    return greetingsEvening[randomInt[0] % greetingsEvening.length];
   } else {
-    return greetings[randomInt[0] % (greetings.length)];
+    return greetingsLate[randomInt[0] % greetingsLate.length];
   }
 }
 
