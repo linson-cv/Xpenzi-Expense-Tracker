@@ -6,6 +6,7 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:budget/colors.dart';
 
 class Button extends StatefulWidget {
@@ -120,6 +121,9 @@ class _ButtonState extends State<Button> with TickerProviderStateMixin {
             }
           },
           onTap: () {
+            if (appStateSettings["buttonPressHapticFeedback"] == true) {
+              HapticFeedback.selectionClick();
+            }
             if (appStateSettings["appAnimations"] == AppAnimations.all.index) {
               _shrink();
             }

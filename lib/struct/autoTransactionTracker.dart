@@ -6,13 +6,64 @@ import 'package:flutter/material.dart';
 class AutoAddedTransactionInfo {
   final String title;
   final double amount;
+  final bool isIncome;
   final DateTime timestamp;
 
   AutoAddedTransactionInfo({
     required this.title,
     required this.amount,
+    this.isIncome = false,
     required this.timestamp,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'amount': amount,
+      'isIncome': isIncome,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory AutoAddedTransactionInfo.fromMap(Map<String, dynamic> map) {
+    return AutoAddedTransactionInfo(
+      title: map['title'] ?? '',
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      isIncome: map['isIncome'] ?? false,
+      timestamp: DateTime.tryParse(map['timestamp'] ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+final List<AutoAddedTransactionInfo> _pendingReviewTransactions = [];
+final ValueNotifier<int> pendingReviewTransactionsNotifier = ValueNotifier<int>(0);
+
+List<AutoAddedTransactionInfo> getPendingReviewTransactions() {
+  return List.unmodifiable(_pendingReviewTransactions);
+}
+
+void registerAutoDetectedTransactionForReview(String title, double amount, {bool isIncome = false}) {
+  _pendingReviewTransactions.add(
+    AutoAddedTransactionInfo(
+      title: title,
+      amount: amount,
+      isIncome: isIncome,
+      timestamp: DateTime.now(),
+    ),
+  );
+  pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
+}
+
+void dismissPendingReviewTransaction(int index) {
+  if (index >= 0 && index < _pendingReviewTransactions.length) {
+    _pendingReviewTransactions.removeAt(index);
+    pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
+  }
+}
+
+void clearAllPendingReviewTransactions() {
+  _pendingReviewTransactions.clear();
+  pendingReviewTransactionsNotifier.value = 0;
 }
 
 final List<AutoAddedTransactionInfo> _recentAutoAddedTransactions = [];

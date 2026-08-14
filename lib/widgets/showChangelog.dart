@@ -26,8 +26,13 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
-    < 1.1.7
+    < 1.1.8
     (A) Zero-latency instant theme engine: Light, Dark, Black AMOLED, and accent palettes apply immediately on the same frame
+    (A) Smart Auto-Detect review banner: Replaced disruptive popup dialogs with an elegant homepage review banner and non-intrusive notification snackbars
+    (A) Upgraded Diagnostic & Error Logs: Added real-time text search, category tag filter chips, and 1-tap system sheet sharing
+    (A) Diagnostic persistence engine: Automatically retains up to 500 logs across 30 days with global unhandled exception tracking
+    (A) Enhanced haptic feedback engine: Fixed touch vibration on buttons and action keypads
+    < 1.1.7
     (A) Smart transaction auto-detection prompt: Replaced abrupt page takeovers with a clean review popup and optional direct silent auto-insert
     (A) App-open auto-recorded transaction summary notification with 1-tap navigation to transactions list
     (A) Added Diagnostic & Error Logs hub with detailed exception logging, full stack traces, and 1-tap clipboard copying

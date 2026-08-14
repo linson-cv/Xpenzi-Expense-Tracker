@@ -24,10 +24,35 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   if (input.trim().isEmpty) return null;
   String text = input.replaceAll("\n", " ");
 
-  // 1. Amount Extraction
+  // 1. Promotional and Marketing Message Filter
+  // Ignore shopping spam, discount alerts, coupon codes, and marketing pushes
+  RegExp promotionalKeywords = RegExp(
+    r'\b(off\b|discount|deal|offer|sale\b|cashback up to|win|won|gift|coupon|promo|voucher|exclusive|free\b|save up to|flat ₹|flat rs|use code|code:|ends soon|hurry|order now|explore)\b',
+    caseSensitive: false,
+  );
+  if (promotionalKeywords.hasMatch(text)) {
+    // Only proceed if it is definitively an actual completed payment transaction alert
+    bool isDefinitiveTransaction = text.toLowerCase().contains("debited") ||
+        text.toLowerCase().contains("credited") ||
+        text.toLowerCase().contains("paid to") ||
+        text.toLowerCase().contains("spent on") ||
+        text.toLowerCase().contains("sent to");
+    if (!isDefinitiveTransaction) return null;
+  }
+
+  // Strict Transaction Verification: Must contain at least one real transaction keyword
+  RegExp transactionVerification = RegExp(
+    r'\b(debited|credited|paid|spent|sent|received|transferred|withdrawn|deposited|refunded|a/c|vpa|txn|ref no|upi ref)\b',
+    caseSensitive: false,
+  );
+  if (!transactionVerification.hasMatch(text)) {
+    return null;
+  }
+
+  // 2. Amount Extraction
   double? amount;
   RegExp amountRegex = RegExp(
-    r'(?:rs\.?|inr|₹|debited by|credited with|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
+    r'(?:rs\.?|inr|₹|debited by|debited for|credited with|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
     caseSensitive: false,
   );
 
@@ -48,7 +73,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   if (amount == null || amount <= 0) return null;
 
-  // 2. Transaction Type (Income vs Expense)
+  // 3. Transaction Type (Income vs Expense)
   bool isIncome = false;
   RegExp incomeKeywords = RegExp(
     r'\b(credited|received|added|deposited|refund|cashback|salary)\b',
@@ -132,10 +157,42 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       List<TransactionWallet> wallets =
           Provider.of<AllWallets>(context, listen: false).list;
       String textLower = text.toLowerCase();
+
+      // First check if any wallet name is explicitly mentioned in the text
       for (var w in wallets) {
         if (textLower.contains(w.name.toLowerCase())) {
           matchedWallet = w;
           break;
+        }
+      }
+
+      // If no exact wallet name matched, distinguish between Credit Card and Regular Bank
+      if (matchedWallet == null && wallets.isNotEmpty) {
+        bool isCreditCard = textLower.contains("credit card") ||
+            (textLower.contains("card") && (textLower.contains("debited") || textLower.contains("spent"))) ||
+            textLower.contains("spent on card") ||
+            textLower.contains("card ending");
+
+        if (isCreditCard) {
+          // Find a credit card wallet if available
+          matchedWallet = wallets.where((w) {
+            String name = w.name.toLowerCase();
+            return name.contains("credit") || name.contains("card");
+          }).firstOrNull;
+        } else if (textLower.contains("debited") ||
+            textLower.contains("credited") ||
+            textLower.contains("a/c") ||
+            textLower.contains("account") ||
+            textLower.contains("bank") ||
+            textLower.contains("upi")) {
+          // Other credited or debited messages are for regular bank accounts
+          matchedWallet = wallets.where((w) {
+            String name = w.name.toLowerCase();
+            return !name.contains("credit") && (name.contains("bank") || name.contains("saving") || name.contains("current") || name.contains("primary") || name.contains("account"));
+          }).firstOrNull ?? wallets.where((w) {
+            String name = w.name.toLowerCase();
+            return !name.contains("credit") && !name.contains("card");
+          }).firstOrNull;
         }
       }
     } catch (_) {}

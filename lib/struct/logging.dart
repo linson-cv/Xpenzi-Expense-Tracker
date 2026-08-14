@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:budget/functions.dart';
+import 'package:budget/struct/errorLog.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/dropdownSelect.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
@@ -50,7 +51,9 @@ captureLogs(Function body) {
     () async {
       await body();
     },
-    (error, stackTrace) {},
+    (error, stackTrace) {
+      recordAppError("UnhandledZoneError", error, stackTrace: stackTrace);
+    },
     zoneSpecification: ZoneSpecification(
       print: (Zone self, ZoneDelegate parent, Zone zone, String message) {
         logService.log(message);

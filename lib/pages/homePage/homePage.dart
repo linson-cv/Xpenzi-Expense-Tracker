@@ -19,6 +19,7 @@ import 'package:budget/pages/settingsPage.dart';
 import 'package:budget/pages/homePage/homePageCreditDebts.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
+import 'package:budget/widgets/autoDetectedReviewBanner.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/navigationFramework.dart';
@@ -344,6 +345,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     // Not full screen
                     if (enableDoubleColumn(context) != true) ...[
                       const KeepAliveClientMixin(
+                          child: AutoDetectedReviewBanner()),
+                      const KeepAliveClientMixin(
                           child: NotificationPermissionBanner()),
                       const KeepAliveClientMixin(child: HomePageRatingBox()),
                       for (String sectionKey
@@ -352,6 +355,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ],
                     // Full screen top section
                     if (enableDoubleColumn(context) == true) ...[
+                      const KeepAliveClientMixin(
+                          child: AutoDetectedReviewBanner()),
                       for (String sectionKey
                           in appStateSettings["homePageOrderFullScreen"])
                         if (homePageSectionsFullScreenCenter

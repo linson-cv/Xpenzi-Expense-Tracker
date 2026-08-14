@@ -19,6 +19,7 @@ import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
+import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
@@ -133,6 +134,8 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       popRoute(context);
     }
 
+    bool shouldOpenOfflineIntelligence = false;
+
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid &&
         appStateSettings["notificationScanning"] != true &&
         !widget.popNavigationWhenDone) {
@@ -153,6 +156,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
               await updateSettings("notificationScanning", true,
                   updateGlobalState: false);
               initNotificationScanning();
+              shouldOpenOfflineIntelligence = true;
             }
           },
           onCancel: () {
@@ -165,8 +169,11 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
     if (widget.popNavigationWhenDone) {
       popRoute(context);
     } else {
-      updateSettings("hasOnboarded", true,
+      await updateSettings("hasOnboarded", true,
           pagesNeedingRefresh: [0], updateGlobalState: true, forceGlobalStateUpdate: true);
+      if (shouldOpenOfflineIntelligence && context.mounted) {
+        pushRoute(context, const OfflineIntelligencePage());
+      }
     }
   }
 

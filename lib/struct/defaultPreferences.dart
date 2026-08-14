@@ -202,7 +202,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "firstDayOfWeek": -1, // -1: Locale/System, 0: Sunday, 1: Monday,
     "disableShadows": false,
     "showBillSplitterShortcut": false,
-    "hiddenMorePageItems": <String>["search"], // search card hidden by default
+    "hiddenMorePageItems": <String>["search", "intelligence"], // search and intelligence cards hidden by default
     "morePageCardOrder": <String>[], // empty = use default order
     "showTransactionPk": false,
     "showMethodAdded": false,

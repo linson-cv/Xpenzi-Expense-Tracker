@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:budget/struct/databaseGlobal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -52,8 +54,42 @@ class AppErrorItem {
 
 final List<AppErrorItem> _appErrorLogs = [];
 final ValueNotifier<int> appErrorLogsCountNotifier = ValueNotifier<int>(0);
+bool _isLogsInitialized = false;
+
+Future<void> _initLogsFromDisk() async {
+  if (_isLogsInitialized) return;
+  _isLogsInitialized = true;
+  try {
+    String? stored = sharedPreferences.getString('persisted_app_error_logs');
+    if (stored != null && stored.isNotEmpty) {
+      List<dynamic> list = jsonDecode(stored);
+      _appErrorLogs.clear();
+      final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+      for (var item in list) {
+        if (item is Map<String, dynamic>) {
+          final errorItem = AppErrorItem.fromMap(item);
+          // Keep only logs from the last 30 days
+          if (errorItem.timestamp.isAfter(cutoffDate)) {
+            _appErrorLogs.add(errorItem);
+          }
+        }
+      }
+      appErrorLogsCountNotifier.value = _appErrorLogs.length;
+    }
+  } catch (e) {
+    debugPrint("Failed to load persisted error logs: $e");
+  }
+}
+
+void _saveLogsToDisk() {
+  try {
+    List<Map<String, dynamic>> rawList = _appErrorLogs.map((e) => e.toMap()).toList();
+    sharedPreferences.setString('persisted_app_error_logs', jsonEncode(rawList));
+  } catch (_) {}
+}
 
 List<AppErrorItem> getAppErrorLogs() {
+  _initLogsFromDisk();
   return List.unmodifiable(_appErrorLogs);
 }
 
@@ -63,6 +99,7 @@ void recordAppError(
   StackTrace? stackTrace,
   String? extraInfo,
 }) {
+  _initLogsFromDisk();
   final item = AppErrorItem(
     timestamp: DateTime.now(),
     tag: tag,
@@ -72,10 +109,17 @@ void recordAppError(
   );
 
   _appErrorLogs.insert(0, item);
-  if (_appErrorLogs.length > 100) {
-    _appErrorLogs.removeRange(100, _appErrorLogs.length);
+  
+  // Prune logs older than 30 days
+  final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+  _appErrorLogs.removeWhere((log) => log.timestamp.isBefore(cutoffDate));
+
+  // Retain up to 500 most recent logs
+  if (_appErrorLogs.length > 500) {
+    _appErrorLogs.removeRange(500, _appErrorLogs.length);
   }
   appErrorLogsCountNotifier.value = _appErrorLogs.length;
+  _saveLogsToDisk();
 
   debugPrint("🚨 [AppErrorLog][$tag]: ${item.error}");
   if (extraInfo != null) debugPrint("   Details: $extraInfo");
@@ -85,6 +129,7 @@ void recordAppError(
 void clearAppErrorLogs() {
   _appErrorLogs.clear();
   appErrorLogsCountNotifier.value = 0;
+  _saveLogsToDisk();
 }
 
 String exportAllLogsAsText() {

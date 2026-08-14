@@ -478,12 +478,16 @@ class _MorePagesState extends State<MorePages> {
       ),
       "offlineIntelligence": _ExploreCard(
         key: "offlineIntelligence",
-        title: "Offline Intelligence",
-        icon: Icons.shield_rounded,
+        title: "Auto-Detect SMS",
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.sms_outlined
+            : Icons.sms_rounded,
         builder: (_) => SettingsContainerOpenPage(
           openPage: const OfflineIntelligencePage(),
-          title: "Offline Intelligence",
-          icon: Icons.shield_rounded,
+          title: "Auto-Detect SMS",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.sms_outlined
+              : Icons.sms_rounded,
           isOutlined: true,
         ),
       ),
@@ -1147,9 +1151,11 @@ class SettingsPageContent extends StatelessWidget {
               children: [
                 SettingsContainerOpenPage(
                   openPage: const OfflineIntelligencePage(),
-                  title: "Offline Intelligence (100% Private)",
-                  description: "Auto-detect bank SMS, payment alerts, and manage templates",
-                  icon: Icons.shield_rounded,
+                  title: "Auto-Detect Bank SMS & Alerts",
+                  description: "100% Private on-device bank SMS & payment notification parser",
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.sms_outlined
+                      : Icons.sms_rounded,
                 ),
                 const Divider(height: 1),
                 SettingsContainerOpenPage(
@@ -1406,6 +1412,7 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
                                 updateSettings("accentSystemColor", false,
                                     updateGlobalState: true);
                                 updateWidgetColorsAndText(context);
+                                RestartApp.restartApp(context);
                               },
                               useSystemColorPrompt: true,
                             ),
@@ -1879,6 +1886,7 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
         await updateSettings("theme", value,
             updateGlobalState: true, forceGlobalStateUpdate: true);
         updateWidgetColorsAndText(context);
+        RestartApp.restartApp(context);
       },
       getLabel: (item) {
         return item.tr();

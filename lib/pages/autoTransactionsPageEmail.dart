@@ -23,7 +23,6 @@ import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/statusBox.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
-import 'package:budget/widgets/util/appLinks.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -149,6 +148,9 @@ Future queueTransactionFromMessage(String messageString,
     }
   }
 
+  bool isIncome = false;
+  TransactionWallet? nlpWallet;
+
   // Step 2. Local Natural Language Processing (Regex NLP Engine)
   if (templateFound == null || amountDouble == null || title == null) {
     BuildContext? ctx = navigatorKey.currentContext;
@@ -157,6 +159,8 @@ Future queueTransactionFromMessage(String messageString,
     if (nlpParsed != null) {
       title ??= nlpParsed.title;
       amountDouble ??= nlpParsed.amount;
+      isIncome = nlpParsed.income;
+      nlpWallet = nlpParsed.wallet;
     }
   }
 
@@ -188,10 +192,16 @@ Future queueTransactionFromMessage(String messageString,
   }
 
   TransactionWallet? wallet = (templateFound == null || templateFound.walletFk == "-1")
-      ? null
+      ? nlpWallet
       : await database.getWalletInstanceOrNull(templateFound.walletFk);
 
+  // If amount represents an income, adjust sign/income tab
+  if (isIncome && amountDouble > 0) {
+    amountDouble = amountDouble * -1;
+  }
+
   if (willPushRoute && appStateSettings["autoInsertNotificationsDirectly"] != true) {
+    registerAutoDetectedTransactionForReview(title, amountDouble, isIncome: isIncome);
     BuildContext? currentCtx = navigatorKey.currentContext;
     if (currentCtx != null) {
       AllWallets? allWallets;
@@ -199,56 +209,77 @@ Future queueTransactionFromMessage(String messageString,
         allWallets = Provider.of<AllWallets>(currentCtx, listen: false);
       } catch (_) {}
       String formattedAmount = allWallets != null
-          ? convertToMoney(allWallets, amountDouble)
-          : amountDouble.toStringAsFixed(2);
+          ? convertToMoney(allWallets, amountDouble.abs())
+          : amountDouble.abs().toStringAsFixed(2);
 
-      openPopup(
-        currentCtx,
-        title: "New Transaction Detected",
-        icon: Icons.notifications_active_rounded,
-        description:
-            "A transaction was auto-detected from notification:\n\n• Title: $title\n• Amount: $formattedAmount\n\nWould you like to review and add this transaction?",
-        onSubmitLabel: "Review & Add",
-        onSubmit: () {
-          popRoute(currentCtx);
-          pushRoute(
-            currentCtx,
-            AddTransactionPage(
-              useCategorySelectedIncome: true,
-              routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-              selectedAmount: amountDouble,
-              selectedTitle: title,
-              selectedCategory: category,
-              startInitialAddTransactionSequence: false,
-              selectedWallet: wallet,
-              selectedDate: dateTime,
-            ),
-          );
-        },
-        onCancelLabel: "Ignore",
-        onCancel: () {
-          popRoute(currentCtx);
-        },
+      openSnackbar(
+        SnackbarMessage(
+          title: isIncome ? "Income Detected · $formattedAmount" : "Transaction Detected · $formattedAmount",
+          description: "$title · Tap to review & add",
+          icon: isIncome ? Icons.arrow_downward_rounded : Icons.auto_awesome_rounded,
+          timeout: const Duration(seconds: 6),
+          onTap: () {
+            pushRoute(
+              currentCtx,
+              AddTransactionPage(
+                useCategorySelectedIncome: false,
+                selectedIncome: isIncome,
+                routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                selectedAmount: amountDouble,
+                selectedTitle: title,
+                selectedCategory: category,
+                startInitialAddTransactionSequence: false,
+                selectedWallet: wallet,
+                selectedDate: dateTime,
+              ),
+            );
+          },
+        ),
       );
     }
   } else {
-    BuildContext? ctx = navigatorKey.currentContext;
-    if (ctx != null) {
-      registerAutoAddedTransaction(title, amountDouble);
-      processAddTransactionFromParams(ctx, {
-        "title": title,
-        "categoryPk": category?.categoryPk,
-        "walletPk": wallet?.walletPk,
-        "amount": amountDouble.toString(),
-        "date": dateTime.toString(),
-      });
-      openSnackbar(
-        SnackbarMessage(
-          title: "Auto-Recorded Transaction",
-          description: "$title · ${amountDouble.toStringAsFixed(2)}",
-          icon: Icons.auto_awesome_rounded,
+    // Direct Silent Auto-Insert
+    try {
+      // Fallback category if none was matched
+      category ??= (await database.getAllCategories()).firstOrNull;
+      String categoryPk = category?.categoryPk ?? "0";
+      String walletPk = wallet?.walletPk ?? appStateSettings["selectedWalletPk"] ?? "0";
+
+      final int? rowId = await database.createOrUpdateTransaction(
+        Transaction(
+          transactionPk: "-1",
+          name: title,
+          amount: amountDouble,
+          note: "Auto-detected notification",
+          categoryFk: categoryPk,
+          subCategoryFk: null,
+          walletFk: walletPk,
+          dateCreated: dateTime ?? DateTime.now(),
+          income: isIncome || amountDouble > 0,
+          paid: true,
+          skipPaid: false,
+          methodAdded: MethodAdded.email,
         ),
+        insert: true,
       );
+
+      if (title.isNotEmpty && category != null) {
+        await addAssociatedTitles(title, category);
+      }
+
+      registerAutoAddedTransaction(title, amountDouble);
+
+      if (rowId != null) {
+        openSnackbar(
+          SnackbarMessage(
+            title: isIncome ? "Auto-Recorded Income" : "Auto-Recorded Transaction",
+            description: "$title · ${amountDouble.abs().toStringAsFixed(2)}",
+            icon: isIncome ? Icons.arrow_downward_rounded : Icons.auto_awesome_rounded,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error directly auto-recording transaction: $e");
     }
   }
 }

@@ -54,6 +54,8 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   String? titleTransactionAfter;
   String? selectedTitle;
 
+  ScannerTemplate? templateInitial;
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +69,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       amountTransactionAfter = widget.scannerTemplate!.amountTransactionAfter;
       titleTransactionBefore = widget.scannerTemplate!.titleTransactionBefore;
       titleTransactionAfter = widget.scannerTemplate!.titleTransactionAfter;
+      canAddTemplate = true;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateInitial();
@@ -80,6 +83,19 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       setState(() {
         selectedCategory = getSelectedCategory;
       });
+      templateInitial = createTemplate();
+      determineBottomButton();
+    }
+  }
+
+  void showDiscardChangesPopupIfNotEditing() {
+    ScannerTemplate templateCreated = createTemplate();
+    if (templateInitial != null &&
+        templateCreated != templateInitial &&
+        widget.scannerTemplate == null) {
+      discardChangesPopup(context, forceShow: true);
+    } else {
+      popRoute(context);
     }
   }
 
@@ -108,12 +124,42 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       return;
     }
 
-    if (selectedName == null) return;
-    if (selectedCategory == null) return;
-    if (amountTransactionBefore == null) return;
-    if (amountTransactionAfter == null) return;
-    if (titleTransactionBefore == null) return;
-    if (titleTransactionAfter == null) return;
+    if (selectedName == null || (selectedName?.trim().isEmpty ?? true)) {
+      setState(() {
+        canAddTemplate = false;
+      });
+      return;
+    }
+    if (selectedCategory == null) {
+      setState(() {
+        canAddTemplate = false;
+      });
+      return;
+    }
+    if (amountTransactionBefore == null) {
+      setState(() {
+        canAddTemplate = false;
+      });
+      return;
+    }
+    if (amountTransactionAfter == null) {
+      setState(() {
+        canAddTemplate = false;
+      });
+      return;
+    }
+    if (titleTransactionBefore == null) {
+      setState(() {
+        canAddTemplate = false;
+      });
+      return;
+    }
+    if (titleTransactionAfter == null) {
+      setState(() {
+        canAddTemplate = false;
+      });
+      return;
+    }
 
     setState(() {
       canAddTemplate = true;
@@ -396,11 +442,11 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
         if (widget.scannerTemplate != null) {
           discardChangesPopup(
             context,
-            previousObject: widget.scannerTemplate,
+            previousObject: templateInitial ?? widget.scannerTemplate,
             currentObject: createTemplate(),
           );
         } else {
-          discardChangesPopup(context);
+          showDiscardChangesPopupIfNotEditing();
         }
         return false;
       },
@@ -426,22 +472,22 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
           if (widget.scannerTemplate != null) {
             discardChangesPopup(
               context,
-              previousObject: widget.scannerTemplate,
+              previousObject: templateInitial ?? widget.scannerTemplate,
               currentObject: createTemplate(),
             );
           } else {
-            discardChangesPopup(context);
+            showDiscardChangesPopupIfNotEditing();
           }
         },
         onDragDownToDismiss: () async {
           if (widget.scannerTemplate != null) {
             discardChangesPopup(
               context,
-              previousObject: widget.scannerTemplate,
+              previousObject: templateInitial ?? widget.scannerTemplate,
               currentObject: createTemplate(),
             );
           } else {
-            discardChangesPopup(context);
+            showDiscardChangesPopupIfNotEditing();
           }
         },
         listWidgets: [

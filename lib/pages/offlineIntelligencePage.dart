@@ -61,8 +61,22 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
     // Default presets for common bank alerts & UPI notifications
     List<ScannerTemplate> defaults = [
       ScannerTemplate(
+        scannerTemplatePk: "preset_credit_card_debit",
+        templateName: "Credit Card Debited / Spent",
+        contains: "Credit Card",
+        amountTransactionBefore: "debited for Rs.",
+        amountTransactionAfter: " on",
+        titleTransactionBefore: "at ",
+        titleTransactionAfter: " on",
+        defaultCategoryFk: "0",
+        walletFk: "-1",
+        dateCreated: DateTime.now(),
+        dateTimeModified: DateTime.now(),
+        ignore: false,
+      ),
+      ScannerTemplate(
         scannerTemplatePk: "preset_upi_debit",
-        templateName: "UPI & Bank Debit",
+        templateName: "Bank / UPI Debit",
         contains: "debited",
         amountTransactionBefore: "Rs.",
         amountTransactionAfter: " ",
@@ -76,7 +90,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
       ),
       ScannerTemplate(
         scannerTemplatePk: "preset_upi_credit",
-        templateName: "UPI & Bank Credit",
+        templateName: "Bank / UPI Credit",
         contains: "credited",
         amountTransactionBefore: "Rs.",
         amountTransactionAfter: " ",
@@ -96,6 +110,34 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
         amountTransactionAfter: " at",
         titleTransactionBefore: "at ",
         titleTransactionAfter: " on",
+        defaultCategoryFk: "0",
+        walletFk: "-1",
+        dateCreated: DateTime.now(),
+        dateTimeModified: DateTime.now(),
+        ignore: false,
+      ),
+      ScannerTemplate(
+        scannerTemplatePk: "preset_phonepe_paid",
+        templateName: "PhonePe UPI Paid",
+        contains: "paid to",
+        amountTransactionBefore: "₹",
+        amountTransactionAfter: " paid",
+        titleTransactionBefore: "paid to ",
+        titleTransactionAfter: " is",
+        defaultCategoryFk: "0",
+        walletFk: "-1",
+        dateCreated: DateTime.now(),
+        dateTimeModified: DateTime.now(),
+        ignore: false,
+      ),
+      ScannerTemplate(
+        scannerTemplatePk: "preset_sib_upi_debit",
+        templateName: "Regular Bank UPI Debit",
+        contains: "A/c *",
+        amountTransactionBefore: "debited by ",
+        amountTransactionAfter: " on",
+        titleTransactionBefore: "transfer to ",
+        titleTransactionAfter: " Ref",
         defaultCategoryFk: "0",
         walletFk: "-1",
         dateCreated: DateTime.now(),
@@ -132,7 +174,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
         appStateSettings["notificationScanning"] == true && isPermissionGranted;
 
     return PageFramework(
-      title: "Offline Intelligence",
+      title: "Auto-Detect SMS",
       dragDownToDismiss: true,
       actions: [
         IconButton(
@@ -249,6 +291,19 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                     setState(() {});
                   }
                 }
+              },
+            ),
+            const Divider(height: 1),
+            SettingsContainerSwitch(
+              title: "Direct Silent Auto-Insert",
+              description: appStateSettings["autoInsertNotificationsDirectly"] == true
+                  ? "Directly record detected transactions silently without showing review prompt"
+                  : "Prompt review dialog when a new transaction is detected",
+              icon: Icons.flash_on_rounded,
+              initialValue: appStateSettings["autoInsertNotificationsDirectly"] ?? false,
+              onSwitched: (val) {
+                updateSettings("autoInsertNotificationsDirectly", val,
+                    updateGlobalState: true);
               },
             ),
             const Divider(height: 1),

@@ -12,6 +12,7 @@ import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ErrorLogsPage extends StatefulWidget {
   const ErrorLogsPage({super.key});
@@ -22,6 +23,14 @@ class ErrorLogsPage extends StatefulWidget {
 
 class _ErrorLogsPageState extends State<ErrorLogsPage> {
   final Set<int> _expandedIndices = {};
+  String _selectedTag = "All";
+  String _searchQuery = "";
+
+  void _shareAllLogs() {
+    final text = exportAllLogsAsText();
+    Share.share(text, subject: "Xpenzi Diagnostic & Error Logs");
+    HapticFeedback.mediumImpact();
+  }
 
   void _copyAllLogs() {
     final text = exportAllLogsAsText();
@@ -61,19 +70,38 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final logs = getAppErrorLogs();
+    final allLogs = getAppErrorLogs();
+
+    // Extract unique tags
+    final tags = ["All", ...allLogs.map((e) => e.tag).toSet()];
+
+    // Filter logs by tag and search query
+    final logs = allLogs.where((log) {
+      final matchesTag = _selectedTag == "All" || log.tag == _selectedTag;
+      final matchesQuery = _searchQuery.isEmpty ||
+          log.error.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          log.tag.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          (log.extraInfo?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+      return matchesTag && matchesQuery;
+    }).toList();
 
     return PageFramework(
       title: "Diagnostic & Error Logs",
       dragDownToDismiss: true,
       actions: [
-        if (logs.isNotEmpty)
+        if (allLogs.isNotEmpty)
+          IconButton(
+            tooltip: "Share Logs",
+            icon: const Icon(Icons.share_rounded),
+            onPressed: _shareAllLogs,
+          ),
+        if (allLogs.isNotEmpty)
           IconButton(
             tooltip: "Copy All Logs",
             icon: const Icon(Icons.copy_rounded),
             onPressed: _copyAllLogs,
           ),
-        if (logs.isNotEmpty)
+        if (allLogs.isNotEmpty)
           IconButton(
             tooltip: "Clear Logs",
             icon: const Icon(Icons.delete_sweep_rounded),
@@ -81,7 +109,7 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
           ),
       ],
       listWidgets: [
-        if (logs.isEmpty)
+        if (allLogs.isEmpty)
           Padding(
             padding: const EdgeInsets.all(20),
             child: StatusBox(
@@ -92,7 +120,80 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
           )
-        else
+        else ...[
+          // Search & Filter Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Search errors or tags...",
+                hintStyle: TextStyle(
+                  color: getColor(context, "textLight"),
+                  fontSize: 13,
+                ),
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val.trim();
+                });
+              },
+            ),
+          ),
+          // Tag Filter Chips
+          if (tags.length > 2)
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                itemCount: tags.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, idx) {
+                  final tag = tags[idx];
+                  final isSelected = _selectedTag == tag;
+                  return ChoiceChip(
+                    label: Text(tag),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedTag = tag;
+                        });
+                        HapticFeedback.selectionClick();
+                      }
+                    },
+                    selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                    labelStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimaryContainer
+                          : getColor(context, "textLight"),
+                    ),
+                  );
+                },
+              ),
+            ),
+          const SizedBox(height: 6),
+          if (logs.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: StatusBox(
+                title: "No Matching Logs",
+                description: "Try adjusting your search query or tag filter.",
+                icon: Icons.filter_alt_off_rounded,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            )
+          else
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -252,6 +353,7 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
               );
             },
           ),
+        ],
       ],
     );
   }

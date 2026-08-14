@@ -2,6 +2,7 @@ import 'package:budget/functions.dart';
 import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/struct/currencyFunctions.dart';
+import 'package:budget/struct/errorLog.dart';
 import 'package:budget/struct/iconObjects.dart';
 import 'package:budget/struct/keyboardIntents.dart';
 import 'package:budget/struct/logging.dart';
@@ -44,6 +45,22 @@ bool allowDangerousDebugFlags = kDebugMode;
 void main() async {
   captureLogs(() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      recordAppError(
+        "FlutterError",
+        details.exceptionAsString(),
+        stackTrace: details.stack,
+        extraInfo: details.context?.toString(),
+      );
+    };
+
+    PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      recordAppError("PlatformDispatcher", error, stackTrace: stack);
+      return true;
+    };
+
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
