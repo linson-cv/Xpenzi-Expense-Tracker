@@ -270,8 +270,9 @@ class _SelectColorState extends State<SelectColor> {
                                     });
                                   }
                                 },
-                                outline: selectedColor.toString() ==
-                                    color.toString(),
+                                outline: selectedColor != null &&
+                                    (colorToHex(selectedColor!) == colorToHex(color) ||
+                                     selectedColor!.toARGB32() == color.toARGB32()),
                               ),
                       ),
                     )
@@ -304,6 +305,10 @@ class ColorIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Color checkColor = ThemeData.estimateBrightnessForColor(color) == Brightness.light
+        ? Colors.black
+        : Colors.white;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       margin: margin ??
@@ -314,8 +319,8 @@ class ColorIcon extends StatelessWidget {
           ? BoxDecoration(
               border: Border.all(
                 color: dynamicPastel(context, color,
-                    amountLight: 0.5, amountDark: 0.4, inverse: true),
-                width: 3,
+                    amountLight: 0.7, amountDark: 0.6, inverse: true),
+                width: 3.5,
               ),
               borderRadius: const BorderRadiusDirectional.all(Radius.circular(500)),
             )
@@ -330,7 +335,15 @@ class ColorIcon extends StatelessWidget {
         color: color,
         onTap: onTap,
         borderRadius: 500,
-        child: Container(),
+        child: outline
+            ? Center(
+                child: Icon(
+                  Icons.check_rounded,
+                  color: checkColor,
+                  size: size * 0.45,
+                ),
+              )
+            : Container(),
       ),
     );
   }

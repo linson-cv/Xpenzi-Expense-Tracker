@@ -156,26 +156,37 @@ class TransactionsListPageState extends State<TransactionsListPage>
       scrollbar: false,
       actions: [
         IconButton(
-          tooltip: appStateSettings["pinAccountFilters"] == true
-              ? "Hide Pinned Filters"
-              : "Show Pinned Filters",
+          tooltip: "preferences".tr(),
           onPressed: () {
-            bool current = appStateSettings["pinAccountFilters"] == true;
-            updateSettings("pinAccountFilters", !current, updateGlobalState: true);
-            setState(() {});
+            openBottomSheet(
+              context,
+              PopupFramework(
+                title: "preferences".tr(),
+                child: StatefulBuilder(
+                  builder: (context, setPopupState) {
+                    return SettingsContainerSwitch(
+                      title: "Pin Account Filters",
+                      description: "Keep account quick-filter chips visible at the top of the transaction list",
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.push_pin_outlined
+                          : Icons.push_pin_rounded,
+                      initialValue: appStateSettings["pinAccountFilters"] == true,
+                      onSwitched: (value) {
+                        updateSettings("pinAccountFilters", value, updateGlobalState: true);
+                        setPopupState(() {});
+                        setState(() {});
+                      },
+                    );
+                  },
+                ),
+              ),
+            );
           },
           padding: const EdgeInsetsDirectional.all(15 - 8),
           icon: Icon(
-            appStateSettings["pinAccountFilters"] == true
-                ? (appStateSettings["outlinedIcons"]
-                    ? Icons.push_pin_outlined
-                    : Icons.push_pin_rounded)
-                : (appStateSettings["outlinedIcons"]
-                    ? Icons.pin_outlined
-                    : Icons.pin_drop_outlined),
-            color: appStateSettings["pinAccountFilters"] == true
-                ? Theme.of(context).colorScheme.primary
-                : null,
+            appStateSettings["outlinedIcons"]
+                ? Icons.settings_outlined
+                : Icons.settings_rounded,
           ),
         ),
         IconButton(

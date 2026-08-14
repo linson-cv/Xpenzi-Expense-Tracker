@@ -53,7 +53,7 @@ class AboutPageState extends State<AboutPage> {
       child: Column(
         children: [
           const Image(
-            image: AssetImage("assets/icon/icon-small.png"),
+            image: AssetImage("assets/icon/icon.png"),
             height: 76,
           ),
           const SizedBox(height: 12),

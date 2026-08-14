@@ -210,9 +210,13 @@ Map<String, dynamic> getSettingConstants(Map<String, dynamic> userSettings) {
   };
 
   Map<String, dynamic> userSettingsNew = {...userSettings};
-  userSettingsNew["theme"] = themeSetting[userSettings["theme"]];
-  userSettingsNew["accentColor"] =
-      HexColor(userSettings["accentColor"]).withValues(alpha: 1);
+  userSettingsNew["theme"] = themeSetting[userSettings["theme"]] ?? ThemeMode.system;
+  try {
+    userSettingsNew["accentColor"] =
+        HexColor(userSettings["accentColor"] ?? "007AFF").withValues(alpha: 1);
+  } catch (_) {
+    userSettingsNew["accentColor"] = const Color(0xFF007AFF);
+  }
   return userSettingsNew;
 }
 

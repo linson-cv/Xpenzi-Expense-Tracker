@@ -105,7 +105,9 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("Rebuilt Material App");
+    final themeState = getSettingConstants(appStateSettings);
+    final themeKey = "XpenziApp_${appStateSettings['theme']}_${appStateSettings['accentColor']}_${appStateSettings['materialYou']}_${appStateSettings['forceFullDarkBackground']}_${appStateSettings['font']}_${appStateSettings['outlinedIcons']}";
+
     return MaterialApp(
       showPerformanceOverlay: kProfileMode,
       localizationsDelegates: context.localizationDelegates,
@@ -114,14 +116,14 @@ class App extends StatelessWidget {
           enableDevicePreview ? DevicePreview.locale(context) : context.locale,
       shortcuts: shortcuts,
       actions: keyboardIntents,
-      themeAnimationDuration: const Duration(milliseconds: 400),
+      themeAnimationDuration: const Duration(milliseconds: 300),
       themeAnimationCurve: const CustomDelayedCurve(),
-      key: const ValueKey('XpenziAppMain'),
+      key: ValueKey(themeKey),
       title: 'Xpenzi: Expense Tracker',
       theme: getLightTheme(),
       darkTheme: getDarkTheme(),
       scrollBehavior: ScrollBehaviorOverride(),
-      themeMode: getSettingConstants(appStateSettings)["theme"],
+      themeMode: themeState["theme"],
       home: HandleWillPopScope(
         child: Stack(
           children: [

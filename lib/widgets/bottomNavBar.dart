@@ -21,6 +21,8 @@ import 'package:budget/colors.dart';
 import 'package:flutter/services.dart';
 import 'package:budget/widgets/floatingNavBar.dart';
 
+ValueNotifier<bool> isExploreEditingNotifier = ValueNotifier<bool>(false);
+
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar(
       {required this.onChanged,
@@ -112,12 +114,17 @@ class BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
-    // The index of the actual navigation bar, this is not the navigation stack index
-    int navigationBarIndex = getNavigationBarIndexFromStackedIndex(
-        widget.currentNavigationStackedIndex);
+    return ValueListenableBuilder<bool>(
+      valueListenable: isExploreEditingNotifier,
+      builder: (context, isEditingExplore, _) {
+        if (isEditingExplore) return const SizedBox.shrink();
 
-    if (getIsFullScreen(context)) return const SizedBox.shrink();
-    if (getPlatform() == PlatformOS.isIOS) {
+        // The index of the actual navigation bar, this is not the navigation stack index
+        int navigationBarIndex = getNavigationBarIndexFromStackedIndex(
+            widget.currentNavigationStackedIndex);
+
+        if (getIsFullScreen(context)) return const SizedBox.shrink();
+        if (getPlatform() == PlatformOS.isIOS) {
       return IntrinsicHeight(
         child: Container(
           decoration: BoxDecoration(
@@ -323,6 +330,8 @@ class BottomNavBarState extends State<BottomNavBar> {
           },
         ),
       ),
+    );
+      },
     );
   }
 }

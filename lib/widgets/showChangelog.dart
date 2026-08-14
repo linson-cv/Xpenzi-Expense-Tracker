@@ -26,6 +26,17 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.6
+    (A) Instantaneous theme switching: Accent color, Material You, theme mode, and AMOLED Black apply immediately without restart
+    (A) Highlighted active accent color palette swatch with contrasting ring and adaptive checkmark indicator
+    (A) Connected icon style switching (Rounded vs. Outlined) to in-memory reload to ensure pristine navigation icons
+    (A) Highlighted full-width Xpenzi Pro banner on Explore screen with authentic animated gradient background matching the Pro page
+    (A) Added customizable Xpenzi Intelligence and Offline Intelligence shortcut cards to Explore screen
+    (A) Streamlined Intelligent & Automation settings section with direct access to Offline Intelligence, Gemini AI, and Email Automation
+    (A) Upgraded Transactions filter control with an intuitive settings gear button opening quick preferences modal
+    (A) Automatically hid bottom navigation bar during Explore edit mode with dedicated floating action toolbar
+    (A) Cleaned up redundant padding and synchronized UI spacing across all intelligent & settings subpages
+    (A) Refreshed official app launcher and branding icon with the new minimalist Blue-X arrow emblem
     < 1.1.5
     (A) Added Offline Intelligence on-device notification parsing under Xpenzi Intelligence
     (A) Added live captured notification logs inspector, retention controls, and customizable parsing templates
@@ -114,6 +125,21 @@ end""";
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
+    "< 1.1.6": [
+      MajorChanges(
+        "Instant Themes & Intelligent Automation",
+        Icons.auto_awesome_rounded,
+        info: [
+          "Instantaneous theme mode, accent color, and AMOLED switching without restart",
+          "Highlighted full-width Xpenzi Pro banner matching the Pro page background",
+          "Dedicated Intelligence & Offline shortcuts directly inside Explore",
+          "Enhanced color palette selection indicator with checkmark & contrast ring",
+        ],
+        onTap: (context) {
+          popRoute(context);
+        },
+      ),
+    ],
     "< 1.1.5": [
       MajorChanges(
         "Offline Intelligence & Icon Gallery",

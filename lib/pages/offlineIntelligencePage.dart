@@ -146,227 +146,216 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
       ],
       listWidgets: [
         // Highlight Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: SettingsGroupCard(
-            title: "On-Device Private Engine",
-            icon: Icons.lock_outline_rounded,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isScanningActive
-                                ? Colors.green.withOpacity(0.15)
-                                : Colors.orange.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isScanningActive
-                                    ? Icons.check_circle
-                                    : Icons.info_outline,
-                                color: isScanningActive
-                                    ? Colors.green
-                                    : Colors.orange,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              TextFont(
-                                text: isScanningActive
-                                    ? "Active & Listening"
-                                    : "Setup Required",
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                textColor: isScanningActive
-                                    ? Colors.green
-                                    : Colors.orange,
-                              ),
-                            ],
-                          ),
+        SettingsGroupCard(
+          title: "On-Device Private Engine",
+          icon: Icons.lock_outline_rounded,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isScanningActive
+                              ? Colors.green.withOpacity(0.15)
+                              : Colors.orange.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const Spacer(),
-                        TextFont(
-                          text: "100% Offline & Private",
-                          fontSize: 11,
-                          textColor: getColor(context, "textLight"),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isScanningActive
+                                  ? Icons.check_circle
+                                  : Icons.info_outline,
+                              color: isScanningActive
+                                  ? Colors.green
+                                  : Colors.orange,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 5),
+                            TextFont(
+                              text: isScanningActive
+                                  ? "Active & Listening"
+                                  : "Setup Required",
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              textColor: isScanningActive
+                                  ? Colors.green
+                                  : Colors.orange,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextFont(
-                      text:
-                          "Xpenzi automatically reads incoming bank SMS, UPI alerts, and payment receipts right on your device. Zero data is sent to external servers.",
-                      fontSize: 13,
-                      textColor: getColor(context, "textLight"),
-                    ),
-                  ],
-                ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextFont(
+                        text: "100% On-Device",
+                        fontSize: 12,
+                        textColor: getColor(context, "textLight"),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextFont(
+                    text:
+                        "Offline Intelligence listens for payment and banking notifications on your device. All parsing runs completely locally without using an API key or sending data online.",
+                    fontSize: 13,
+                    textColor: getColor(context, "textLight"),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
 
         // Permission & Status Toggle Card
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: SettingsGroupCard(
-            title: "Notification Listening Access",
-            icon: Icons.notifications_active_rounded,
-            children: [
-              SettingsContainerSwitch(
-                title: "Auto-Detect Bank & Payment Alerts",
-                description: isPermissionGranted
-                    ? "Notification listener granted. Listening for payment receipts."
-                    : "Tap to grant Android notification listener permission.",
-                icon: isScanningActive
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_paused_rounded,
-                initialValue: isScanningActive,
-                onSwitched: (val) async {
-                  if (val == true) {
-                    bool status = await requestReadNotificationPermission(
-                        context: context);
-                    if (status) {
-                      await updateSettings("notificationScanning", true,
-                          updateGlobalState: true);
-                      initNotificationScanning();
-                    }
-                    if (mounted) {
-                      setState(() {
-                        isPermissionGranted = status;
-                      });
-                    }
-                  } else {
-                    await updateSettings("notificationScanning", false,
+        SettingsGroupCard(
+          title: "Notification Listening Access",
+          icon: Icons.notifications_active_rounded,
+          children: [
+            SettingsContainerSwitch(
+              title: "Auto-Detect Bank & Payment Alerts",
+              description: isPermissionGranted
+                  ? "Notification listener granted. Listening for payment receipts."
+                  : "Tap to grant Android notification listener permission.",
+              icon: isScanningActive
+                  ? Icons.notifications_active_rounded
+                  : Icons.notifications_paused_rounded,
+              initialValue: isScanningActive,
+              onSwitched: (val) async {
+                if (val == true) {
+                  bool status = await requestReadNotificationPermission(
+                      context: context);
+                  if (status) {
+                    await updateSettings("notificationScanning", true,
                         updateGlobalState: true);
-                    notificationListenerSubscription?.cancel();
-                    if (mounted) {
-                      setState(() {});
-                    }
+                    initNotificationScanning();
                   }
-                },
-              ),
-              const Divider(height: 1),
-              SettingsContainerSwitch(
-                title: "Local NLP Parsing Engine",
-                description:
-                    "Extract title, amount, and merchant using smart regex rules",
-                icon: Icons.bolt_rounded,
-                initialValue: appStateSettings["localNlpParsing"] ?? true,
-                onSwitched: (val) {
-                  updateSettings("localNlpParsing", val,
+                  if (mounted) {
+                    setState(() {
+                      isPermissionGranted = status;
+                    });
+                  }
+                } else {
+                  await updateSettings("notificationScanning", false,
                       updateGlobalState: true);
-                },
-              ),
-              const Divider(height: 1),
-              SettingsContainer(
-                title: "Battery Optimization Settings",
-                description: "Ensure Android doesn't put background listener to sleep",
-                icon: Icons.battery_charging_full_rounded,
-                onTap: () async {
-                  await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
-                },
-              ),
-            ],
-          ),
+                  notificationListenerSubscription?.cancel();
+                  if (mounted) {
+                    setState(() {});
+                  }
+                }
+              },
+            ),
+            const Divider(height: 1),
+            SettingsContainerSwitch(
+              title: "Local NLP Parsing Engine",
+              description:
+                  "Extract title, amount, and merchant using smart regex rules",
+              icon: Icons.bolt_rounded,
+              initialValue: appStateSettings["localNlpParsing"] ?? true,
+              onSwitched: (val) {
+                updateSettings("localNlpParsing", val,
+                    updateGlobalState: true);
+              },
+            ),
+            const Divider(height: 1),
+            SettingsContainer(
+              title: "Battery Optimization Settings",
+              description: "Ensure Android doesn't put background listener to sleep",
+              icon: Icons.battery_charging_full_rounded,
+              onTap: () async {
+                await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+              },
+            ),
+          ],
         ),
 
         // Custom Templates & Presets Section
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: SettingsGroupCard(
-            title: "Parsing Templates",
-            icon: Icons.pattern_rounded,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextFont(
-                        text:
-                            "Templates teach Xpenzi how to parse different bank formats and match categories.",
-                        fontSize: 12.5,
-                        textColor: getColor(context, "textLight"),
-                      ),
+        SettingsGroupCard(
+          title: "Parsing Templates",
+          icon: Icons.pattern_rounded,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextFont(
+                      text:
+                          "Templates teach Xpenzi how to parse different bank formats and match categories.",
+                      fontSize: 12.5,
+                      textColor: getColor(context, "textLight"),
                     ),
-                    const SizedBox(width: 8),
-                    Button(
-                      label: "Load Defaults",
-                      icon: Icons.download_rounded,
-                      padding: const EdgeInsetsDirectional.symmetric(
-                          horizontal: 12, vertical: 8),
-                      fontSize: 12,
-                      onTap: _loadDefaultTemplates,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Button(
+                    label: "Load Defaults",
+                    icon: Icons.download_rounded,
+                    padding: const EdgeInsetsDirectional.symmetric(
+                        horizontal: 12, vertical: 8),
+                    fontSize: 12,
+                    onTap: _loadDefaultTemplates,
+                  ),
+                ],
               ),
-              StreamBuilder<List<ScannerTemplate>>(
-                stream: database.watchAllScannerTemplates(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                    return Column(
-                      children: [
-                        for (ScannerTemplate tmpl in snapshot.data!)
-                          ScannerTemplateEntry(
-                            messagesList: recentCapturedNotifications,
-                            scannerTemplate: tmpl,
-                          ),
-                      ],
-                    );
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: StatusBox(
-                      title: "No Templates Configured",
-                      description:
-                          "Tap 'Load Defaults' above or add a custom template below.",
-                      icon: Icons.info_outline_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+            ),
+            StreamBuilder<List<ScannerTemplate>>(
+              stream: database.watchAllScannerTemplates(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                  return Column(
+                    children: [
+                      for (ScannerTemplate tmpl in snapshot.data!)
+                        ScannerTemplateEntry(
+                          messagesList: recentCapturedNotifications,
+                          scannerTemplate: tmpl,
+                        ),
+                    ],
                   );
-                },
+                }
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: StatusBox(
+                    title: "No Templates Configured",
+                    description:
+                        "Tap 'Load Defaults' above or add a custom template below.",
+                    icon: Icons.info_outline_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                );
+              },
+            ),
+            OpenContainerNavigation(
+              openPage: AddEmailTemplate(
+                messagesList: recentCapturedNotifications,
               ),
-              OpenContainerNavigation(
-                openPage: AddEmailTemplate(
-                  messagesList: recentCapturedNotifications,
-                ),
-                borderRadius: 15,
-                button: (openContainer) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
-                    child: Button(
-                      label: "Add Custom Template",
-                      icon: Icons.add_rounded,
-                      onTap: openContainer,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 6),
-            ],
-          ),
+              borderRadius: 15,
+              button: (openContainer) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  child: Button(
+                    label: "Add Custom Template",
+                    icon: Icons.add_rounded,
+                    onTap: openContainer,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 6),
+          ],
         ),
 
         // Captured Notifications Raw Log Inspector
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: SettingsGroupCard(
-            title: "Captured Notification Logs",
-            icon: Icons.history_rounded,
-            children: [
+        SettingsGroupCard(
+          title: "Captured Notification Logs",
+          icon: Icons.history_rounded,
+          children: [
               SettingsContainerDropdown(
                 title: "Log Retention Limit",
                 description: "Maximum recent raw notifications kept in memory",
@@ -511,7 +500,6 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
               const SizedBox(height: 8),
             ],
           ),
-        ),
       ],
     );
   }

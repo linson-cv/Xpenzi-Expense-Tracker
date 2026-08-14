@@ -20,6 +20,7 @@ import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
+import 'package:budget/widgets/bottomNavBar.dart';
 import 'package:budget/widgets/exportDB.dart';
 import 'package:budget/widgets/exportPDF.dart';
 import 'package:budget/widgets/importCSV.dart';
@@ -103,6 +104,7 @@ class MoreActionsPageState extends State<MoreActionsPage> {
     HapticFeedback.heavyImpact();
     setState(() {
       _isEditMode = !_isEditMode;
+      isExploreEditingNotifier.value = _isEditMode;
     });
   }
 
@@ -133,7 +135,10 @@ class MoreActionsPageState extends State<MoreActionsPage> {
           SliverToBoxAdapter(
             child: MorePages(
               isEditMode: _isEditMode,
-              onEditModeChanged: (value) => setState(() => _isEditMode = value),
+              onEditModeChanged: (value) => setState(() {
+                _isEditMode = value;
+                isExploreEditingNotifier.value = value;
+              }),
             ),
           ),
         ],
@@ -172,6 +177,7 @@ const List<String> _kDefaultCardOrder = [
   "premium", "about", "betaFeedback", "faq", "googleAccount",
   "calendar", "activityLog", "subscriptions", "scheduled",
   "goals", "loans", "accounts", "budgets",
+  "intelligence", "offlineIntelligence",
   "billSplitter", "transactions", "search",
 ];
 
@@ -363,6 +369,21 @@ class _MorePagesState extends State<MorePages> {
           openPage: const TransactionsListPage(),
           title: "transactions".tr(),
           icon: navBarIconsData["transactions"]!.iconData,
+          isOutlined: true,
+        ),
+      ),
+      "intelligence": _ExploreCard(
+        key: "intelligence",
+        title: "Xpenzi Intelligence",
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.auto_awesome_outlined
+            : Icons.auto_awesome_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const AiSettingsPage(),
+          title: "Xpenzi Intelligence",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.auto_awesome_outlined
+              : Icons.auto_awesome_rounded,
           isOutlined: true,
         ),
       ),
@@ -562,21 +583,37 @@ class _MorePagesState extends State<MorePages> {
             ],
 
             Builder(builder: (context) {
-              final visibleCards = orderedKeys
+              final isPremiumVisible = !hidden.contains("premium") &&
+                  catalogue.containsKey("premium") &&
+                  catalogue["premium"]!.matchesSearch(widget.searchValue);
+
+              final gridCards = orderedKeys
+                  .where((k) => k != "premium")
                   .where((k) => catalogue.containsKey(k))
                   .where((k) => !hidden.contains(k))
                   .map((k) => catalogue[k]!)
                   .where((c) => c.matchesSearch(widget.searchValue))
                   .toList();
 
-              if (visibleCards.isEmpty && isSearching) {
+              if (!isPremiumVisible && gridCards.isEmpty && isSearching) {
                 return const SizedBox.shrink();
               }
 
               final List<Widget> rows = [];
-              for (int i = 0; i < visibleCards.length; i += 2) {
-                final left = visibleCards[i];
-                final right = i + 1 < visibleCards.length ? visibleCards[i + 1] : null;
+
+              // Top Full-Width Highlight Card: Xpenzi Pro with authentic Premium background theme
+              if (isPremiumVisible) {
+                rows.add(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: const PremiumBanner(),
+                  ),
+                );
+              }
+
+              for (int i = 0; i < gridCards.length; i += 2) {
+                final left = gridCards[i];
+                final right = i + 1 < gridCards.length ? gridCards[i + 1] : null;
 
                 rows.add(
                   Padding(
@@ -1054,39 +1091,39 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Intelligent & Automation", "", ["ai", "automation", "mail", "email", "gemini", "read emails", "parse"]) || 
+                    _match("Intelligent & Automation", "", ["ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification"]) || 
+                    _match("Offline Intelligence", "", ["offline", "sms", "notification", "scan", "parser", "bank alerts"]) || 
                     _match("Advanced Automation", "", ["mail", "email", "automation", "read emails", "parse"]) || 
                     _match("Xpenzi Intelligence", "", ["ai", "intelligence", "gemini", "smart", "assistant"]),
-            child: Column(
+            child: SettingsGroupCard(
+              title: "Intelligent & Automation",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.auto_awesome_outlined
+                  : Icons.auto_awesome_rounded,
               children: [
-                const SizedBox(height: 8),
-                SettingsGroupCard(
-                  title: "Intelligent & Automation",
+                SettingsContainerOpenPage(
+                  openPage: const OfflineIntelligencePage(),
+                  title: "Offline Intelligence (100% Private)",
+                  description: "Auto-detect bank SMS, payment alerts, and manage templates",
+                  icon: Icons.shield_rounded,
+                ),
+                const Divider(height: 1),
+                SettingsContainerOpenPage(
+                  openPage: const AiSettingsPage(),
+                  title: "Xpenzi Intelligence",
+                  description: "Google Gemini AI model, category suggestions, and custom prompt rules",
                   icon: appStateSettings["outlinedIcons"]
                       ? Icons.auto_awesome_outlined
                       : Icons.auto_awesome_rounded,
-                  children: [
-                    AnimatedExpanded(
-                      expand: _match("Intelligent & Automation", "") || _match("Advanced Automation", "", ["mail", "email", "automation", "read emails", "parse"]),
-                      child: SettingsContainerOpenPage(
-                        openPage: const AutoTransactionsPageEmail(),
-                        title: "Advanced Automation",
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.mail_outlined
-                            : Icons.mail_rounded,
-                      ),
-                    ),
-                    AnimatedExpanded(
-                      expand: _match("Intelligent & Automation", "") || _match("Xpenzi Intelligence", "", ["ai", "intelligence", "gemini", "smart", "assistant"]),
-                      child: SettingsContainerOpenPage(
-                        openPage: const AiSettingsPage(),
-                        title: "Xpenzi Intelligence",
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.smart_toy_outlined
-                            : Icons.smart_toy_rounded,
-                      ),
-                    ),
-                  ],
+                ),
+                const Divider(height: 1),
+                SettingsContainerOpenPage(
+                  openPage: const AutoTransactionsPageEmail(),
+                  title: "Advanced Automation",
+                  description: "Connect mailbox to automatically track bank transaction receipts",
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.mark_email_read_outlined
+                      : Icons.mark_email_read_rounded,
                 ),
               ],
             ),
@@ -1096,23 +1133,18 @@ class SettingsPageContent extends StatelessWidget {
             expand: searchValue.trim().isEmpty || 
                     _match("Permissions", "", ["permission", "permissions", "security", "device", "access"]) || 
                     _match("Device Permissions", "", ["permission", "permissions", "security", "device", "access"]),
-            child: SettingsGroupCard(
-              title: "Permissions",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.security_outlined
-                  : Icons.security_rounded,
-              children: [
-                AnimatedExpanded(
-                  expand: _match("Permissions", "") || _match("Device Permissions", "", ["permission", "permissions", "security", "device", "access"]),
-                  child: SettingsContainerOpenPage(
-                    openPage: const PermissionsSettingsSubPage(),
-                    title: "Device Permissions",
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.phonelink_lock_outlined
-                        : Icons.phonelink_lock_rounded,
-                  ),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const PermissionsSettingsSubPage(),
+                title: "Device Permissions",
+                description: "Storage, notification access, biometrics & security",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.security_outlined
+                    : Icons.security_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
           ),
 
@@ -1121,33 +1153,18 @@ class SettingsPageContent extends StatelessWidget {
                     _match("Tools & Extras", "", ["bill", "splitter", "display", "preferences", "visual", "layout"]) || 
                     _match("Bill Splitter", "", ["bill", "splitter", "split", "divide bill", "group bill"]) || 
                     _match("Display Preferences", "", ["display", "preferences", "visual", "layout", "cards", "icons", "animations"]),
-            child: SettingsGroupCard(
-              title: "Tools & Extras",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.extension_outlined
-                  : Icons.extension_rounded,
-              children: [
-                AnimatedExpanded(
-                  expand: _match("Tools & Extras", "") || _match("Bill Splitter", "", ["bill", "splitter", "split", "divide bill", "group bill"]),
-                  child: SettingsContainerOpenPage(
-                    openPage: const BillSplitter(),
-                    title: "Bill Splitter",
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.summarize_outlined
-                        : Icons.summarize_rounded,
-                  ),
-                ),
-                AnimatedExpanded(
-                  expand: _match("Tools & Extras", "") || _match("Display Preferences", "", ["display", "preferences", "visual", "layout", "cards", "icons", "animations"]),
-                  child: SettingsContainerOpenPage(
-                    openPage: const ExperimentalFeaturesSubPage(),
-                    title: "Display Preferences",
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.tune_outlined
-                        : Icons.tune_rounded,
-                  ),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const ToolsAndExtrasSubPage(),
+                title: "Tools & Extras",
+                description: "Bill splitter, display & visual preferences",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.extension_outlined
+                    : Icons.extension_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
           ),
         ],
@@ -1385,18 +1402,7 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
               ? Icons.style_outlined
               : Icons.style_rounded,
           children: [
-            SettingsContainerDropdown(
-              title: "Icon Style",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.star_outline_rounded
-                  : Icons.star_rounded,
-              initial: appStateSettings["outlinedIcons"] ? "Outlined" : "Rounded",
-              items: const ["Rounded", "Outlined"],
-              onChanged: (value) {
-                updateSettings("outlinedIcons", value == "Outlined", updateGlobalState: true);
-              },
-              getLabel: (item) => item,
-            ),
+            const OutlinedIconsSetting(),
             SettingsContainerOpenPage(
               openPage: const CategoryIconPackGalleryPage(),
               title: "Category Icon Pack & Gallery",
@@ -1834,6 +1840,52 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
       getLabel: (item) {
         return item.tr();
       },
+    );
+  }
+}
+
+class ToolsAndExtrasSubPage extends StatelessWidget {
+  const ToolsAndExtrasSubPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageFramework(
+      title: "Tools & Extras",
+      dragDownToDismiss: true,
+      listWidgets: [
+        SettingsGroupCard(
+          title: "Tools",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.construction_outlined
+              : Icons.construction_rounded,
+          children: [
+            SettingsContainerOpenPage(
+              openPage: const BillSplitter(),
+              title: "Bill Splitter",
+              description: "Easily split expenses, calculate tip, and share breakdown",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.summarize_outlined
+                  : Icons.summarize_rounded,
+            ),
+          ],
+        ),
+        SettingsGroupCard(
+          title: "Display Preferences",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.tune_outlined
+              : Icons.tune_rounded,
+          children: [
+            SettingsContainerOpenPage(
+              openPage: const ExperimentalFeaturesSubPage(),
+              title: "Visual & Layout Preferences",
+              description: "Cards detail, animations, badge icons & layout",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.view_quilt_outlined
+                  : Icons.view_quilt_rounded,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -38,65 +38,97 @@ class CheckWidgetLaunch extends StatefulWidget {
 Throttler widgetActionThrottler =
     Throttler(duration: const Duration(milliseconds: 350));
 
+bool _initialWidgetLaunchChecked = false;
+Uri? _lastProcessedWidgetUri;
+
 class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
+  StreamSubscription<Uri?>? _widgetSubscription;
+
   @override
   void initState() {
     super.initState();
-    HomeWidget.setAppGroupId('WIDGET_GROUP_ID');
-    Future.delayed(const Duration(milliseconds: 50), () {
-      _checkForWidgetLaunch();
-    });
-    HomeWidget.widgetClicked.listen(_launchedFromWidget);
+    try {
+      HomeWidget.setAppGroupId('WIDGET_GROUP_ID');
+      if (!_initialWidgetLaunchChecked) {
+        _initialWidgetLaunchChecked = true;
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _checkForWidgetLaunch();
+        });
+      }
+      _widgetSubscription = HomeWidget.widgetClicked.listen(_launchedFromWidget);
+    } catch (e) {
+      debugPrint("Error initializing HomeWidget: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _widgetSubscription?.cancel();
+    super.dispose();
   }
 
   void _checkForWidgetLaunch() {
-    HomeWidget.initiallyLaunchedFromHomeWidget().then(_launchedFromWidget);
+    try {
+      HomeWidget.initiallyLaunchedFromHomeWidget().then((uri) {
+        if (uri != null) {
+          _launchedFromWidget(uri);
+        }
+      }).catchError((e) {
+        debugPrint("Error checking initiallyLaunchedFromHomeWidget: $e");
+      });
+    } catch (e) {
+      debugPrint("Error in _checkForWidgetLaunch: $e");
+    }
   }
 
-  // For some reason, older Android versions open an entirely new app instance... weird!
-  // has this been fixed with: android:launchMode="singleInstance" ?
   void _launchedFromWidget(Uri? uri) async {
-    // Only perform one widget action per launch/continue of the app
+    if (uri == null) return;
+    String widgetPayload = uri.toString();
+    if (widgetPayload.isEmpty) return;
+
+    // Prevent duplicate triggers when returning from recent apps
+    if (_lastProcessedWidgetUri == uri && !widgetActionThrottler.canProceed()) return;
+    _lastProcessedWidgetUri = uri;
     if (!widgetActionThrottler.canProceed()) return;
 
-    String widgetPayload = (uri ?? "").toString();
-    if (widgetPayload == "addTransactionWidget") {
-      // Add a delay so the keyboard can focus
-      Future.delayed(const Duration(milliseconds: 50), () {
-        pushRoute(
+    try {
+      if (widgetPayload == "addTransactionWidget") {
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (!mounted) return;
+          pushRoute(
+            context,
+            const AddTransactionPage(
+              routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+            ),
+          );
+        });
+      } else if (widgetPayload == "transferTransactionWidget") {
+        if (!mounted) return;
+        final allWalletsProvider = Provider.of<AllWallets>(context, listen: false);
+        if (allWalletsProvider.indexedByPk[appStateSettings["selectedWalletPk"]] == null) {
+          popAllRoutes(context);
+        }
+
+        openBottomSheet(
           context,
-          const AddTransactionPage(
-            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+          fullSnap: true,
+          TransferBalancePopup(
+            allowEditWallet: true,
+            wallet: allWalletsProvider.indexedByPk[appStateSettings["selectedWalletPk"]],
+            showAllEditDetails: true,
           ),
         );
-      });
-    } else if (widgetPayload == "transferTransactionWidget") {
-      // This fixes an issue on older versions of Android where the route would popup twice
-      // We can detect when this is going to happen if the Provider is not yet loaded, so just pop
-      // the route when this is called so the first time routing does not persist (i.e. we end with one route)
-      if (Provider.of<AllWallets>(context, listen: false)
-              .indexedByPk[appStateSettings["selectedWalletPk"]] ==
-          null) {
-        popAllRoutes(context);
+      } else if (widgetPayload == "netWorthLaunchWidget") {
+        if (!mounted) return;
+        pushRoute(
+          context,
+          const WalletDetailsPage(
+            wallet: null,
+          ),
+        );
       }
-
-      openBottomSheet(
-        context,
-        fullSnap: true,
-        TransferBalancePopup(
-          allowEditWallet: true,
-          wallet: Provider.of<AllWallets>(context, listen: false)
-              .indexedByPk[appStateSettings["selectedWalletPk"]],
-          showAllEditDetails: true,
-        ),
-      );
-    } else if (widgetPayload == "netWorthLaunchWidget") {
-      pushRoute(
-        context,
-        const WalletDetailsPage(
-          wallet: null,
-        ),
-      );
+    } catch (e) {
+      debugPrint("Error handling widget launch payload: $e");
     }
   }
 

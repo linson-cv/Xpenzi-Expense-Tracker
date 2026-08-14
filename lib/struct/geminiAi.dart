@@ -22,6 +22,32 @@ class GeminiParsedTransaction {
   });
 }
 
+Future<bool> testAiConnection() async {
+  String apiKey = (appStateSettings["geminiApiKey"] ?? "").toString().trim();
+  if (apiKey.isEmpty) return false;
+  String model = appStateSettings["geminiModel"] ?? "gemini-1.5-flash";
+  try {
+    var response = await http.post(
+      Uri.parse(
+          "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "contents": [
+          {
+            "parts": [
+              {"text": "Ping"}
+            ]
+          }
+        ]
+      }),
+    ).timeout(const Duration(seconds: 10));
+    return response.statusCode == 200;
+  } catch (e) {
+    debugPrint("AI Connection test error: $e");
+    return false;
+  }
+}
+
 Future<GeminiParsedTransaction?> parseTransactionWithGemini(
     String input, BuildContext context) async {
   String apiKey = appStateSettings["geminiApiKey"] ?? "";
