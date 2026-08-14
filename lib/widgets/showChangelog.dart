@@ -26,6 +26,11 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.0
+    (A) Seamless Real-Time Theming: Eliminated MaterialApp element recreation so theme, accent color, and AMOLED Black switch smoothly without page reload or navigator reset
+    (A) Stream Stability Enhancements: Fixed stream re-listening exceptions on global wallet providers during live configuration updates
+    (A) Robust Scanner Template Editor: Fortified text selection bounds against inverted/invalid selection ranges and null-check crashes during save or back actions
+    (A) Auto-Loaded Preset Scanner Engine: Automatically provisions global currency-agnostic templates when notification reading is initialized
     < 1.1.9
     (A) Universal Currency & NLP Engine: Added global currency symbol and keyword matching across international bank alerts, UPI transfers, NEFT, AutoPay, and card debits
     (A) Auto-loaded Global Preset Templates: Seamlessly initializes currency-agnostic bank and card scanner templates when Notification Access is enabled

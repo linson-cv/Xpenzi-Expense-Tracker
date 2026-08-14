@@ -17,15 +17,15 @@ class WatchAllWallets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<AllWallets>.value(
+    return StreamProvider<AllWallets>(
       initialData: AllWallets(list: [], indexedByPk: {}),
-      value: database.watchAllWalletsIndexed(),
+      create: (_) => database.watchAllWalletsIndexed(),
       child: child,
     );
   }
 }
 
-final selectedWalletPkController = StreamController<SelectedWalletPk>();
+final selectedWalletPkController = StreamController<SelectedWalletPk>.broadcast();
 
 class WatchSelectedWalletPk extends StatelessWidget {
   const WatchSelectedWalletPk({required this.child, super.key});

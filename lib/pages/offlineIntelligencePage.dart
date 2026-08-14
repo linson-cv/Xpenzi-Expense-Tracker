@@ -276,6 +276,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                   if (status) {
                     await updateSettings("notificationScanning", true,
                         updateGlobalState: true);
+                    await populateDefaultScannerTemplatesIfEmpty();
                     initNotificationScanning();
                   }
                   if (mounted) {

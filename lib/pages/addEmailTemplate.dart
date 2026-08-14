@@ -204,6 +204,37 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
     return;
   }
 
+  (String selected, String before, String after)? _extractBounds(
+      String text, TextSelection selection) {
+    if (text.isEmpty) return null;
+    int start = selection.start;
+    int end = selection.end;
+    if (start < 0 || end < 0 || start >= end) return null;
+    start = start.clamp(0, text.length);
+    end = end.clamp(0, text.length);
+    if (start >= end) return null;
+
+    String selected = text.substring(start, end);
+    int beforeStart = (start - characterPadding).clamp(0, text.length);
+    String before = text.substring(beforeStart, start);
+
+    int afterEnd = (end + characterPadding).clamp(0, text.length);
+    String after = text.substring(end, afterEnd);
+
+    return (selected, before, after);
+  }
+
+  String? _extractSubstring(String text, TextSelection selection) {
+    if (text.isEmpty) return null;
+    int start = selection.start;
+    int end = selection.end;
+    if (start < 0 || end < 0 || start >= end) return null;
+    start = start.clamp(0, text.length);
+    end = end.clamp(0, text.length);
+    if (start >= end) return null;
+    return text.substring(start, end);
+  }
+
   Widget selectSubjectText(String messageString, VoidCallback next) {
     return PopupFramework(
       title: "Select Subject Text",
@@ -234,13 +265,13 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               padding: const EdgeInsetsDirectional.all(15),
               child: SelectableText(
                 messageString,
-                toolbarOptions: const ToolbarOptions(
-                    copy: false, cut: false, paste: false, selectAll: false),
                 onSelectionChanged: (selection, changeCause) {
-                  selectedSubject = messageString.substring(
-                      selection.baseOffset, selection.extentOffset);
-                  determineBottomButton();
-                  setState(() {});
+                  String? extracted = _extractSubstring(messageString, selection);
+                  if (extracted != null && extracted.isNotEmpty) {
+                    selectedSubject = extracted;
+                    determineBottomButton();
+                    setState(() {});
+                  }
                 },
               ),
             ),
@@ -291,30 +322,15 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               padding: const EdgeInsetsDirectional.all(15),
               child: SelectableText(
                 messageString,
-                toolbarOptions: const ToolbarOptions(
-                    copy: false, cut: false, paste: false, selectAll: false),
                 onSelectionChanged: (selection, changeCause) {
-                  if (selection.baseOffset - characterPadding < 0) {
-                    amountTransactionBefore =
-                        messageString.substring(0, selection.baseOffset);
-                  } else {
-                    amountTransactionBefore = messageString.substring(
-                        selection.baseOffset - characterPadding,
-                        selection.baseOffset);
+                  var bounds = _extractBounds(messageString, selection);
+                  if (bounds != null) {
+                    selectedAmount = bounds.$1;
+                    amountTransactionBefore = bounds.$2;
+                    amountTransactionAfter = bounds.$3;
+                    determineBottomButton();
+                    setState(() {});
                   }
-                  if (selection.extentOffset + characterPadding >
-                      messageString.length - 1) {
-                    amountTransactionAfter = messageString.substring(
-                        selection.extentOffset, messageString.length);
-                  } else {
-                    amountTransactionAfter = messageString.substring(
-                        selection.extentOffset,
-                        selection.extentOffset + characterPadding);
-                  }
-                  selectedAmount = messageString.substring(
-                      selection.baseOffset, selection.extentOffset);
-                  determineBottomButton();
-                  setState(() {});
                 },
               ),
             ),
@@ -365,31 +381,15 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
               padding: const EdgeInsetsDirectional.all(15),
               child: SelectableText(
                 messageString,
-                toolbarOptions: const ToolbarOptions(
-                    copy: false, cut: false, paste: false, selectAll: false),
                 onSelectionChanged: (selection, changeCause) {
-                  if (selection.baseOffset - characterPadding < 0) {
-                    titleTransactionBefore =
-                        messageString.substring(0, selection.baseOffset);
-                  } else {
-                    titleTransactionBefore = messageString.substring(
-                        selection.baseOffset - characterPadding,
-                        selection.baseOffset);
+                  var bounds = _extractBounds(messageString, selection);
+                  if (bounds != null) {
+                    selectedTitle = bounds.$1;
+                    titleTransactionBefore = bounds.$2;
+                    titleTransactionAfter = bounds.$3;
+                    determineBottomButton();
+                    setState(() {});
                   }
-
-                  if (selection.extentOffset + characterPadding >
-                      messageString.length - 1) {
-                    titleTransactionAfter = messageString.substring(
-                        selection.extentOffset, messageString.length);
-                  } else {
-                    titleTransactionAfter = messageString.substring(
-                        selection.extentOffset,
-                        selection.extentOffset + characterPadding);
-                  }
-                  selectedTitle = messageString.substring(
-                      selection.baseOffset, selection.extentOffset);
-                  determineBottomButton();
-                  setState(() {});
                 },
               ),
             ),
@@ -411,31 +411,31 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
 
   Future addTemplate() async {
     print("Added template");
-    await database.createOrUpdateScannerTemplate(
-      insert: widget.scannerTemplate == null,
-      createTemplate(),
-    );
-    savingHapticFeedback();
-    popRoute(context);
+    try {
+      await database.createOrUpdateScannerTemplate(
+        insert: widget.scannerTemplate == null,
+        createTemplate(),
+      );
+      savingHapticFeedback();
+      popRoute(context);
+    } catch (e) {
+      print("Error saving template: $e");
+    }
   }
 
   ScannerTemplate createTemplate() {
     return ScannerTemplate(
-      scannerTemplatePk: widget.scannerTemplate != null
-          ? widget.scannerTemplate!.scannerTemplatePk
-          : "-1",
-      dateCreated: widget.scannerTemplate != null
-          ? widget.scannerTemplate!.dateCreated
-          : DateTime.now(),
+      scannerTemplatePk: widget.scannerTemplate?.scannerTemplatePk ?? "-1",
+      dateCreated: widget.scannerTemplate?.dateCreated ?? DateTime.now(),
       dateTimeModified: null,
       amountTransactionAfter: amountTransactionAfter ?? "",
       amountTransactionBefore: amountTransactionBefore ?? "",
       contains: selectedSubject ?? "",
-      defaultCategoryFk: selectedCategory?.categoryPk ?? "0",
-      templateName: selectedName ?? "",
+      defaultCategoryFk: selectedCategory?.categoryPk ?? widget.scannerTemplate?.defaultCategoryFk ?? "0",
+      templateName: selectedName ?? widget.scannerTemplate?.templateName ?? "",
       titleTransactionAfter: titleTransactionAfter ?? "",
       titleTransactionBefore: titleTransactionBefore ?? "",
-      walletFk: selectedWalletPk ?? "-1",
+      walletFk: selectedWalletPk ?? widget.scannerTemplate?.walletFk ?? "-1",
       ignore: false,
     );
   }

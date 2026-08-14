@@ -123,7 +123,6 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeState = getSettingConstants(appStateSettings);
-    final themeKey = "XpenziApp_${appStateSettings['theme']}_${appStateSettings['accentColor']}_${appStateSettings['materialYou']}_${appStateSettings['forceFullDarkBackground']}_${appStateSettings['font']}_${appStateSettings['outlinedIcons']}";
 
     return MaterialApp(
       showPerformanceOverlay: kProfileMode,
@@ -134,7 +133,7 @@ class App extends StatelessWidget {
       shortcuts: shortcuts,
       actions: keyboardIntents,
       themeAnimationDuration: Duration.zero,
-      key: ValueKey(themeKey),
+      key: const ValueKey("XpenziApp"),
       title: 'Xpenzi: Expense Tracker',
       theme: getLightTheme(),
       darkTheme: getDarkTheme(),
