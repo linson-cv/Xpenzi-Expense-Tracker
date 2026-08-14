@@ -26,6 +26,12 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.9
+    (A) Universal Currency & NLP Engine: Added global currency symbol and keyword matching across international bank alerts, UPI transfers, NEFT, AutoPay, and card debits
+    (A) Auto-loaded Global Preset Templates: Seamlessly initializes currency-agnostic bank and card scanner templates when Notification Access is enabled
+    (A) Zero-Restart Theme Engine: Seamless instant theme, accent palette, and icon style switching without app reload or navigational disruption
+    (A) Fixed onboarding freeze when bypassing Google sign-in by handling null-safety returns on Notification Permission requests
+    (A) Fixed scanner template editor freeze on missing or null category references
     < 1.1.8
     (A) Zero-latency instant theme engine: Light, Dark, Black AMOLED, and accent palettes apply immediately on the same frame
     (A) Smart Auto-Detect review banner: Replaced disruptive popup dialogs with an elegant homepage review banner and non-intrusive notification snackbars

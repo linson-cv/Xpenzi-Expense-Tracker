@@ -37,6 +37,93 @@ import 'addButton.dart';
 StreamSubscription<ServiceNotificationEvent>? notificationListenerSubscription;
 List<String> recentCapturedNotifications = [];
 
+Future<void> populateDefaultScannerTemplatesIfEmpty() async {
+  try {
+    List<ScannerTemplate> existing = await database.getAllScannerTemplates();
+    if (existing.isEmpty) {
+      List<ScannerTemplate> defaults = [
+        ScannerTemplate(
+          scannerTemplatePk: "preset_credit_card_debit",
+          templateName: "Card Purchase / Debit Alert",
+          contains: "Card",
+          amountTransactionBefore: "debited",
+          amountTransactionAfter: " at",
+          titleTransactionBefore: "at ",
+          titleTransactionAfter: " on",
+          defaultCategoryFk: "0",
+          walletFk: "-1",
+          dateCreated: DateTime.now(),
+          dateTimeModified: DateTime.now(),
+          ignore: false,
+        ),
+        ScannerTemplate(
+          scannerTemplatePk: "preset_bank_debit",
+          templateName: "Bank Account Debit",
+          contains: "debited",
+          amountTransactionBefore: "debited",
+          amountTransactionAfter: " on",
+          titleTransactionBefore: "to ",
+          titleTransactionAfter: " on",
+          defaultCategoryFk: "0",
+          walletFk: "-1",
+          dateCreated: DateTime.now(),
+          dateTimeModified: DateTime.now(),
+          ignore: false,
+        ),
+        ScannerTemplate(
+          scannerTemplatePk: "preset_bank_credit",
+          templateName: "Bank Account Credit / Deposit",
+          contains: "credited",
+          amountTransactionBefore: "credited",
+          amountTransactionAfter: " to",
+          titleTransactionBefore: "by ",
+          titleTransactionAfter: " on",
+          defaultCategoryFk: "0",
+          walletFk: "-1",
+          dateCreated: DateTime.now(),
+          dateTimeModified: DateTime.now(),
+          ignore: false,
+        ),
+        ScannerTemplate(
+          scannerTemplatePk: "preset_instant_payment",
+          templateName: "Payment App / Instant Pay",
+          contains: "paid to",
+          amountTransactionBefore: "paid",
+          amountTransactionAfter: " to",
+          titleTransactionBefore: "paid to ",
+          titleTransactionAfter: " using",
+          defaultCategoryFk: "0",
+          walletFk: "-1",
+          dateCreated: DateTime.now(),
+          dateTimeModified: DateTime.now(),
+          ignore: false,
+        ),
+        ScannerTemplate(
+          scannerTemplatePk: "preset_recurring_autopay",
+          templateName: "Subscription / Auto-Debit",
+          contains: "scheduled",
+          amountTransactionBefore: "debit of",
+          amountTransactionAfter: " is",
+          titleTransactionBefore: "for ",
+          titleTransactionAfter: " is scheduled",
+          defaultCategoryFk: "0",
+          walletFk: "-1",
+          dateCreated: DateTime.now(),
+          dateTimeModified: DateTime.now(),
+          ignore: false,
+        ),
+      ];
+
+      for (var tmpl in defaults) {
+        await database.createOrUpdateScannerTemplate(tmpl);
+      }
+      print("Auto-loaded default bank scanner templates");
+    }
+  } catch (e) {
+    print("Error populating default scanner templates: $e");
+  }
+}
+
 Future initNotificationScanning() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
   notificationListenerSubscription?.cancel();
@@ -45,6 +132,7 @@ Future initNotificationScanning() async {
   bool status = await requestReadNotificationPermission();
 
   if (status == true) {
+    await populateDefaultScannerTemplatesIfEmpty();
     notificationListenerSubscription =
         NotificationListenerService.notificationsStream.listen(onNotification);
   }
@@ -66,7 +154,12 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
     onCancelLabel: "Cancel",
     onSubmit: () async {
       popRoute(context);
-      bool status = await NotificationListenerService.requestPermission();
+      try {
+        await NotificationListenerService.requestPermission();
+      } catch (e) {
+        print("Error requesting notification permission: $e");
+      }
+      bool status = await NotificationListenerService.isPermissionGranted();
       completer.complete(status);
     },
     onCancel: () {
@@ -84,7 +177,12 @@ Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
     if (popupContext != null) {
       status = await promptNotificationPermissionPopup(popupContext);
     } else {
-      status = await NotificationListenerService.requestPermission();
+      try {
+        await NotificationListenerService.requestPermission();
+      } catch (e) {
+        print("Error requesting notification permission: $e");
+      }
+      status = await NotificationListenerService.isPermissionGranted();
     }
   }
   return status;

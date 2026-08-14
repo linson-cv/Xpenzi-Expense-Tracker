@@ -50,7 +50,6 @@ import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/ratingPopup.dart';
-import 'package:budget/widgets/restartApp.dart';
 import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/selectCategoryImage.dart';
 import 'package:budget/widgets/selectColor.dart';
@@ -1412,7 +1411,6 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
                                 updateSettings("accentSystemColor", false,
                                     updateGlobalState: true);
                                 updateWidgetColorsAndText(context);
-                                RestartApp.restartApp(context);
                               },
                               useSystemColorPrompt: true,
                             ),
@@ -1886,7 +1884,6 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
         await updateSettings("theme", value,
             updateGlobalState: true, forceGlobalStateUpdate: true);
         updateWidgetColorsAndText(context);
-        RestartApp.restartApp(context);
       },
       getLabel: (item) {
         return item.tr();
@@ -2360,7 +2357,8 @@ class OutlinedIconsSetting extends StatelessWidget {
           );
         }
         navBarIconsData = getNavBarIconsData();
-        RestartApp.restartApp(context);
+        await updateSettings("outlinedIcons", value == "outlined",
+            updateGlobalState: true, forceGlobalStateUpdate: true);
       },
       getLabel: (value) {
         return value.tr();

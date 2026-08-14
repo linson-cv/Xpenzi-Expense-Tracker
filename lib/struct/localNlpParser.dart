@@ -51,8 +51,9 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   // 2. Amount Extraction
   double? amount;
+  // Supports global currencies: $, €, £, ¥, ₹, ₩, ₺, ₱, ฿, ₫, ₴, R$, CHF, CAD, AUD, USD, EUR, GBP, INR, etc.
   RegExp amountRegex = RegExp(
-    r'(?:rs\.?|inr|₹|debited by|debited for|credited with|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
+    r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs\.?|debited\s+by|debited\s+for|debit\s+of|debit\s+by|debit\s+for|debit|credited\s+with|credited\s+by|credited\s+for|credit\s+of|credit\s+by|credit\s+for|credit|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
     caseSensitive: false,
   );
 
@@ -62,12 +63,21 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     amount = double.tryParse(cleanAmountStr);
   }
 
-  // Fallback amount regex for any standalone currency formatted number
+  // Fallback amount regex for any standalone currency symbol or code
   if (amount == null) {
-    RegExp fallbackAmountRegex = RegExp(r'₹\s*([0-9]+(?:\.[0-9]{1,2})?)');
+    RegExp fallbackAmountRegex = RegExp(r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|rs\.?)\s*([0-9]+(?:\.[0-9]{1,2})?)', caseSensitive: false);
     var fallbackMatch = fallbackAmountRegex.firstMatch(text);
     if (fallbackMatch != null && fallbackMatch.group(1) != null) {
       amount = double.tryParse(fallbackMatch.group(1)!);
+    }
+  }
+
+  // Fallback for "debit/credit/debited/credited by/of <amount>" or direct number following debit/credit
+  if (amount == null) {
+    RegExp debitCreditRegex = RegExp(r'(?:debited|credited|debit|credit)\s+(?:by|of|for)?\s*:?\s*([0-9]+(?:\.[0-9]{1,2})?)', caseSensitive: false);
+    var match = debitCreditRegex.firstMatch(text);
+    if (match != null && match.group(1) != null) {
+      amount = double.tryParse(match.group(1)!);
     }
   }
 
@@ -75,24 +85,41 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   // 3. Transaction Type (Income vs Expense)
   bool isIncome = false;
+  // If scheduled/mandate reminder without actual debit, ignore or treat as expense if debit
   RegExp incomeKeywords = RegExp(
-    r'\b(credited|received|added|deposited|refund|cashback|salary)\b',
+    r'\b(credited|received|added to your|deposited|refund|cashback|salary)\b',
     caseSensitive: false,
   );
   if (incomeKeywords.hasMatch(text)) {
     isIncome = true;
   }
 
-  // 3. Merchant / Payee Title Extraction
+  // 4. Merchant / Payee Title Extraction
   String title = "Transaction";
+
+  // Check for specialized bank SMS patterns
+  // Pattern A: "by <MERCHANT>, INFO: ..." or "by <MERCHANT>"
+  RegExp byMerchantRegex = RegExp(r'\bby\s+([A-Za-z0-9\s&\.\-\@]+?)(?=,\s*INFO|\s+INFO|//|\.|$)', caseSensitive: false);
+  // Pattern B: "trf to <PAYEE> Refno" or "transfer to <PAYEE>"
+  RegExp trfToRegex = RegExp(r'\b(?:trf to|transfer to|transferred to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:Refno|Ref|on|via|using|If not)|\.|$)', caseSensitive: false);
+  // Pattern C: "AutoPay for <MERCHANT> SIP" or "AutoPay for <MERCHANT>"
+  RegExp autoPayRegex = RegExp(r'\b(?:AutoPay for|mandate for|autopay to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:debit|credit|scheduled|is scheduled)|\.|$)', caseSensitive: false);
+  // Pattern D: Standard "at/to/vpa/for/towards <PAYEE>"
   RegExp payeeRegex = RegExp(
     r'(?:at|to|vpa|info|for|towards)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:on|ref|using|via|a/c|card|bal|avbl|date|val)|\.|$)',
     caseSensitive: false,
   );
-  var payeeMatch = payeeRegex.firstMatch(text);
-  if (payeeMatch != null && payeeMatch.group(1) != null) {
-    String extractedTitle = payeeMatch.group(1)!.trim();
-    if (extractedTitle.length > 2 && extractedTitle.length < 35) {
+
+  var match = trfToRegex.firstMatch(text) ??
+      byMerchantRegex.firstMatch(text) ??
+      autoPayRegex.firstMatch(text) ??
+      payeeRegex.firstMatch(text);
+
+  if (match != null && match.group(1) != null) {
+    String extractedTitle = match.group(1)!.trim();
+    // Clean trailing punctuation or noise
+    extractedTitle = extractedTitle.replaceAll(RegExp(r'[\/\,\.]+$'), '').trim();
+    if (extractedTitle.length > 2 && extractedTitle.length < 50) {
       title = extractedTitle;
     }
   }

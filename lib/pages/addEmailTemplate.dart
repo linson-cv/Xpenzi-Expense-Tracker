@@ -79,7 +79,12 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   updateInitial() async {
     if (widget.scannerTemplate != null) {
       TransactionCategory? getSelectedCategory = await database
-          .getCategoryInstance(widget.scannerTemplate!.defaultCategoryFk);
+          .getCategoryInstanceOrNull(widget.scannerTemplate!.defaultCategoryFk);
+      if (getSelectedCategory == null) {
+        try {
+          getSelectedCategory = await database.getCategoryInstance("0");
+        } catch (_) {}
+      }
       setState(() {
         selectedCategory = getSelectedCategory;
       });
@@ -426,7 +431,7 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
       amountTransactionAfter: amountTransactionAfter ?? "",
       amountTransactionBefore: amountTransactionBefore ?? "",
       contains: selectedSubject ?? "",
-      defaultCategoryFk: selectedCategory!.categoryPk,
+      defaultCategoryFk: selectedCategory?.categoryPk ?? "0",
       templateName: selectedName ?? "",
       titleTransactionAfter: titleTransactionAfter ?? "",
       titleTransactionBefore: titleTransactionBefore ?? "",
