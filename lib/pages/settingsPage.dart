@@ -36,6 +36,7 @@ import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/recurringHubPage.dart';
 import 'package:budget/pages/aiSettingsPage.dart';
 import 'package:budget/pages/offlineIntelligencePage.dart';
+import 'package:budget/pages/errorLogsPage.dart';
 import 'package:budget/pages/faqPage.dart';
 
 import 'package:budget/widgets/accountAndBackup.dart';
@@ -116,6 +117,27 @@ class MoreActionsPageState extends State<MoreActionsPage> {
         title: _isEditMode ? "Customize Explore" : "Explore",
         backButton: false,
         horizontalPaddingConstrained: true,
+        overlay: _isEditMode
+            ? Align(
+                alignment: Alignment.bottomCenter,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: _ExploreEditToolbar(
+                      onReset: () async {
+                        HapticFeedback.mediumImpact();
+                        await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
+                        await updateSettings("hiddenMorePageItems", <String>[], updateGlobalState: true);
+                        settingsPageStateKey.currentState?.refreshState();
+                        setState(() {});
+                      },
+                      onDone: () => _toggleEditMode(),
+                    ),
+                  ),
+                ),
+              )
+            : null,
         actions: [
           IconButton(
             onPressed: _toggleEditMode,
@@ -180,6 +202,73 @@ const List<String> _kDefaultCardOrder = [
   "intelligence", "offlineIntelligence",
   "billSplitter", "transactions", "search",
 ];
+
+// ─── _ExploreEditToolbar widget ─────────────────────────────────────────────
+
+class _ExploreEditToolbar extends StatelessWidget {
+  const _ExploreEditToolbar({
+    required this.onReset,
+    required this.onDone,
+  });
+
+  final VoidCallback onReset;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final hidden = List<String>.from(appStateSettings["hiddenMorePageItems"] ?? []);
+    final totalCount = _kDefaultCardOrder.length;
+    final visibleCount = totalCount - hidden.where((k) => _kDefaultCardOrder.contains(k)).length;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 500),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.dashboard_customize_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            TextFont(
+              text: "$visibleCount/$totalCount Visible",
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+            const Spacer(),
+            IconButton(
+              tooltip: "Reset Defaults",
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: onReset,
+            ),
+            IconButton(
+              tooltip: "Done",
+              icon: Icon(
+                Icons.check_circle_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 28,
+              ),
+              onPressed: onDone,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // ─── MorePages widget ────────────────────────────────────────────────────────
 
@@ -497,91 +586,11 @@ class _MorePagesState extends State<MorePages> {
                     ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Bottom floating edit toolbar with details, reset & tick buttons
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.dashboard_customize_rounded,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  TextFont(
-                    text: "$visibleCount/${orderedKeys.length} Visible",
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    tooltip: "Reset Defaults",
-                    icon: const Icon(Icons.refresh_rounded),
-                    onPressed: () async {
-                      HapticFeedback.mediumImpact();
-                      await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
-                      await updateSettings("hiddenMorePageItems", <String>[], updateGlobalState: true);
-                      settingsPageStateKey.currentState?.refreshState();
-                      setState(() {});
-                    },
-                  ),
-                  IconButton(
-                    tooltip: "Done",
-                    icon: Icon(
-                      Icons.check_circle_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 28,
-                    ),
-                    onPressed: () {
-                      HapticFeedback.mediumImpact();
-                      widget.onEditModeChanged?.call(false);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 80),
           ] else ...[
             // ────────────────────────────────────────────────────────────
             // NORMAL / SEARCH MODE: 2-column card grid (Strict Sizing)
             // ────────────────────────────────────────────────────────────
-            if (!isSearching) ...[
-              SettingsContainerOpenPage(
-                openPage: SettingsPageFramework(
-                  key: settingsPageFrameworkStateKey,
-                ),
-                title: "Settings & Customization",
-                description: "Theme, Language, Import/Export CSV",
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.settings_outlined
-                    : Icons.settings_rounded,
-                isOutlined: true,
-                isWideOutlined: true,
-              ),
-              const SizedBox(height: 6),
-              SettingsContainerOpenPage(
-                openPage: const WalletDetailsPage(wallet: null),
-                title: navBarIconsData["allSpending"]!.labelLong.tr(),
-                description: "Your spending statistics all in one place",
-                icon: navBarIconsData["allSpending"]!.iconData,
-                isOutlined: true,
-                isWideOutlined: true,
-              ),
-              const SizedBox(height: 8),
-            ],
-
             Builder(builder: (context) {
               final isPremiumVisible = !hidden.contains("premium") &&
                   catalogue.containsKey("premium") &&
@@ -609,6 +618,35 @@ class _MorePagesState extends State<MorePages> {
                     child: const PremiumBanner(),
                   ),
                 );
+              }
+
+              if (!isSearching) {
+                rows.add(
+                  SettingsContainerOpenPage(
+                    openPage: SettingsPageFramework(
+                      key: settingsPageFrameworkStateKey,
+                    ),
+                    title: "Settings & Customization",
+                    description: "Theme, Language, Import/Export CSV",
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.settings_outlined
+                        : Icons.settings_rounded,
+                    isOutlined: true,
+                    isWideOutlined: true,
+                  ),
+                );
+                rows.add(const SizedBox(height: 6));
+                rows.add(
+                  SettingsContainerOpenPage(
+                    openPage: const WalletDetailsPage(wallet: null),
+                    title: navBarIconsData["allSpending"]!.labelLong.tr(),
+                    description: "Your spending statistics all in one place",
+                    icon: navBarIconsData["allSpending"]!.iconData,
+                    isOutlined: true,
+                    isWideOutlined: true,
+                  ),
+                );
+                rows.add(const SizedBox(height: 8));
               }
 
               for (int i = 0; i < gridCards.length; i += 2) {
@@ -640,27 +678,33 @@ class _MorePagesState extends State<MorePages> {
                   ),
                 );
               }
-              return Column(children: rows);
-            }),
 
-            if (!isSearching) ...[
-              const SizedBox(height: 6),
-              SettingsContainer(
-                onTap: () {
-                  openBottomSheet(
-                    context,
-                    const EditDataOverviewPage(),
-                  );
-                },
-                title: "Edit, Delete, and Reorder Data",
-                description: "For accounts, categories, titles, budgets, goals, loans",
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.edit_note_outlined
-                    : Icons.edit_note_rounded,
-                isOutlined: true,
-                isWideOutlined: true,
-              ),
-            ],
+              if (!isSearching) {
+                rows.add(const SizedBox(height: 6));
+                rows.add(
+                  SettingsContainer(
+                    onTap: () {
+                      openBottomSheet(
+                        context,
+                        const EditDataOverviewPage(),
+                      );
+                    },
+                    title: "Edit, Delete, and Reorder Data",
+                    description: "For accounts, categories, titles, budgets, goals, loans",
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.edit_note_outlined
+                        : Icons.edit_note_rounded,
+                    isOutlined: true,
+                    isWideOutlined: true,
+                  ),
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: rows,
+              );
+            }),
           ],
         ],
       ),
@@ -1826,15 +1870,14 @@ class _ThemeSettingsDropdownState extends State<ThemeSettingsDropdown> {
           appStateSettings["forceFullDarkBackground"] == true ? "black" : "dark"
       ],
       onChanged: (value) async {
-        if (value == "black") {
-          await updateSettings("forceFullDarkBackground", true,
-              updateGlobalState: false);
-        } else {
-          await updateSettings("forceFullDarkBackground", false,
-              updateGlobalState: false);
-        }
+        final bool isBlack = value == "black";
+        appStateSettings["forceFullDarkBackground"] = isBlack;
+        appStateSettings["theme"] = value;
         setState(() {});
-        await updateSettings("theme", value, updateGlobalState: true);
+        updateSettings("forceFullDarkBackground", isBlack,
+            updateGlobalState: false);
+        await updateSettings("theme", value,
+            updateGlobalState: true, forceGlobalStateUpdate: true);
         updateWidgetColorsAndText(context);
       },
       getLabel: (item) {
@@ -1866,6 +1909,14 @@ class ToolsAndExtrasSubPage extends StatelessWidget {
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.summarize_outlined
                   : Icons.summarize_rounded,
+            ),
+            SettingsContainerOpenPage(
+              openPage: const ErrorLogsPage(),
+              title: "Diagnostic & Error Logs",
+              description: "Inspect runtime logs, sign-in errors & copy reports",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.bug_report_outlined
+                  : Icons.bug_report_rounded,
             ),
           ],
         ),

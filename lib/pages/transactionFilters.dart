@@ -20,10 +20,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/widgets/selectChips.dart';
 import 'package:budget/widgets/amountRangeSlider.dart';
 import 'package:budget/widgets/textWidgets.dart';
+import 'package:budget/widgets/tappable.dart';
+import 'package:flutter/services.dart' hide TextInput;
 
 enum TransactionSortOption {
   dateCreated,
@@ -1661,18 +1662,21 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
   late bool selectedSortAscending = widget.searchFilters.sortAscending;
 
   void updateSort(TransactionSortOption option) {
+    HapticFeedback.selectionClick();
     setState(() {
       selectedSortOption = option;
     });
   }
 
   void updateAscending(bool ascending) {
+    HapticFeedback.selectionClick();
     setState(() {
       selectedSortAscending = ascending;
     });
   }
 
   void applySort() {
+    HapticFeedback.mediumImpact();
     widget.searchFilters.sortOption = selectedSortOption;
     widget.searchFilters.sortAscending = selectedSortAscending;
     widget.setSearchFilters(widget.searchFilters);
@@ -1680,6 +1684,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
   }
 
   void clearSort() {
+    HapticFeedback.mediumImpact();
     setState(() {
       selectedSortOption = TransactionSortOption.dateCreated;
       selectedSortAscending = false;
@@ -1690,57 +1695,215 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
     Navigator.of(context).maybePop();
   }
 
+  String _getDescendingLabel() {
+    switch (selectedSortOption) {
+      case TransactionSortOption.amount:
+        return "Highest First";
+      case TransactionSortOption.title:
+        return "Z to A";
+      case TransactionSortOption.dateCreated:
+      case TransactionSortOption.dateUpdated:
+        return "Newest First";
+    }
+  }
+
+  String _getAscendingLabel() {
+    switch (selectedSortOption) {
+      case TransactionSortOption.amount:
+        return "Lowest First";
+      case TransactionSortOption.title:
+        return "A to Z";
+      case TransactionSortOption.dateCreated:
+      case TransactionSortOption.dateUpdated:
+        return "Oldest First";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sortOptions = [
+      (
+        option: TransactionSortOption.dateCreated,
+        label: "Date Created",
+        icon: Icons.calendar_today_rounded,
+      ),
+      (
+        option: TransactionSortOption.dateUpdated,
+        label: "Date Updated",
+        icon: Icons.update_rounded,
+      ),
+      (
+        option: TransactionSortOption.amount,
+        label: "Amount",
+        icon: Icons.payments_rounded,
+      ),
+      (
+        option: TransactionSortOption.title,
+        label: "Title",
+        icon: Icons.sort_by_alpha_rounded,
+      ),
+    ];
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-            child: TextFont(
-              text: "Sort By",
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          // ── Sort Criteria (2x2 Grid) ──
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sortOptions.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 2.7,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (context, index) {
+              final item = sortOptions[index];
+              final isSelected = selectedSortOption == item.option;
+              return Tappable(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                borderRadius: 14,
+                onTap: () => updateSort(item.option),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary.withOpacity(0.6)
+                          : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        item.icon,
+                        size: 18,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFont(
+                          text: item.label.tr(),
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          textColor: isSelected
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurface,
+                          maxLines: 1,
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // ── Sort Direction (Segmented Pill) ──
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Tappable(
+                    color: !selectedSortAscending
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Colors.transparent,
+                    borderRadius: 10,
+                    onTap: () => updateAscending(false),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_downward_rounded,
+                            size: 16,
+                            color: !selectedSortAscending
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: TextFont(
+                              text: _getDescendingLabel().tr(),
+                              fontSize: 12.5,
+                              fontWeight: !selectedSortAscending ? FontWeight.bold : FontWeight.normal,
+                              textColor: !selectedSortAscending
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Tappable(
+                    color: selectedSortAscending
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Colors.transparent,
+                    borderRadius: 10,
+                    onTap: () => updateAscending(true),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_upward_rounded,
+                            size: 16,
+                            color: selectedSortAscending
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: TextFont(
+                              text: _getAscendingLabel().tr(),
+                              fontSize: 12.5,
+                              fontWeight: selectedSortAscending ? FontWeight.bold : FontWeight.normal,
+                              textColor: selectedSortAscending
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          RadioItems<TransactionSortOption>(
-            initial: selectedSortOption,
-            items: TransactionSortOption.values,
-            displayFilter: (option) {
-              switch (option) {
-                case TransactionSortOption.dateCreated:
-                  return "Date Created".tr();
-                case TransactionSortOption.dateUpdated:
-                  return "Date Updated".tr();
-                case TransactionSortOption.amount:
-                  return "Amount".tr();
-                case TransactionSortOption.title:
-                  return "Title".tr();
-              }
-            },
-            onChanged: (option) => updateSort(option),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-            child: TextFont(
-              text: "Order",
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          RadioItems<bool>(
-            initial: selectedSortAscending,
-            items: const [false, true],
-            displayFilter: (ascending) {
-              return ascending ? "Ascending".tr() : "Descending".tr();
-            },
-            onChanged: (ascending) => updateAscending(ascending),
-          ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 14),
+
+          // ── Action Buttons ──
           Row(
             children: [
               Expanded(

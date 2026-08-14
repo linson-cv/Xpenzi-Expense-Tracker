@@ -8,6 +8,7 @@ import 'package:budget/pages/editCategoriesPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/geminiAi.dart';
 import 'package:budget/struct/localNlpParser.dart';
+import 'package:budget/struct/autoTransactionTracker.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/button.dart';
@@ -190,28 +191,65 @@ Future queueTransactionFromMessage(String messageString,
       ? null
       : await database.getWalletInstanceOrNull(templateFound.walletFk);
 
-  if (willPushRoute) {
-    pushRoute(
-      null,
-      AddTransactionPage(
-        useCategorySelectedIncome: true,
-        routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-        selectedAmount: amountDouble,
-        selectedTitle: title,
-        selectedCategory: category,
-        startInitialAddTransactionSequence: false,
-        selectedWallet: wallet,
-        selectedDate: dateTime,
-      ),
-    );
+  if (willPushRoute && appStateSettings["autoInsertNotificationsDirectly"] != true) {
+    BuildContext? currentCtx = navigatorKey.currentContext;
+    if (currentCtx != null) {
+      AllWallets? allWallets;
+      try {
+        allWallets = Provider.of<AllWallets>(currentCtx, listen: false);
+      } catch (_) {}
+      String formattedAmount = allWallets != null
+          ? convertToMoney(allWallets, amountDouble)
+          : amountDouble.toStringAsFixed(2);
+
+      openPopup(
+        currentCtx,
+        title: "New Transaction Detected",
+        icon: Icons.notifications_active_rounded,
+        description:
+            "A transaction was auto-detected from notification:\n\n• Title: $title\n• Amount: $formattedAmount\n\nWould you like to review and add this transaction?",
+        onSubmitLabel: "Review & Add",
+        onSubmit: () {
+          popRoute(currentCtx);
+          pushRoute(
+            currentCtx,
+            AddTransactionPage(
+              useCategorySelectedIncome: true,
+              routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+              selectedAmount: amountDouble,
+              selectedTitle: title,
+              selectedCategory: category,
+              startInitialAddTransactionSequence: false,
+              selectedWallet: wallet,
+              selectedDate: dateTime,
+            ),
+          );
+        },
+        onCancelLabel: "Ignore",
+        onCancel: () {
+          popRoute(currentCtx);
+        },
+      );
+    }
   } else {
-    processAddTransactionFromParams(navigatorKey.currentContext!, {
-      "title": title,
-      "categoryPk": category?.categoryPk,
-      "walletPk": wallet?.walletPk,
-      "amount": amountDouble.toString(),
-      "date": dateTime.toString(),
-    });
+    BuildContext? ctx = navigatorKey.currentContext;
+    if (ctx != null) {
+      registerAutoAddedTransaction(title, amountDouble);
+      processAddTransactionFromParams(ctx, {
+        "title": title,
+        "categoryPk": category?.categoryPk,
+        "walletPk": wallet?.walletPk,
+        "amount": amountDouble.toString(),
+        "date": dateTime.toString(),
+      });
+      openSnackbar(
+        SnackbarMessage(
+          title: "Auto-Recorded Transaction",
+          description: "$title · ${amountDouble.toStringAsFixed(2)}",
+          icon: Icons.auto_awesome_rounded,
+        ),
+      );
+    }
   }
 }
 
@@ -290,6 +328,21 @@ class _AutoTransactionsPageNotificationsState
               "When a notification is dismissed and the app is open, attempt to add a transaction given its information. Create a template so Xpenzi understands the format of a notification.",
           initialValue: appStateSettings["notificationScanning"],
         ),
+        if (appStateSettings["notificationScanning"] == true)
+          SettingsContainerSwitch(
+            onSwitched: (value) async {
+              await updateSettings("autoInsertNotificationsDirectly", value,
+                  updateGlobalState: false);
+              setState(() {});
+            },
+            title: "Direct Auto-Insert without Prompt",
+            description:
+                "Automatically insert transactions directly into database without showing a confirmation popup.",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.flash_on_outlined
+                : Icons.flash_on_rounded,
+            initialValue: appStateSettings["autoInsertNotificationsDirectly"] ?? false,
+          ),
         StreamBuilder<List<ScannerTemplate>>(
           stream: database.watchAllScannerTemplates(),
           builder: (context, snapshot) {
@@ -636,6 +689,8 @@ Future<void> parseEmailsInBackground(context,
             const Duration(milliseconds: 2500) - stopwatch.elapsed, () {});
       }
       for (Transaction transaction in transactionsToAdd) {
+        registerAutoAddedTransaction(
+            transaction.name, transaction.amount.abs());
         await database.createOrUpdateTransaction(insert: true, transaction);
       }
       List<dynamic> emails = [
@@ -912,20 +967,20 @@ class ScannerTemplateEntry extends StatelessWidget {
                 bottom: 5,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      CategoryIcon(
-                          categoryPk: scannerTemplate.defaultCategoryFk,
-                          size: 25),
-                      const SizedBox(width: 7),
-                      TextFont(
-                        text: scannerTemplate.templateName,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ],
+                  CategoryIcon(
+                    categoryPk: scannerTemplate.defaultCategoryFk,
+                    size: 25,
                   ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFont(
+                      text: scannerTemplate.templateName,
+                      fontWeight: FontWeight.bold,
+                      maxLines: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   ButtonIcon(
                     onTap: () async {
                       DeletePopupAction? action = await openDeletePopup(
@@ -948,7 +1003,7 @@ class ScannerTemplateEntry extends StatelessWidget {
                     icon: appStateSettings["outlinedIcons"]
                         ? Icons.delete_outlined
                         : Icons.delete_rounded,
-                  )
+                  ),
                 ],
               ),
             ),

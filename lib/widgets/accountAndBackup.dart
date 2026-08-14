@@ -7,7 +7,9 @@ import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
 import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/accountsPage.dart';
+import 'package:budget/pages/errorLogsPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/errorLog.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/shareBudget.dart';
 import 'package:budget/struct/syncClient.dart';
@@ -175,27 +177,42 @@ Future<bool> signInGoogle(
 
     refreshUIAfterLoginChange();
     return true;
-  } catch (e) {
+  } catch (e, stack) {
     print(e);
-    if (waitForCompletion == true && context != null) popRoute(context);
-    openSnackbar(
-      SnackbarMessage(
-        title: "sign-in-error".tr(),
-        description: "sign-in-error-description".tr(),
-        icon: appStateSettings["outlinedIcons"]
-            ? Icons.error_outlined
-            : Icons.error_rounded,
-        timeout: const Duration(milliseconds: 3400),
-        onTap: () => signInGoogle(
-          context: context,
-          drivePermissionsAttachments: drivePermissionsAttachments,
-          gMailPermissions: gMailPermissions,
-          next: next,
-          silentSignIn: false,
-          waitForCompletion: waitForCompletion,
-        ),
-      ),
+    recordAppError(
+      "Google Sign-In",
+      e,
+      stackTrace: stack,
+      extraInfo: "Scopes: ${googleSignIn?.scopes} | Platform: ${getPlatform()}",
     );
+    if (waitForCompletion == true && context != null) popRoute(context);
+    BuildContext? currentContext = context ?? navigatorKey.currentContext;
+    if (currentContext != null) {
+      openPopup(
+        currentContext,
+        title: "Google Sign-In Error",
+        icon: Icons.error_outline_rounded,
+        description: "Google Sign-In encountered an error:\n\n$e\n\nYou can view full diagnostic logs to see the exception details.",
+        onSubmitLabel: "View Error Logs",
+        onSubmit: () {
+          popRoute(currentContext);
+          pushRoute(currentContext, const ErrorLogsPage());
+        },
+        onCancelLabel: "Copy Error",
+        onCancel: () {
+          Clipboard.setData(ClipboardData(
+              text: "Google Sign-In Error: $e\n\nStack:\n$stack"));
+          popRoute(currentContext);
+          openSnackbar(
+            SnackbarMessage(
+              title: "Error Copied",
+              description: "Paste and share the error message.",
+              icon: Icons.copy_rounded,
+            ),
+          );
+        },
+      );
+    }
     googleUser = null;
     await updateSettings("currentUserEmail", "", updateGlobalState: false);
     if (runningCloudFunctions) {

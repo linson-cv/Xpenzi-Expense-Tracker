@@ -156,6 +156,44 @@ class TransactionsListPageState extends State<TransactionsListPage>
       scrollbar: false,
       actions: [
         IconButton(
+          padding: const EdgeInsetsDirectional.all(15 - 8),
+          tooltip: "search-transactions".tr(),
+          onPressed: () {
+            pushRoute(context, const TransactionsSearchPage());
+          },
+          icon: Icon(
+            appStateSettings["outlinedIcons"]
+                ? Icons.search_outlined
+                : Icons.search_rounded,
+          ),
+        ),
+        IconButton(
+          tooltip: "filters".tr(),
+          onPressed: () {
+            selectFilters(context);
+          },
+          padding: const EdgeInsetsDirectional.all(15 - 8),
+          icon: SelectedIconForIconButton(
+            iconData: appStateSettings["outlinedIcons"]
+                ? Icons.filter_alt_outlined
+                : Icons.filter_alt_rounded,
+            isSelected: searchFilters.isClear() == false,
+          ),
+        ),
+        IconButton(
+          tooltip: "sort".tr(),
+          onPressed: () {
+            selectSort(context);
+          },
+          padding: const EdgeInsetsDirectional.all(15 - 8),
+          icon: SelectedIconForIconButton(
+            iconData: appStateSettings["outlinedIcons"]
+                ? Icons.sort_outlined
+                : Icons.sort_rounded,
+            isSelected: searchFilters.sortOption != TransactionSortOption.dateCreated || searchFilters.sortAscending != false,
+          ),
+        ),
+        IconButton(
           tooltip: "preferences".tr(),
           onPressed: () {
             openBottomSheet(
@@ -182,48 +220,11 @@ class TransactionsListPageState extends State<TransactionsListPage>
               ),
             );
           },
-          padding: const EdgeInsetsDirectional.all(15 - 8),
+          padding: const EdgeInsetsDirectional.all(15),
           icon: Icon(
             appStateSettings["outlinedIcons"]
                 ? Icons.settings_outlined
                 : Icons.settings_rounded,
-          ),
-        ),
-        IconButton(
-          tooltip: "sort".tr(),
-          onPressed: () {
-            selectSort(context);
-          },
-          padding: const EdgeInsetsDirectional.all(15 - 8),
-          icon: Icon(
-            appStateSettings["outlinedIcons"]
-                ? Icons.sort_outlined
-                : Icons.sort_rounded,
-          ),
-        ),
-        IconButton(
-          tooltip: "filters".tr(),
-          onPressed: () {
-            selectFilters(context);
-          },
-          padding: const EdgeInsetsDirectional.all(15 - 8),
-          icon: SelectedIconForIconButton(
-            iconData: appStateSettings["outlinedIcons"]
-                ? Icons.filter_alt_outlined
-                : Icons.filter_alt_rounded,
-            isSelected: searchFilters.isClear() == false,
-          ),
-        ),
-        IconButton(
-          padding: const EdgeInsetsDirectional.all(15),
-          tooltip: "search-transactions".tr(),
-          onPressed: () {
-            pushRoute(context, const TransactionsSearchPage());
-          },
-          icon: Icon(
-            appStateSettings["outlinedIcons"]
-                ? Icons.search_outlined
-                : Icons.search_rounded,
           ),
         ),
       ],

@@ -166,8 +166,6 @@ Future<bool> updateSettings(
   bool isChanged = appStateSettings[setting] != value;
 
   appStateSettings[setting] = value;
-  await sharedPreferences.setString(
-      'userSettings', json.encode(appStateSettings));
 
   if (updateGlobalState == true) {
     // Only refresh global state if the value is different
@@ -197,6 +195,9 @@ Future<bool> updateSettings(
       }
     }
   }
+
+  await sharedPreferences.setString(
+      'userSettings', json.encode(appStateSettings));
 
   return true;
 }

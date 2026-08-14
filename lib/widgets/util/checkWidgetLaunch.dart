@@ -70,7 +70,7 @@ class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
   void _checkForWidgetLaunch() {
     try {
       HomeWidget.initiallyLaunchedFromHomeWidget().then((uri) {
-        if (uri != null) {
+        if (uri != null && _lastProcessedWidgetUri != uri) {
           _launchedFromWidget(uri);
         }
       }).catchError((e) {

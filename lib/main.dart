@@ -8,6 +8,7 @@ import 'package:budget/struct/logging.dart';
 import 'package:budget/widgets/fadeIn.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/initializeBiometrics.dart';
+import 'package:budget/struct/autoTransactionTracker.dart';
 import 'package:budget/widgets/util/appLinks.dart';
 import 'package:budget/widgets/util/onAppResume.dart';
 import 'package:budget/widgets/util/watchForDayChange.dart';
@@ -23,7 +24,6 @@ import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/struct/initializeNotifications.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/restartApp.dart';
-import 'package:budget/struct/customDelayedCurve.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
@@ -116,8 +116,7 @@ class App extends StatelessWidget {
           enableDevicePreview ? DevicePreview.locale(context) : context.locale,
       shortcuts: shortcuts,
       actions: keyboardIntents,
-      themeAnimationDuration: const Duration(milliseconds: 300),
-      themeAnimationCurve: const CustomDelayedCurve(),
+      themeAnimationDuration: Duration.zero,
       key: ValueKey(themeKey),
       title: 'Xpenzi: Expense Tracker',
       theme: getLightTheme(),
@@ -156,6 +155,7 @@ class App extends StatelessWidget {
           updateGlobalAppLifecycleState: true,
           onAppResume: () async {
             await setHighRefreshRate();
+            checkAndShowAutoAddedTransactionsSummary();
           },
           child: InitializeBiometrics(
             child: InitializeNotificationService(

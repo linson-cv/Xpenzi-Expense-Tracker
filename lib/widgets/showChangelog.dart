@@ -26,6 +26,14 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.1.7
+    (A) Zero-latency instant theme engine: Light, Dark, Black AMOLED, and accent palettes apply immediately on the same frame
+    (A) Smart transaction auto-detection prompt: Replaced abrupt page takeovers with a clean review popup and optional direct silent auto-insert
+    (A) App-open auto-recorded transaction summary notification with 1-tap navigation to transactions list
+    (A) Added Diagnostic & Error Logs hub with detailed exception logging, full stack traces, and 1-tap clipboard copying
+    (A) Modernized Transactions sorting sheet with a compact 2x2 Material 3 card grid and context-aware direction toggles
+    (A) Explore customization upgrades: Pinned static bottom edit toolbar and top-placed full-width Xpenzi Pro banner
+    (A) Transactions header action polish: Pinned preferences settings button to the far right
     < 1.1.6
     (A) Instantaneous theme switching: Accent color, Material You, theme mode, and AMOLED Black apply immediately without restart
     (A) Highlighted active accent color palette swatch with contrasting ring and adaptive checkmark indicator
@@ -125,6 +133,21 @@ end""";
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
+    "< 1.1.7": [
+      MajorChanges(
+        "Instant Themes & Smart Auto-Detection",
+        Icons.flash_on_rounded,
+        info: [
+          "0ms zero-latency instant theme engine for all modes & accent colors",
+          "Non-intrusive auto-detected transaction confirmation & resume alerts",
+          "Diagnostic & Error Logs hub with 1-tap exception copying",
+          "Modernized compact 2x2 Material 3 transactions sort sheet",
+        ],
+        onTap: (context) {
+          popRoute(context);
+        },
+      ),
+    ],
     "< 1.1.6": [
       MajorChanges(
         "Instant Themes & Intelligent Automation",

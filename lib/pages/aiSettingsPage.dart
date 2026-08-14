@@ -1,6 +1,5 @@
 import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
-import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:budget/struct/geminiAi.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
@@ -86,38 +85,6 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
           ],
         ),
 
-        // Offline Intelligence Highlight Section
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-              width: 1.5,
-            ),
-          ),
-          child: SettingsGroupCard(
-            title: "Offline Intelligence (100% On-Device & Private)",
-            icon: Icons.shield_rounded,
-            children: [
-              SettingsContainerOpenPage(
-                openPage: const OfflineIntelligencePage(),
-                title: "Offline Notification Transactions",
-                description: "Auto-detect bank SMS, payment alerts, and manage templates without AI key",
-                icon: Icons.notifications_active_rounded,
-              ),
-              const Divider(height: 1),
-              SettingsContainerSwitch(
-                title: "Local Regex NLP Parser",
-                description: "Fast offline extraction of merchant, amount, and category without cloud AI",
-                icon: Icons.bolt_rounded,
-                initialValue: appStateSettings["localNlpParsing"] ?? true,
-                onSwitched: (val) {
-                  updateSettings("localNlpParsing", val, updateGlobalState: true);
-                },
-              ),
-            ],
-          ),
-        ),
 
         // Gemini Model Provider Container
         SettingsGroupCard(
