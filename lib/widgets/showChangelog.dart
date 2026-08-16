@@ -26,9 +26,11 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.3
+    (A) Startup & Notification Engine Fix: Eliminated mutual recursive permission checking on app launch and background service registration
+    (A) Dedicated Data Management & Reset: Placed data erase and cloud backup wipe into a dedicated top-level section in Settings and renamed backup section to Data, Backup & Sync
     < 1.2.2
     (A) Unified Notifications Screen: Redesigned notification settings with cohesive group cards matching app design aesthetics
-    (A) Data Management & Reset Section: Moved full data erase & database reset under Settings > Import & Export with clean About Page focus
     (A) Notification Background Capture & Battery Optimization: Added direct settings prompt to disable Android battery optimization for uninterrupted background transaction listening
     (A) Enhanced Direct Auto-Insert: Fixed amount sign formatting and category fallbacks for instant silent notification recording
     (A) Expanded Bank SMS Parser: Added comprehensive keyword coverage across international bank alerts, IMPS, NEFT, RTGS, NACH, POS, and mandates

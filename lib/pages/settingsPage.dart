@@ -1101,18 +1101,36 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("Import & Export Data", "Import CSV, backup data", [
-              "import", "export", "csv", "pdf", "backup", "restore", "google drive", "data", "file"
+            expand: _match("Data, Backup & Sync", "Backup to Google Drive, spreadsheets, restore", [
+              "import", "export", "csv", "pdf", "backup", "restore", "google drive", "data", "file", "spreadsheets", "sync"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
                 openPage: const ImportExportSettingsSubPage(),
-                title: "Import & Export Data",
-                description: "Import CSV, backup data",
+                title: "Data, Backup & Sync",
+                description: "Backup to Google Drive, spreadsheets, restore",
                 icon: appStateSettings["outlinedIcons"]
-                    ? Icons.sd_storage_outlined
-                    : Icons.sd_storage_rounded,
+                    ? Icons.cloud_sync_outlined
+                    : Icons.cloud_sync_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
+            ),
+          ),
+          AnimatedExpanded(
+            expand: _match("Data Management & Reset", "Erase local data, wipe cloud backups", [
+              "erase", "delete", "wipe", "reset", "clear", "clear database", "delete all data", "factory reset", "erase cloud"
+            ]),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const DataManagementSettingsSubPage(),
+                title: "Data Management & Reset",
+                description: "Erase local data, wipe cloud backups",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.phonelink_erase_outlined
+                    : Icons.phonelink_erase_rounded,
                 isOutlined: true,
                 isWideOutlined: true,
               ),
@@ -1767,7 +1785,7 @@ class ImportExportSettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "Import & Export",
+      title: "Data, Backup & Sync",
       dragDownToDismiss: true,
       listWidgets: [
         // Spreadsheets Section
@@ -1783,7 +1801,7 @@ class ImportExportSettingsSubPage extends StatelessWidget {
 
         // Backups Section
         SettingsGroupCard(
-          title: "Backups",
+          title: "Backups & Sync",
           icon: Icons.backup_outlined,
           children: [
             const ExportDB(),
@@ -1794,15 +1812,27 @@ class ImportExportSettingsSubPage extends StatelessWidget {
             ),
           ],
         ),
+      ],
+    );
+  }
+}
 
-        // Reset & Data Wipe Section
+class DataManagementSettingsSubPage extends StatelessWidget {
+  const DataManagementSettingsSubPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageFramework(
+      title: "Data Management & Reset",
+      dragDownToDismiss: true,
+      listWidgets: [
         SettingsGroupCard(
           title: "Reset & Data Management",
           icon: Icons.restart_alt_rounded,
           children: [
             SettingsContainer(
               title: "Erase Local Data",
-              description: "Permanently erase all local accounts, transactions, and app settings on this device.",
+              description: "Permanently erase all local accounts, transactions, categories, budgets, and preferences on this device.",
               icon: Icons.phonelink_erase_rounded,
               onTap: () => deleteAllDataFlow(context),
             ),

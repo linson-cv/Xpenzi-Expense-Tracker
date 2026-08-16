@@ -18,6 +18,7 @@ import 'package:budget/widgets/textWidgets.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 
 class OfflineIntelligencePage extends StatefulWidget {
   const OfflineIntelligencePage({super.key});
@@ -39,7 +40,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
   Future<void> _checkPermission() async {
     setState(() => isCheckingPermission = true);
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
-      bool status = await requestReadNotificationPermission();
+      bool status = await NotificationListenerService.isPermissionGranted();
       if (mounted) {
         setState(() {
           isPermissionGranted = status;

@@ -130,7 +130,7 @@ Future initNotificationScanning() async {
   notificationListenerSubscription?.cancel();
   if (appStateSettings["notificationScanning"] != true) return;
 
-  bool status = await requestReadNotificationPermission();
+  bool status = await NotificationListenerService.isPermissionGranted();
 
   if (status == true) {
     await populateDefaultScannerTemplatesIfEmpty();

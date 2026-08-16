@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/widgets/timeDigits.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 bool notificationsGlobalEnabled = kIsWeb == false;
@@ -549,7 +550,7 @@ class _NotificationListenerPermissionSettingState
 
   Future _checkStatus() async {
     if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
-    bool status = await requestReadNotificationPermission();
+    bool status = await NotificationListenerService.isPermissionGranted();
     if (mounted) {
       setState(() {
         isPermissionGranted = status;
