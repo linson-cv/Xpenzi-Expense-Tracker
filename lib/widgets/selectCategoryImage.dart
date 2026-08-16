@@ -158,52 +158,7 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
                 )
               : const SizedBox.shrink(),
           const SizedBox(height: 5),
-          Center(
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              children: iconObjects.map((IconForCategory image) {
-                bool show = false;
-                if (searchTerm != "") {
-                  for (int i = 0; i < image.tags.length; i++) {
-                    if (image.tags[i]
-                        .toLowerCase()
-                        .contains(searchTerm.toLowerCase())) {
-                      show = true;
-                      break;
-                    }
-                  }
-                } else {
-                  show = true;
-                }
-                if (show) {
-                  return ImageIcon(
-                    sizePadding: 8,
-                    margin: const EdgeInsetsDirectional.all(5),
-                    color: Colors.transparent,
-                    size: 55,
-                    iconPath: "assets/categories/${image.icon}",
-                    onTap: () {
-                      widget.setSelectedImage(image.icon);
-                      if (context.locale.toString() == "en") {
-                        widget.setSelectedTitle(image.mostLikelyCategoryName);
-                      }
-                      setState(() {
-                        selectedImage = image.icon;
-                      });
-                      Future.delayed(const Duration(milliseconds: 70), () {
-                        popRoute(context);
-                        if (widget.next != null) {
-                          widget.next!();
-                        }
-                      });
-                    },
-                    outline: selectedImage == image.icon,
-                  );
-                }
-                return const SizedBox.shrink();
-              }).toList(),
-            ),
-          ),
+          ..._buildIconPacks(context),
           context.locale.toString() == "en"
               ? Padding(
                   padding: const EdgeInsetsDirectional.only(top: 8.0),
@@ -217,12 +172,171 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
             padding: EdgeInsetsDirectional.only(top: 8.0),
             child: SuggestIcon(),
           ),
-          const Padding(
-            padding: EdgeInsetsDirectional.only(top: 8.0),
-            child: ProIconPackBanner(),
-          ),
+          if (appStateSettings["purchaseID"] == null)
+            const Padding(
+              padding: EdgeInsetsDirectional.only(top: 8.0),
+              child: ProIconPackBanner(),
+            ),
         ],
       ),
+    );
+  }
+
+  List<Widget> _buildIconPacks(BuildContext context) {
+    bool isProUser = appStateSettings["purchaseID"] != null;
+
+    // Categorize icons into Starter Pack (Free) and Pro Packs
+    final List<String> starterPackIconNames = [
+      "food.png", "groceries.png", "restaurant.png", "fast-food.png", "coffee.png",
+      "shopping-bag.png", "cart.png", "gift.png", "clothing.png", "t-shirt.png",
+      "car.png", "bus.png", "train.png", "fuel.png", "taxi.png",
+      "home.png", "electricity.png", "water.png", "wifi.png", "phone.png",
+      "salary.png", "wallet.png", "cash.png", "bank.png", "money-bag.png",
+      "entertainment.png", "movie.png", "popcorn.png", "game-controller.png",
+      "health.png", "medicine.png", "hospital.png", "fitness.png", "gym.png",
+      "education.png", "book.png", "school.png", "travel.png", "flight.png",
+      "credit-card.png", "savings.png", "piggy-bank.png", "receipt.png",
+    ];
+
+    List<IconForCategory> filtered = iconObjects.where((IconForCategory image) {
+      if (searchTerm.isEmpty) return true;
+      return image.tags.any((t) => t.toLowerCase().contains(searchTerm.toLowerCase()));
+    }).toList();
+
+    if (searchTerm.isNotEmpty) {
+      return [
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            children: filtered.map((image) => _buildIconTile(image, isProUser, starterPackIconNames)).toList(),
+          ),
+        ),
+      ];
+    }
+
+    List<IconForCategory> starterPack = [];
+    List<IconForCategory> proPack = [];
+
+    for (var icon in filtered) {
+      if (starterPackIconNames.contains(icon.icon) || starterPack.length < 35) {
+        starterPack.add(icon);
+      } else {
+        proPack.add(icon);
+      }
+    }
+
+    return [
+      _buildPackHeader(context, title: "Starter Collection", isPro: false),
+      const SizedBox(height: 4),
+      Center(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          children: starterPack.map((image) => _buildIconTile(image, isProUser, starterPackIconNames, isFreeCollection: true)).toList(),
+        ),
+      ),
+      const SizedBox(height: 12),
+      _buildPackHeader(context, title: "Pro Icon Collection", isPro: true),
+      const SizedBox(height: 4),
+      Center(
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          children: proPack.map((image) => _buildIconTile(image, isProUser, starterPackIconNames, isFreeCollection: false)).toList(),
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildPackHeader(BuildContext context, {required String title, required bool isPro}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      child: Row(
+        children: [
+          TextFont(
+            text: title,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            textColor: getColor(context, "textLight"),
+          ),
+          if (isPro) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: const TextFont(
+                text: "PRO",
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+                textColor: Colors.white,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconTile(IconForCategory image, bool isProUser, List<String> starterPackNames, {bool isFreeCollection = false}) {
+    bool isLocked = !isProUser && !isFreeCollection && !starterPackNames.contains(image.icon);
+
+    return Stack(
+      children: [
+        ImageIcon(
+          sizePadding: 8,
+          margin: const EdgeInsetsDirectional.all(5),
+          color: Colors.transparent,
+          size: 55,
+          iconPath: "assets/categories/${image.icon}",
+          onTap: () {
+            if (isLocked) {
+              pushRoute(
+                context,
+                const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
+              );
+              return;
+            }
+            widget.setSelectedImage(image.icon);
+            if (context.locale.toString() == "en") {
+              widget.setSelectedTitle(image.mostLikelyCategoryName);
+            }
+            setState(() {
+              selectedImage = image.icon;
+            });
+            Future.delayed(const Duration(milliseconds: 70), () {
+              popRoute(context);
+              if (widget.next != null) {
+                widget.next!();
+              }
+            });
+          },
+          outline: selectedImage == image.icon,
+        ),
+        if (isLocked)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 3,
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.lock_rounded,
+                size: 11,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
