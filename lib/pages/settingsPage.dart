@@ -40,7 +40,10 @@ import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:budget/pages/errorLogsPage.dart';
 import 'package:budget/pages/faqPage.dart';
 
+import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
+import 'package:budget/widgets/button.dart';
+import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/importDB.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/notificationsSettings.dart';
@@ -71,7 +74,6 @@ import 'package:provider/provider.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
 
@@ -1156,44 +1158,21 @@ class SettingsPageContent extends StatelessWidget {
           ),
 
           AnimatedExpanded(
-            expand: searchValue.trim().isEmpty || 
-                    _match("Intelligent & Automation", "", ["ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification"]) || 
-                    _match("Offline Intelligence", "", ["offline", "sms", "notification", "scan", "parser", "bank alerts"]) || 
-                    _match("Advanced Automation", "", ["mail", "email", "automation", "read emails", "parse"]) || 
-                    _match("Xpenzi Intelligence", "", ["ai", "intelligence", "gemini", "smart", "assistant"]),
-            child: SettingsGroupCard(
-              title: "Intelligent & Automation",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.auto_awesome_outlined
-                  : Icons.auto_awesome_rounded,
-              children: [
-                SettingsContainerOpenPage(
-                  openPage: const OfflineIntelligencePage(),
-                  title: "Auto-Detect Bank SMS & Alerts",
-                  description: "100% Private on-device bank SMS & payment notification parser",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.sms_outlined
-                      : Icons.sms_rounded,
-                ),
-                const Divider(height: 1),
-                SettingsContainerOpenPage(
-                  openPage: const AiSettingsPage(),
-                  title: "Xpenzi Intelligence",
-                  description: "Google Gemini AI model, category suggestions, and custom prompt rules",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.auto_awesome_outlined
-                      : Icons.auto_awesome_rounded,
-                ),
-                const Divider(height: 1),
-                SettingsContainerOpenPage(
-                  openPage: const AutoTransactionsPageEmail(),
-                  title: "Advanced Automation",
-                  description: "Connect mailbox to automatically track bank transaction receipts",
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.mark_email_read_outlined
-                      : Icons.mark_email_read_rounded,
-                ),
-              ],
+            expand: _match("Intelligent & Automation", "Offline intelligence, Gemini AI, email automation", [
+              "ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence"
+            ]),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const IntelligentAutomationSettingsSubPage(),
+                title: "Intelligent & Automation",
+                description: "Offline intelligence, Gemini AI, email automation",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.auto_awesome_outlined
+                    : Icons.auto_awesome_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
             ),
           ),
 
@@ -1779,6 +1758,54 @@ class NotificationsSettingsSubPage extends StatelessWidget {
   }
 }
 
+class IntelligentAutomationSettingsSubPage extends StatelessWidget {
+  const IntelligentAutomationSettingsSubPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PageFramework(
+      title: "Intelligent & Automation",
+      dragDownToDismiss: true,
+      listWidgets: [
+        SettingsGroupCard(
+          title: "Intelligent & Automation",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.auto_awesome_outlined
+              : Icons.auto_awesome_rounded,
+          children: [
+            SettingsContainerOpenPage(
+              openPage: const OfflineIntelligencePage(),
+              title: "Auto-Detect Bank SMS & Alerts",
+              description: "100% Private on-device bank SMS & payment notification parser",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.sms_outlined
+                  : Icons.sms_rounded,
+            ),
+            const Divider(height: 1),
+            SettingsContainerOpenPage(
+              openPage: const AiSettingsPage(),
+              title: "Xpenzi Intelligence",
+              description: "Google Gemini AI model, category suggestions, and custom prompt rules",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.auto_awesome_outlined
+                  : Icons.auto_awesome_rounded,
+            ),
+            const Divider(height: 1),
+            SettingsContainerOpenPage(
+              openPage: const AutoTransactionsPageEmail(),
+              title: "Advanced Automation",
+              description: "Connect mailbox to automatically track bank transaction receipts",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.mark_email_read_outlined
+                  : Icons.mark_email_read_rounded,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class ImportExportSettingsSubPage extends StatelessWidget {
   const ImportExportSettingsSubPage({super.key});
 
@@ -1813,6 +1840,117 @@ class ImportExportSettingsSubPage extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+void deleteAllDataFlow(BuildContext context) {
+  openPopup(
+    context,
+    title: "erase-everything".tr(),
+    description: "erase-everything-description".tr(),
+    icon: appStateSettings["outlinedIcons"]
+        ? Icons.warning_outlined
+        : Icons.warning_rounded,
+    onSubmit: () async {
+      popRoute(context);
+      openBottomSheet(
+        context,
+        const EraseDataConfirmationPopup(),
+      );
+    },
+    onSubmitLabel: "erase".tr(),
+    onCancelLabel: "cancel".tr(),
+    onCancel: () {
+      popRoute(context);
+    },
+  );
+}
+
+Future clearDatabase(BuildContext context) async {
+  openLoadingPopup(context);
+  await Future.wait([database.deleteEverything(), sharedPreferences.clear()]);
+  await database.close();
+  popRoute(context);
+  restartAppPopup(context);
+}
+
+class EraseDataConfirmationPopup extends StatefulWidget {
+  const EraseDataConfirmationPopup({super.key});
+  @override
+  State<EraseDataConfirmationPopup> createState() => _EraseDataConfirmationPopupState();
+}
+
+class _EraseDataConfirmationPopupState extends State<EraseDataConfirmationPopup> {
+  String typedText = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupFramework(
+      title: "erase-everything-warning".tr(),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10),
+            child: TextFont(
+              textAlign: TextAlign.center,
+              text: "To confirm, please type \"DELETE\" below.",
+              fontSize: 16.5,
+              maxLines: 100,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: TextInput(
+              labelText: "Type DELETE",
+              onChanged: (val) {
+                setState(() {
+                  typedText = val.trim();
+                });
+              },
+              autoFocus: true,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              runSpacing: 10,
+              children: [
+                IntrinsicWidth(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Button(
+                      color: Theme.of(context).colorScheme.tertiaryContainer,
+                      textColor: Theme.of(context).colorScheme.onTertiaryContainer,
+                      label: "cancel".tr(),
+                      onTap: () {
+                        popRoute(context);
+                      },
+                    ),
+                  ),
+                ),
+                IntrinsicWidth(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Button(
+                      color: typedText == "DELETE" ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      textColor: typedText == "DELETE" ? Theme.of(context).colorScheme.onError : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      label: "erase".tr(),
+                      onTap: () {
+                        if (typedText == "DELETE") {
+                          popRoute(context);
+                          clearDatabase(context);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

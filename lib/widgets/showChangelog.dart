@@ -26,9 +26,14 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.4
+    (A) Notification Engine Architecture: Extracted background SMS & push notification processing into a dedicated, modular engine
+    (A) Google Sign-In & Drive OAuth Resolution: Configured explicit serverClientId for seamless Google Drive and Gmail scope authorization
+    (A) Settings & Advanced Automation Layout: Aligned card padding, border radii, and visual styling across Intelligent & Automation settings
     < 1.2.3
     (A) Startup & Notification Engine Fix: Eliminated mutual recursive permission checking on app launch and background service registration
     (A) Dedicated Data Management & Reset: Placed data erase and cloud backup wipe into a dedicated top-level section in Settings and renamed backup section to Data, Backup & Sync
+    (A) Streamlined Explore Hub: Disabled redundant Transactions card by default (customizable via Explore Edit mode)
     < 1.2.2
     (A) Unified Notifications Screen: Redesigned notification settings with cohesive group cards matching app design aesthetics
     (A) Notification Background Capture & Battery Optimization: Added direct settings prompt to disable Android battery optimization for uninterrupted background transaction listening

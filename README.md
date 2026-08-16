@@ -70,6 +70,32 @@ Xpenzi: Expense Tracker is a full-fledged, feature-rich application designed to 
 
 ---
 
+## App Links
+
+Automate transaction entry from external apps (e.g. **Tasker**, **Shortcuts**, **MacroDroid**, **Automate**, or Web scripts) using standard URL schemes.
+
+### 🌐 URL Format & Endpoints
+
+| Endpoint | Action | Example |
+| :--- | :--- | :--- |
+| `addTransaction` | Inserts the transaction directly into the database with a flash notification. | `xpenzi://addTransaction?title=Coffee&amount=-4.50&category=Dining` |
+| `addTransactionRoute` | Opens the Add Transaction screen with fields pre-populated. | `xpenzi://addTransactionRoute?title=Dinner&amount=-35.00&account=Main` |
+
+### 🛠 Supported Query Parameters
+
+| Parameter | Type / Description | Example |
+| :--- | :--- | :--- |
+| `amount` | Transaction value (negative for expense, positive for income). | `amount=-14.99` |
+| `title` / `name` | Transaction title or merchant name. | `title=Supermarket` |
+| `note` / `notes` | Note or memo. | `note=Weekly+groceries` |
+| `category` / `categoryPk` | Target category name or primary key. | `category=Groceries` |
+| `subcategory` / `subcategoryPk` | Target subcategory name or primary key. | `subcategory=Fruits` |
+| `account` / `wallet` / `walletPk` | Account/Wallet name or primary key. | `account=Bank+Account` |
+| `date` / `dateCreated` | Date string (ISO 8601 or standard date format). | `date=2026-08-16` |
+| `messageToParse` | Raw SMS or notification text to run through on-device parser. | `messageToParse=Paid+Rs.500+at+Store` |
+
+---
+
 ## Bundled Packages
 
 This repository contains, bundled in, modified versions of packages listed below. They can be found in the folder `/budget/packages`

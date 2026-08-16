@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:budget/functions.dart';
@@ -18,6 +19,7 @@ import 'package:budget/widgets/textWidgets.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 
 class OfflineIntelligencePage extends StatefulWidget {
@@ -30,11 +32,25 @@ class OfflineIntelligencePage extends StatefulWidget {
 class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
   bool isPermissionGranted = false;
   bool isCheckingPermission = true;
+  StreamSubscription<ServiceNotificationEvent>? _uiNotificationSub;
 
   @override
   void initState() {
     super.initState();
     _checkPermission();
+    if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
+      _uiNotificationSub = NotificationListenerService.notificationsStream.listen((event) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _uiNotificationSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkPermission() async {
@@ -408,6 +424,55 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
               },
             ),
             const SizedBox(height: 6),
+          ],
+        ),
+
+        // Diagnostic & Service Control Card
+        SettingsGroupCard(
+          title: "Service Control & Force Re-Scan",
+          icon: Icons.sync_rounded,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFont(
+                    text:
+                        "If Android froze the background listener or a notification arrived while the app was closed, use the actions below to immediately re-initialize the OS event stream or pull notifications.",
+                    fontSize: 13,
+                    textColor: getColor(context, "textLight"),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Button(
+                          label: "Re-bind OS Listener",
+                          icon: Icons.sync_rounded,
+                          onTap: () async {
+                            initNotificationScanning();
+                            await _checkPermission();
+                            if (mounted) {
+                              openSnackbar(
+                                SnackbarMessage(
+                                  title: "OS Listener Re-bound",
+                                  description: isScanningActive
+                                      ? "Real-time notification stream is active and listening"
+                                      : "Notification access permission required",
+                                  icon: Icons.check_circle_rounded,
+                                ),
+                              );
+                              setState(() {});
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
 

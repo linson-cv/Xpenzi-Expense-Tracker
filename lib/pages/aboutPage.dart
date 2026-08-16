@@ -1,29 +1,24 @@
 import 'dart:math';
+import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
-import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/debugPage.dart';
 import 'package:budget/pages/detailedChangelogPage.dart';
 import 'package:budget/pages/onBoardingPage.dart';
-import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
-import 'package:budget/widgets/framework/popupFramework.dart';
+import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/moreIcons.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
-import 'package:budget/widgets/openPopup.dart';
-import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/showChangelog.dart';
 import 'package:budget/widgets/tappable.dart';
-import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:budget/colors.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -196,7 +191,7 @@ class AboutPageState extends State<AboutPage> {
         padding:
             const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
         child: AboutInfoBox(
-          title: "Community & Global Translators",
+          title: "community-translations".tr(),
           showLink: false,
           list: const [
             "Special thanks to all open-source contributors and community volunteers who helped translate and test Xpenzi in over 20 languages worldwide.",
@@ -340,19 +335,6 @@ class AboutPageState extends State<AboutPage> {
               ),
               ...majorTools,
               const SizedBox(height: 15),
-              Padding(
-                padding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: 15, vertical: 7),
-                child: Center(
-                  child: TextFont(
-                    text: "community-translations".tr(),
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    textAlign: TextAlign.center,
-                    maxLines: 5,
-                  ),
-                ),
-              ),
               ...communityCredits,
               const SizedBox(height: 20),
             ],
@@ -426,77 +408,6 @@ void openLicensesPage(BuildContext context) {
       applicationVersion: getVersionString(),
       applicationLegalese:
           "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n${"exchange-rate-notice-description".tr()}");
-}
-
-void deleteAllDataFlow(BuildContext context) {
-  openPopup(
-    context,
-    title: "erase-everything".tr(),
-    description: "erase-everything-description".tr(),
-    icon: appStateSettings["outlinedIcons"]
-        ? Icons.warning_outlined
-        : Icons.warning_rounded,
-    onExtraLabel2: "erase-synced-data-and-cloud-backups".tr(),
-    onExtra2: () {
-      popRoute(context);
-      openBottomSheet(
-        context,
-        PopupFramework(
-          title: "erase-cloud-data".tr(),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  bottom: 18,
-                  start: 5,
-                  end: 5,
-                ),
-                child: TextFont(
-                  text: "erase-cloud-data-description".tr(),
-                  fontSize: 16.5,
-                  textAlign: TextAlign.center,
-                  maxLines: 10,
-                ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: SyncCloudBackupButton(
-                      onTap: () async {
-                        popRoute(context);
-                        pushRoute(context, const AccountsPage());
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: BackupsCloudBackupButton(
-                      onTap: () async {
-                        popRoute(context);
-                        pushRoute(context, const AccountsPage());
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-    onSubmit: () async {
-      popRoute(context);
-      openBottomSheet(
-        context,
-        const EraseDataConfirmationPopup(),
-      );
-    },
-    onSubmitLabel: "erase".tr(),
-    onCancelLabel: "cancel".tr(),
-    onCancel: () {
-      popRoute(context);
-    },
-  );
 }
 
 class AboutLinks extends StatelessWidget {
@@ -624,21 +535,12 @@ class AboutDeepLinking extends StatelessWidget {
       title: "deep-linking".tr(),
       showLink: false,
       link:
-          "https://github.com/xpenzi/Xpenzi?tab=readme-ov-file#app-links",
+          "https://github.com/linson-cv/Xpenzi-Expense-Tracker#app-links",
       list: [
         "deep-linking-description".tr(),
       ],
     );
   }
-}
-
-// Note that this is different than forceDeleteDB()
-Future clearDatabase(BuildContext context) async {
-  openLoadingPopup(context);
-  await Future.wait([database.deleteEverything(), sharedPreferences.clear()]);
-  await database.close();
-  popRoute(context);
-  restartAppPopup(context);
 }
 
 class AboutInfoBox extends StatelessWidget {
@@ -712,86 +614,6 @@ class AboutInfoBox extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class EraseDataConfirmationPopup extends StatefulWidget {
-  const EraseDataConfirmationPopup({super.key});
-  @override
-  State<EraseDataConfirmationPopup> createState() => _EraseDataConfirmationPopupState();
-}
-
-class _EraseDataConfirmationPopupState extends State<EraseDataConfirmationPopup> {
-  String typedText = "";
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupFramework(
-      title: "erase-everything-warning".tr(),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10),
-            child: TextFont(
-              textAlign: TextAlign.center,
-              text: "To confirm, please type \"DELETE\" below.",
-              fontSize: 16.5,
-              maxLines: 100,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            child: TextInput(
-              labelText: "Type DELETE",
-              onChanged: (val) {
-                setState(() {
-                  typedText = val.trim();
-                });
-              },
-              autoFocus: true,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              runSpacing: 10,
-              children: [
-                IntrinsicWidth(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Button(
-                      color: Theme.of(context).colorScheme.tertiaryContainer,
-                      textColor: Theme.of(context).colorScheme.onTertiaryContainer,
-                      label: "cancel".tr(),
-                      onTap: () {
-                        popRoute(context);
-                      },
-                    ),
-                  ),
-                ),
-                IntrinsicWidth(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Button(
-                      color: typedText == "DELETE" ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      textColor: typedText == "DELETE" ? Theme.of(context).colorScheme.onError : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
-                      label: "erase".tr(),
-                      onTap: () {
-                        if (typedText == "DELETE") {
-                          popRoute(context);
-                          clearDatabase(context);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
