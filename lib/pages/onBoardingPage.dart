@@ -2,6 +2,7 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/generatePreviewData.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/pages/addBudgetPage.dart';
+import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/settings.dart';
@@ -349,6 +350,19 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
               TransactionWallet? primaryWallet = snapshot
                   .data?.indexedByPk[appStateSettings["selectedWalletPk"]];
               if (primaryWallet != null) {
+                String currencyCode = (primaryWallet.currency ?? "").toUpperCase();
+                String currencySymbol = "";
+                if (currenciesJSON[primaryWallet.currency] != null &&
+                    currenciesJSON[primaryWallet.currency]["Symbol"] != null) {
+                  currencySymbol = currenciesJSON[primaryWallet.currency]["Symbol"];
+                }
+                String currencyDisplay = currencySymbol.isNotEmpty && currencySymbol != currencyCode
+                    ? "$currencyCode ($currencySymbol)"
+                    : currencyCode;
+                String currentLocale = appStateSettings["locale"]?.toString() ?? "System";
+                String languageDisplay = languageDisplayFilter(currentLocale);
+                int currentDecimals = appStateSettings["amountDecimals"] ?? 2;
+
                 return Padding(
                   padding: const EdgeInsetsDirectional.only(top: 25),
                   child: Column(
@@ -380,6 +394,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                                       database.createOrUpdateWallet(
                                           primaryWallet.copyWith(
                                               currency: Value(selectedCurrency)));
+                                      setState(() {});
                                     },
                                     initialCurrency: primaryWallet.currency,
                                     onHasFocus: () {},
@@ -392,12 +407,16 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                             },
                           );
                         },
-                        text: "change-currency".tr(),
+                        text: currencyDisplay.isNotEmpty
+                            ? "${"change-currency".tr()}: $currencyDisplay"
+                            : "change-currency".tr(),
                       ),
                       const SizedBox(height: 10),
                       LowKeyButton(
-                        onTap: () => openLanguagePicker(context),
-                        text: "language".tr(),
+                        onTap: () async {
+                          openLanguagePicker(context);
+                        },
+                        text: "${"language".tr()}: $languageDisplay",
                       ),
                       const SizedBox(height: 10),
                       LowKeyButton(
@@ -413,6 +432,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                                 onChanged: (value) async {
                                   updateSettings("amountDecimals", value,
                                       updateGlobalState: false);
+                                  setState(() {});
                                   await Future.delayed(
                                       const Duration(milliseconds: 50));
                                   popRoute(context);
@@ -421,7 +441,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                             ),
                           );
                         },
-                        text: "decimal-precision".tr(),
+                        text: "${"decimal-precision".tr()}: $currentDecimals",
                       ),
                     ],
                   ),

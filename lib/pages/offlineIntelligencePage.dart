@@ -278,6 +278,9 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                         updateGlobalState: true);
                     await populateDefaultScannerTemplatesIfEmpty();
                     initNotificationScanning();
+                    Future.delayed(const Duration(milliseconds: 400), () {
+                      if (mounted) promptBatteryOptimizationPopup(context);
+                    });
                   }
                   if (mounted) {
                     setState(() {

@@ -26,10 +26,19 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.2
+    (A) Unified Notifications Screen: Redesigned notification settings with cohesive group cards matching app design aesthetics
+    (A) Data Management & Reset Section: Moved full data erase & database reset under Settings > Import & Export with clean About Page focus
+    (A) Notification Background Capture & Battery Optimization: Added direct settings prompt to disable Android battery optimization for uninterrupted background transaction listening
+    (A) Enhanced Direct Auto-Insert: Fixed amount sign formatting and category fallbacks for instant silent notification recording
+    (A) Expanded Bank SMS Parser: Added comprehensive keyword coverage across international bank alerts, IMPS, NEFT, RTGS, NACH, POS, and mandates
+    (A) Template Studio Save Fix: Hardened template creation & updates with UUID PK generation, validation guards, and error snackbars
+    (A) Onboarding Selected Values Display: Live display of selected currency, language, and decimal precision on onboarding action buttons
+    (A) Account Type Save Option: Instant activation of Save Changes button when selecting account type chips in account editor
+    (A) Google Sign-In & Auth Resilience: Seamless sign-in handling with multi-environment OAuth configuration and graceful cancellation recovery
     < 1.2.1
     (A) Instant Theme Engine: Streamlined application state reconciliation for instantaneous, seamless theme and accent palette transitions
     (A) Universal Database Resilience: Eliminated all single-query exceptions across categories, budgets, and objectives with automatic fallback recovery
-    (A) Refined Template Studio: Always-available Save action and clean, intelligent back navigation
     (A) Enhanced System Back Navigation: Implemented 5-layer back hierarchy preventing premature app exits across dialogs, sheets, and tabs
     (A) Google Services & Web Configuration: Aligned client IDs and isolated platform options to the dedicated Xpenzi project
     < 1.2.0

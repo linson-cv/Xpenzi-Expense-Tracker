@@ -3,6 +3,7 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:budget/pages/aboutPage.dart';
+import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/billSplitter.dart';
 import 'package:budget/pages/budgetsListPage.dart';
@@ -1790,6 +1791,28 @@ class ImportExportSettingsSubPage extends StatelessWidget {
             GoogleAccountLoginButton(
               isOutlinedButton: false,
               forceButtonName: "google-drive".tr(),
+            ),
+          ],
+        ),
+
+        // Reset & Data Wipe Section
+        SettingsGroupCard(
+          title: "Reset & Data Management",
+          icon: Icons.restart_alt_rounded,
+          children: [
+            SettingsContainer(
+              title: "Erase Local Data",
+              description: "Permanently erase all local accounts, transactions, and app settings on this device.",
+              icon: Icons.phonelink_erase_rounded,
+              onTap: () => deleteAllDataFlow(context),
+            ),
+            SettingsContainer(
+              title: "Erase Synced Cloud Backups",
+              description: "Manage and delete cloud backups and synchronized data from Google Drive.",
+              icon: Icons.cloud_off_rounded,
+              onTap: () {
+                pushRoute(context, const AccountsPage());
+              },
             ),
           ],
         ),

@@ -2,6 +2,8 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/notificationsSettings.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
+import 'package:budget/functions.dart';
+import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/statusBox.dart';
 import 'package:budget/widgets/util/onAppResume.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -62,11 +64,30 @@ class _NotificationsPageState extends State<NotificationsPage> {
           AnimatedOpacity(
             opacity: notificationsEnabled ? 1 : 0.5,
             duration: const Duration(milliseconds: 300),
-            child: const Column(
+            child: Column(
               children: [
-                NotificationListenerPermissionSetting(),
-                DailyNotificationsSettings(),
-                UpcomingTransactionsNotificationsSettings(),
+                if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid)
+                  SettingsGroupCard(
+                    title: "Offline Intelligence & Bank Alerts",
+                    icon: Icons.notifications_active_rounded,
+                    children: const [
+                      NotificationListenerPermissionSetting(),
+                    ],
+                  ),
+                SettingsGroupCard(
+                  title: "Daily Reminders",
+                  icon: Icons.alarm_on_rounded,
+                  children: const [
+                    DailyNotificationsSettings(),
+                  ],
+                ),
+                SettingsGroupCard(
+                  title: "Upcoming Bills & Subscriptions",
+                  icon: Icons.event_repeat_rounded,
+                  children: const [
+                    UpcomingTransactionsNotificationsSettings(),
+                  ],
+                ),
               ],
             ),
           )

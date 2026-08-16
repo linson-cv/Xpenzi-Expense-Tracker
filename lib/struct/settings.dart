@@ -4,8 +4,6 @@ import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
 import 'package:budget/pages/editHomePage.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
-import 'package:budget/widgets/tappable.dart';
-import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/transactionEntry/transactionEntry.dart';
 import 'package:budget/widgets/watchAllWallets.dart';
 import 'package:drift/isolate.dart';
@@ -274,10 +272,6 @@ void openLanguagePicker(BuildContext context) {
       title: "language".tr(),
       child: Column(
         children: [
-          const Padding(
-            padding: EdgeInsetsDirectional.only(bottom: 10),
-            child: TranslationsHelp(),
-          ),
           RadioItems(
             items: [
               "System",
@@ -401,82 +395,4 @@ Future backupSettings() async {
     ),
   );
   print("Created settings entry in DB");
-}
-
-class TranslationsHelp extends StatelessWidget {
-  const TranslationsHelp({
-    super.key,
-    this.showIcon = true,
-    this.backgroundColor,
-  });
-
-  final bool showIcon;
-  final Color? backgroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tappable(
-      onTap: () {
-        openUrl('mailto:nav.lin.dev@gmail.com');
-      },
-      onLongPress: () {
-        copyToClipboard("nav.lin.dev@gmail.com");
-      },
-      color: backgroundColor ??
-          Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
-      borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
-      child: Padding(
-        padding:
-            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 12),
-        child: Row(
-          children: [
-            if (showIcon)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 12),
-                child: Icon(
-                  appStateSettings["outlinedIcons"]
-                      ? Icons.connect_without_contact_outlined
-                      : Icons.connect_without_contact_rounded,
-                  color: Theme.of(context).colorScheme.secondary,
-                  size: 31,
-                ),
-              ),
-            Expanded(
-              child: TextFont(
-                text: "",
-                textColor: getColor(context, "black"),
-                textAlign:
-                    showIcon == true ? TextAlign.start : TextAlign.center,
-                richTextSpan: [
-                  TextSpan(
-                    text: "${"translations-help".tr()} ",
-                    style: TextStyle(
-                      color: getColor(context, "black"),
-                      fontFamily: appStateSettings["font"],
-                      fontFamilyFallback: const ['Inter'],
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'nav.lin.dev@gmail.com',
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      decorationStyle: TextDecorationStyle.solid,
-                      decorationColor:
-                          getColor(context, "unPaidOverdue").withValues(alpha: 0.8),
-                      color:
-                          getColor(context, "unPaidOverdue").withValues(alpha: 0.8),
-                      fontFamily: appStateSettings["font"],
-                      fontFamilyFallback: const ['Inter'],
-                    ),
-                  ),
-                ],
-                maxLines: 5,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

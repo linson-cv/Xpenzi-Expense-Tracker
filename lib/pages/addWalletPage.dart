@@ -133,8 +133,11 @@ class _AddWalletPageState extends State<AddWalletPage> {
   void populateCurrencies() {
     Future.delayed(Duration.zero, () async {
       setState(() {
-        //Set to false because we can't save until we made some changes
-        canAddWallet = false;
+        if (widget.wallet == null) {
+          canAddWallet = false;
+        } else {
+          determineBottomButton();
+        }
         currencies = currenciesJSON;
       });
     });
@@ -166,6 +169,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
           : HexColor(widget.wallet!.colour);
       selectedCurrency = widget.wallet!.currency ?? "usd";
       selectedDecimals = widget.wallet!.decimals;
+      canAddWallet = true;
       // Restore account type from currencyFormat field
       if (widget.wallet!.currencyFormat != null &&
           ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
@@ -487,6 +491,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
                               setState(() {
                                 selectedAccountType = type["name"] as String;
                               });
+                              determineBottomButton();
                             }
                           },
                         ),

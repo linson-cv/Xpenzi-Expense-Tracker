@@ -220,7 +220,7 @@ Future<bool> signInGoogle(
       await updateSettings("hasSignedIn", false, updateGlobalState: false);
     }
     refreshUIAfterLoginChange();
-    throw ("Error signing in");
+    return false;
   }
 }
 

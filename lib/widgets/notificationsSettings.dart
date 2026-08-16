@@ -165,12 +165,6 @@ class _DailyNotificationsSettingsState
                 ),
               ],
             )),
-        Divider(
-          indent: 20,
-          endIndent: 20,
-          thickness: 2,
-          color: getColor(context, "dividerColor"),
-        ),
       ],
     );
   }
@@ -223,7 +217,7 @@ class _UpcomingTransactionsNotificationsSettingsState
               padding:
                   const EdgeInsetsDirectional.symmetric(horizontal: 0, vertical: 0),
               margin:
-                  const EdgeInsetsDirectional.symmetric(horizontal: 20, vertical: 10),
+                  const EdgeInsetsDirectional.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 borderRadius: BorderRadiusDirectional.circular(
                     getPlatform() == PlatformOS.isIOS ? 10 : 15),

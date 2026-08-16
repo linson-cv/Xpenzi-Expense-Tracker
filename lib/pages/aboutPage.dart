@@ -24,7 +24,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -192,251 +191,17 @@ class AboutPageState extends State<AboutPage> {
       ),
     ];
 
-    List<Widget> translators = [
-      const TranslationInfoBox(
-        title: "Italian",
-        list: [
-          "Thomas B.",
-          "Mattia A.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Polish",
-        list: [
-          "MichaÅ‚ S.",
-          "MichaÅ‚ P.",
-          "Kaczusia",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Serbian",
-        list: [
-          "Jovan P.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Swahili",
-        list: [
-          "Anthony K.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "German",
-        list: [
-          "Fabian S.",
-          "Christian R.",
-          "Samuel R.",
-          "Bettina S.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Arabic",
-        list: [
-          "Dorra Y.",
-          "Ammar N.",
-          "Hussain A.",
-          "Mahmoud E.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Portuguese",
-        list: [
-          "Alexander G.",
-          "Jean J.",
-          "JoÃ£o P.",
-          "Junior M.",
-          "Leandro",
-          "Xavier B.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Bulgarian",
-        list: [
-          "Ð”ÐµÐ½Ð¸ÑÐ»Ð°Ð² C.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Chinese (Simplified)",
-        list: [
-          "Clyde",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Chinese (Traditional)",
-        list: [
-          "qazlll456",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Hindi",
-        list: [
-          "Dikshant S.",
-          "Nikunj K.",
-          "Darshan L.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Vietnamese",
-        list: [
-          "Ng. Anh",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "French",
-        list: [
-          "Antoine C.",
-          "Fabien H.",
-          "Samuel S.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Indonesian",
-        list: [
-          "Gusairi P.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Ukrainian",
-        list: [
-          "Chris M.",
-          "Yurii S.",
-          "Mariia",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Russian",
-        list: [
-          "Ilya A.",
-          "Konstantin B.",
-          "Dennis Q",
-          "Innokentii B.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Romanian",
-        list: [
-          "Valentin G.",
-          "Tarciziu",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Spanish",
-        list: [
-          "Pablo S.",
-          "Gonzalo R.",
-          "Ramon M.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Swedish",
-        list: [
-          "Anna M.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Danish",
-        list: [
-          "Mittheo",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Turkish",
-        list: [
-          "Serdar A.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Slovak",
-        list: [
-          "Igor V.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Macedonian",
-        list: [
-          "Andrej A.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Czech",
-        list: [
-          "Kamil T.",
-          "Hana B.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Hebrew",
-        list: [
-          "Happy Bear",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Afrikaans",
-        list: [
-          "AndrÃ¨ B.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Filipino",
-        list: [
-          "Waren G.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Tamil",
-        list: [
-          "Mohamed A.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Japanese",
-        list: [
-          "Tetta N.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Hungarian",
-        list: [
-          "DÃ¶brÃ¶ntei S.",
-          "Myra S.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Thai",
-        list: [
-          "Jateniphat U.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Gujarati",
-        list: [
-          "Darshan L.",
-          "Harsh S.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Finnish",
-        list: [
-          "Mirko J.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Dutch",
-        list: [
-          "Niels S.",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Malay",
-        list: [
-          "ã‚¢ãƒªãƒ•",
-        ],
-      ),
-      const TranslationInfoBox(
-        title: "Sinhala",
-        list: [
-          "Bhagya S.",
-        ],
+    List<Widget> communityCredits = [
+      Padding(
+        padding:
+            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
+        child: AboutInfoBox(
+          title: "Community & Global Translators",
+          showLink: false,
+          list: const [
+            "Special thanks to all open-source contributors and community volunteers who helped translate and test Xpenzi in over 20 languages worldwide.",
+          ],
+        ),
       ),
     ];
 
@@ -451,28 +216,6 @@ class AboutPageState extends State<AboutPage> {
             ? max(0, (widthOfScreen - maxWidth) / 2)
             : getHorizontalPaddingConstrained(context);
       },
-      sliversBefore: false,
-      slivers: [
-        SliverPadding(
-          padding: fullScreenLayout
-              ? EdgeInsets.zero
-              : const EdgeInsetsDirectional.symmetric(horizontal: 7.5),
-          sliver: SliverMasonryGrid(
-            gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: fullScreenLayout ? 4 : 2,
-            ),
-            mainAxisSpacing: 0,
-            crossAxisSpacing: 0,
-            delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                return translators[index];
-              },
-              childCount: translators.length,
-            ),
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
-      ],
       listWidgets: fullScreenLayout
           ? [
               LayoutBuilder(
@@ -505,6 +248,11 @@ class AboutPageState extends State<AboutPage> {
                               Row(children: [
                                 Expanded(child: graphicAcknowledge)
                               ]),
+                            const HorizontalBreak(
+                                padding: EdgeInsetsDirectional.symmetric(
+                                    horizontal: 10, vertical: 20)),
+                            for (Widget credit in communityCredits)
+                              Row(children: [Expanded(child: credit)]),
                           ],
                         ),
                       ),
@@ -518,10 +266,6 @@ class AboutPageState extends State<AboutPage> {
               Padding(
                 padding: const EdgeInsetsDirectional.symmetric(horizontal: 7.5),
                 child: SpreadExpandFlex(majorTools: majorTools, maxPerRow: 3),
-              ),
-              const HorizontalBreak(
-                padding: EdgeInsetsDirectional.only(
-                    start: 10, end: 10, top: 25, bottom: 10),
               ),
             ]
           : [
@@ -595,13 +339,13 @@ class AboutPageState extends State<AboutPage> {
                 ),
               ),
               ...majorTools,
-              Container(height: 15),
+              const SizedBox(height: 15),
               Padding(
                 padding: const EdgeInsetsDirectional.symmetric(
                     horizontal: 15, vertical: 7),
                 child: Center(
                   child: TextFont(
-                    text: "translations".tr().capitalizeFirst,
+                    text: "community-translations".tr(),
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     textAlign: TextAlign.center,
@@ -609,14 +353,8 @@ class AboutPageState extends State<AboutPage> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsetsDirectional.only(
-                    start: 15, end: 15, top: 5),
-                child: TranslationsHelp(
-                  showIcon: false,
-                  backgroundColor: containerColor,
-                ),
-              ),
+              ...communityCredits,
+              const SizedBox(height: 20),
             ],
     );
   }
@@ -824,17 +562,6 @@ class AboutLinks extends StatelessWidget {
                   : Icons.account_balance_rounded,
               text: "view-licenses-and-legalese".tr(),
             ),
-            const HorizontalBreak(padding: EdgeInsetsDirectional.zero),
-            _buildTappable(
-              context: context,
-              isExternalLink: false,
-              onTap: () => deleteAllDataFlow(context),
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.delete_sweep_outlined
-                  : Icons.delete_sweep_rounded,
-              text: "delete-all-data".tr(),
-              color: Colors.red.withValues(alpha: 0.4),
-            ),
           ],
         ),
       ),
@@ -912,27 +639,6 @@ Future clearDatabase(BuildContext context) async {
   await database.close();
   popRoute(context);
   restartAppPopup(context);
-}
-
-class TranslationInfoBox extends StatelessWidget {
-  const TranslationInfoBox({
-    super.key,
-    required this.title,
-    this.list,
-  });
-
-  final String title;
-  final List<String>? list;
-
-  @override
-  Widget build(BuildContext context) {
-    return AboutInfoBox(
-      title: title,
-      list: list,
-      listTextColor: getColor(context, "black").withValues(alpha: 0.5),
-      padding: const EdgeInsetsDirectional.symmetric(horizontal: 7.5, vertical: 5),
-    );
-  }
 }
 
 class AboutInfoBox extends StatelessWidget {

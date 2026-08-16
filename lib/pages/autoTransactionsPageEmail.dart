@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:budget/colors.dart';
-import 'package:budget/database/tables.dart';
+import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:budget/pages/addEmailTemplate.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
@@ -19,6 +19,7 @@ import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
+import 'package:app_settings/app_settings.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/statusBox.dart';
 import 'package:budget/widgets/tappable.dart';
@@ -138,6 +139,30 @@ Future initNotificationScanning() async {
   }
 }
 
+Future<void> promptBatteryOptimizationPopup(BuildContext context) async {
+  openPopup(
+    context,
+    title: "Disable Battery Optimization",
+    icon: Icons.battery_charging_full_rounded,
+    description:
+        "To ensure continuous, real-time background detection of bank SMS & payment alerts when the app is closed, Android requires battery optimization to be turned off for Xpenzi.\n\n• Prevents Android from killing the notification listener\n• Ensures transactions are captured immediately in the background\n\n⚙️ You can customize auto-insert, NLP parsing rules, and templates anytime under Settings > Offline Intelligence.",
+    onSubmitLabel: "Open Battery Settings",
+    onCancelLabel: "Later",
+    onSubmit: () async {
+      popRoute(context);
+      try {
+        await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+      } catch (e) {
+        print("Error opening battery optimization settings: $e");
+        await AppSettings.openAppSettings();
+      }
+    },
+    onCancel: () {
+      popRoute(context);
+    },
+  );
+}
+
 Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
   bool isGranted = await NotificationListenerService.isPermissionGranted();
   if (isGranted) return true;
@@ -160,6 +185,12 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
         print("Error requesting notification permission: $e");
       }
       bool status = await NotificationListenerService.isPermissionGranted();
+      if (status == true) {
+        Future.delayed(const Duration(milliseconds: 400), () {
+          BuildContext? ctx = navigatorKey.currentContext ?? context;
+          promptBatteryOptimizationPopup(ctx);
+        });
+      }
       completer.complete(status);
     },
     onCancel: () {
@@ -185,6 +216,15 @@ Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
       status = await NotificationListenerService.isPermissionGranted();
     }
   }
+
+  if (status == true) {
+    // Automatically enable all essential app-side intelligence settings
+    await updateSettings("notificationScanning", true, updateGlobalState: false);
+    await updateSettings("autoInsertNotificationsDirectly", true, updateGlobalState: false);
+    await populateDefaultScannerTemplatesIfEmpty();
+    initNotificationScanning();
+  }
+
   return status;
 }
 
@@ -343,17 +383,21 @@ Future queueTransactionFromMessage(String messageString,
       String categoryPk = category?.categoryPk ?? "0";
       String walletPk = wallet?.walletPk ?? appStateSettings["selectedWalletPk"] ?? "0";
 
+      // Expenses should have positive amount in database when income: false,
+      // and income transactions have income: true with positive amount
+      double finalAmount = amountDouble.abs();
+
       final int? rowId = await database.createOrUpdateTransaction(
         Transaction(
           transactionPk: "-1",
           name: title,
-          amount: amountDouble,
+          amount: finalAmount,
           note: "Auto-detected notification",
           categoryFk: categoryPk,
           subCategoryFk: null,
           walletFk: walletPk,
           dateCreated: dateTime ?? DateTime.now(),
-          income: isIncome || amountDouble > 0,
+          income: isIncome,
           paid: true,
           skipPaid: false,
           methodAdded: MethodAdded.email,

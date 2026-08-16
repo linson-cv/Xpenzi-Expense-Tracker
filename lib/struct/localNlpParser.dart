@@ -42,7 +42,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   // Strict Transaction Verification: Must contain at least one real transaction keyword
   RegExp transactionVerification = RegExp(
-    r'\b(debited|credited|paid|spent|sent|received|transferred|withdrawn|deposited|refunded|a/c|vpa|txn|ref no|upi ref)\b',
+    r'\b(debited|credited|debit|credit|paid|spent|sent|received|transferred|withdrawn|deposited|refunded|a/c|acct|vpa|txn|ref\s*no|upi\s*ref|imps|neft|rtgs|nach|pos\b|atm\b|autopay|mandate|purchase|charged)\b',
     caseSensitive: false,
   );
   if (!transactionVerification.hasMatch(text)) {

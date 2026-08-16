@@ -83,15 +83,11 @@ class _NotificationPermissionBannerState
                         onTap: () async {
                           bool status = await requestReadNotificationPermission(context: context);
                           if (status) {
-                            await updateSettings(
-                                "notificationScanning", true,
-                                updateGlobalState: false);
-                            initNotificationScanning();
                             openSnackbar(
                               SnackbarMessage(
-                                title: "Notification Access Granted",
+                                title: "Auto-Tracking Enabled",
                                 icon: Icons.check_circle_rounded,
-                                description: "Auto transaction detection enabled.",
+                                description: "Bank SMS & alerts will auto-record. Customize anytime in Settings > Offline Intelligence.",
                               ),
                             );
                           }

@@ -16,6 +16,8 @@ import 'package:budget/widgets/selectChips.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
+import 'package:budget/widgets/openSnackbar.dart';
+import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -391,26 +393,49 @@ class _AddEmailTemplateState extends State<AddEmailTemplate> {
   Future addTemplate() async {
     print("Added template");
     try {
+      ScannerTemplate templateToSave = createTemplate();
+      if (templateToSave.templateName.trim().isEmpty) {
+        openSnackbar(
+          SnackbarMessage(
+            title: "Please enter a template name",
+            icon: Icons.warning_rounded,
+          ),
+        );
+        return;
+      }
       await database.createOrUpdateScannerTemplate(
         insert: widget.scannerTemplate == null,
-        createTemplate(),
+        templateToSave,
       );
       savingHapticFeedback();
       popRoute(context);
     } catch (e) {
       print("Error saving template: $e");
+      openSnackbar(
+        SnackbarMessage(
+          title: "Error saving template",
+          description: e.toString(),
+          icon: Icons.error_outline_rounded,
+        ),
+      );
     }
   }
 
   ScannerTemplate createTemplate() {
+    String templatePk = widget.scannerTemplate?.scannerTemplatePk ?? "";
+    if (templatePk.isEmpty || templatePk == "-1") {
+      templatePk = uuid.v4();
+    }
     return ScannerTemplate(
-      scannerTemplatePk: widget.scannerTemplate?.scannerTemplatePk ?? "-1",
+      scannerTemplatePk: templatePk,
       dateCreated: widget.scannerTemplate?.dateCreated ?? DateTime.now(),
-      dateTimeModified: null,
+      dateTimeModified: DateTime.now(),
       amountTransactionAfter: amountTransactionAfter ?? "",
       amountTransactionBefore: amountTransactionBefore ?? "",
       contains: selectedSubject ?? "",
-      defaultCategoryFk: selectedCategory?.categoryPk ?? widget.scannerTemplate?.defaultCategoryFk ?? "0",
+      defaultCategoryFk: selectedCategory?.categoryPk ??
+          widget.scannerTemplate?.defaultCategoryFk ??
+          "0",
       templateName: selectedName ?? widget.scannerTemplate?.templateName ?? "",
       titleTransactionAfter: titleTransactionAfter ?? "",
       titleTransactionBefore: titleTransactionBefore ?? "",
