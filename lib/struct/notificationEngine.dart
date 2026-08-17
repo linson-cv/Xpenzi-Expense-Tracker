@@ -109,10 +109,51 @@ Future<void> populateDefaultScannerTemplatesIfEmpty() async {
   }
 }
 
+Future<void> updatePersistentBackgroundServiceNotification() async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
+  const int persistentNotificationId = 888123;
+
+  if (appStateSettings["notificationScanning"] == true &&
+      appStateSettings["persistentBackgroundListener"] == true) {
+    try {
+      AndroidNotificationDetails androidDetails = const AndroidNotificationDetails(
+        'persistent_listener_channel',
+        'SMS & Alert Background Monitor',
+        channelDescription: 'Keeps Xpenzi notification listener active in the background for real-time transaction detection',
+        importance: Importance.low,
+        priority: Priority.low,
+        ongoing: true,
+        autoCancel: false,
+        showWhen: false,
+      );
+
+      NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+      );
+
+      await flutterLocalNotificationsPlugin.show(
+        persistentNotificationId,
+        "Xpenzi Auto-Detection Active",
+        "Monitoring bank SMS & payment alerts in real time",
+        notificationDetails,
+      );
+    } catch (e) {
+      print("Error showing persistent background notification: $e");
+    }
+  } else {
+    try {
+      await flutterLocalNotificationsPlugin.cancel(persistentNotificationId);
+    } catch (_) {}
+  }
+}
+
 Future initNotificationScanning() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
   notificationListenerSubscription?.cancel();
-  if (appStateSettings["notificationScanning"] != true) return;
+  if (appStateSettings["notificationScanning"] != true) {
+    await updatePersistentBackgroundServiceNotification();
+    return;
+  }
 
   bool status = await NotificationListenerService.isPermissionGranted();
 
@@ -120,6 +161,7 @@ Future initNotificationScanning() async {
     await populateDefaultScannerTemplatesIfEmpty();
     notificationListenerSubscription =
         NotificationListenerService.notificationsStream.listen(onNotification);
+    await updatePersistentBackgroundServiceNotification();
   }
 }
 
@@ -166,9 +208,13 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
       try {
         await NotificationListenerService.requestPermission();
       } catch (e) {
-        print("Error requesting notification permission: $e");
+        // notification_listener_service plugin platform channel might return null instead of bool on some Android versions
+        print("Notification permission request dispatched: $e");
       }
-      bool status = await NotificationListenerService.isPermissionGranted();
+      bool status = false;
+      try {
+        status = await NotificationListenerService.isPermissionGranted();
+      } catch (_) {}
       if (status == true) {
         Future.delayed(const Duration(milliseconds: 400), () {
           BuildContext? ctx = navigatorKey.currentContext ?? context;
@@ -186,7 +232,11 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
 }
 
 Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
-  bool status = await NotificationListenerService.isPermissionGranted();
+  bool status = false;
+  try {
+    status = await NotificationListenerService.isPermissionGranted();
+  } catch (_) {}
+
   if (status != true) {
     BuildContext? popupContext = context ?? navigatorKey.currentContext;
     if (popupContext != null) {
@@ -195,9 +245,11 @@ Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
       try {
         await NotificationListenerService.requestPermission();
       } catch (e) {
-        print("Error requesting notification permission: $e");
+        print("Notification permission request dispatched: $e");
       }
-      status = await NotificationListenerService.isPermissionGranted();
+      try {
+        status = await NotificationListenerService.isPermissionGranted();
+      } catch (_) {}
     }
   }
 
@@ -403,16 +455,16 @@ Future queueTransactionFromMessage(String messageString,
   // ─── Deduplication Check (In-Memory Key + Database Check) ─────────────────
   final String dedupKey = "${title.trim().toLowerCase()}_${absoluteAmount.toStringAsFixed(2)}";
   final DateTime? lastSeen = _recentlyProcessedNotificationKeys[dedupKey];
-  if (lastSeen != null && eventTime.difference(lastSeen).inSeconds.abs() <= 15) {
-    print("Notification Engine: Ignored in-memory duplicate notification for $dedupKey within 15 seconds.");
+  if (lastSeen != null && eventTime.difference(lastSeen).inSeconds.abs() <= 60) {
+    print("Notification Engine: Ignored in-memory duplicate notification for $dedupKey within 60 seconds.");
     return false;
   }
 
-  // Check existing database records with matching amount within 15 seconds window
+  // Check existing database records with matching amount and similar name within 60 seconds window
   Transaction? existingDbDuplicate = await database.findDuplicateTransaction(
     amount: absoluteAmount,
     timestamp: eventTime,
-    window: const Duration(seconds: 15),
+    window: const Duration(seconds: 60),
   );
   if (existingDbDuplicate != null) {
     print("Notification Engine: Ignored database duplicate for amount $absoluteAmount matching '${existingDbDuplicate.name}'");
@@ -421,9 +473,9 @@ Future queueTransactionFromMessage(String messageString,
 
   // Register in deduplication cache
   _recentlyProcessedNotificationKeys[dedupKey] = eventTime;
-  // Prune keys older than 60 seconds
+  // Prune keys older than 120 seconds
   _recentlyProcessedNotificationKeys.removeWhere(
-      (_, time) => DateTime.now().difference(time).inSeconds.abs() > 60);
+      (_, time) => DateTime.now().difference(time).inSeconds.abs() > 120);
 
   TransactionCategory? category;
   TransactionAssociatedTitleWithCategory? foundTitle =
@@ -484,9 +536,12 @@ Future queueTransactionFromMessage(String messageString,
   } else {
     // Direct Silent Auto-Insert
     try {
-      // Fallback category if none was matched
-      category ??= (await database.getAllCategories()).firstOrNull;
-      String categoryPk = category?.categoryPk ?? "0";
+      // Fallback category if none was matched: find first category or create default
+      if (category == null) {
+        List<TransactionCategory> allCats = await database.getAllCategories();
+        category = allCats.where((c) => c.categoryPk != "0").firstOrNull ?? allCats.firstOrNull;
+      }
+      String categoryPk = category?.categoryPk ?? "1";
       String walletPk = wallet?.walletPk ?? appStateSettings["selectedWalletPk"] ?? "0";
 
       // Expenses should have positive amount in database when income: false,

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
+import 'package:budget/database/initializeDefaultDatabase.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addCategoryPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
@@ -102,17 +103,23 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
                   ),
                 ),
               ),
-              // DropdownItemMenu(
-              //   id: "settings",
-              //   label: "settings".tr(),
-              //   icon: appStateSettings["outlinedIcons"]
-              //       ? Icons.more_vert_outlined
-              //       : Icons.more_vert_rounded,
-              //   action: () => openBottomSheet(
-              //     context,
-              //     PopupFramework(hasPadding: false, child: CategorySettings()),
-              //   ),
-              // ),
+              DropdownItemMenu(
+                id: "restore-default-categories",
+                label: "Restore Default Categories",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.restore_outlined
+                    : Icons.restore_rounded,
+                action: () async {
+                  await createDefaultCategories();
+                  openSnackbar(
+                    SnackbarMessage(
+                      title: "Default Categories Restored",
+                      icon: Icons.check_circle_outline_rounded,
+                      description: "Common default categories have been created.",
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ],

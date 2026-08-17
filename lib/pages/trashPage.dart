@@ -11,6 +11,8 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/selectedTransactionsAppBar.dart';
+import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/transactionEntry/transactionEntry.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -173,21 +175,89 @@ class _TrashPageState extends State<TrashPage> {
 
   @override
   Widget build(BuildContext context) {
+    int retentionDays = appStateSettings["trashRetentionDays"] ?? 30;
     return StreamBuilder<List<TransactionActivityLog>>(
       stream: database.watchAllTransactionDeleteActivityLog(limit: 500),
       builder: (context, snapshot) {
-        final thirtyDaysAgo =
-            DateTime.now().subtract(const Duration(days: 30));
+        final retentionCutoff =
+            DateTime.now().subtract(Duration(days: retentionDays));
         List<TransactionActivityLog> trashItems = (snapshot.data ?? [])
-            .where((item) => item.dateTime.isAfter(thirtyDaysAgo))
+            .where((item) => item.dateTime.isAfter(retentionCutoff))
             .toList()
           ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
 
         return PageFramework(
           key: pageState,
           dragDownToDismiss: true,
-          title: "Trash (30 Days)",
+          title: "Trash ($retentionDays Days)",
           listID: pageId,
+          actions: [
+            IconButton(
+              tooltip: "preferences".tr(),
+              icon: Icon(
+                appStateSettings["outlinedIcons"]
+                    ? Icons.settings_outlined
+                    : Icons.settings_rounded,
+              ),
+              onPressed: () {
+                openBottomSheet(
+                  context,
+                  PopupFramework(
+                    title: "Trash Settings",
+                    child: StatefulBuilder(
+                      builder: (context, setPopupState) {
+                        int currentDays =
+                            appStateSettings["trashRetentionDays"] ?? 30;
+                        return Column(
+                          children: [
+                            SettingsContainerDropdown(
+                              title: "Trash Retention Period",
+                              description:
+                                  "Automatically delete trashed transactions older than this period",
+                              icon: Icons.history_rounded,
+                              initial: "$currentDays Days",
+                              items: const [
+                                "7 Days",
+                                "14 Days",
+                                "30 Days",
+                                "60 Days",
+                                "90 Days"
+                              ],
+                              onChanged: (value) {
+                                int days = int.tryParse(
+                                        value.replaceAll(" Days", "")) ??
+                                    30;
+                                updateSettings("trashRetentionDays", days,
+                                    updateGlobalState: true);
+                                setPopupState(() {});
+                                setState(() {});
+                              },
+                              getLabel: (item) => item,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (trashItems.isNotEmpty) ...[
+              IconButton(
+                tooltip: "Restore All",
+                icon: const Icon(Icons.restore_rounded),
+                onPressed: () => _restoreAll(trashItems),
+              ),
+              IconButton(
+                tooltip: "Empty Trash",
+                icon: Icon(
+                  Icons.delete_sweep_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () => _emptyTrash(trashItems),
+              ),
+            ],
+          ],
           selectedTransactionsAppBar: ValueListenableBuilder(
             valueListenable: globalSelectedID,
             builder: (context, _, __) {
@@ -247,7 +317,7 @@ class _TrashPageState extends State<TrashPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: TextFont(
                           text:
-                              "Transactions deleted within the last 30 days appear here and can be restored.",
+                              "Transactions deleted within the last $retentionDays days appear here and can be restored.",
                           fontSize: 14,
                           textAlign: TextAlign.center,
                           textColor: getColor(context, "textLight"),
@@ -261,7 +331,7 @@ class _TrashPageState extends State<TrashPage> {
             else
               SliverMainAxisGroup(
                 slivers: [
-                  // Info header with Restore All / Empty Trash actions
+                  // Dynamic status & selection action bar
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsetsDirectional.symmetric(
@@ -269,57 +339,105 @@ class _TrashPageState extends State<TrashPage> {
                             getHorizontalPaddingConstrained(context) + 14,
                         vertical: 8,
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.auto_delete_outlined,
-                              size: 22,
-                              color: Theme.of(context).colorScheme.primary,
+                      child: ValueListenableBuilder(
+                        valueListenable: globalSelectedID,
+                        builder: (context, _, __) {
+                          List<String> selectedPks =
+                              globalSelectedID.value[pageId] ?? [];
+                          bool isSelecting = selectedPks.isNotEmpty;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelecting
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                      .withValues(alpha: 0.8)
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  TextFont(
-                                    text: "${trashItems.length} Deleted Items",
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelecting
+                                      ? Icons.checklist_rounded
+                                      : Icons.auto_delete_outlined,
+                                  size: 22,
+                                  color: isSelecting
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      TextFont(
+                                        text: isSelecting
+                                            ? "${selectedPks.length} Selected"
+                                            : "${trashItems.length} Deleted ${trashItems.length == 1 ? "Item" : "Items"}",
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        textColor: isSelecting
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer
+                                            : null,
+                                      ),
+                                      TextFont(
+                                        text: isSelecting
+                                            ? "Tap below to restore or permanently remove"
+                                            : "Kept for $retentionDays days before auto-removal",
+                                        fontSize: 11.5,
+                                        textColor: isSelecting
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer
+                                                .withValues(alpha: 0.8)
+                                            : getColor(context, "textLight"),
+                                      ),
+                                    ],
                                   ),
-                                  TextFont(
-                                    text:
-                                        "Items are kept for 30 days before removal.",
-                                    fontSize: 12,
-                                    textColor: getColor(context, "textLight"),
+                                ),
+                                if (isSelecting) ...[
+                                  IconButton(
+                                    tooltip: "Restore Selected",
+                                    icon: Icon(
+                                      Icons.restore_rounded,
+                                      size: 22,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                                    onPressed: () => _restoreSelected(
+                                        selectedPks, trashItems),
+                                  ),
+                                  IconButton(
+                                    tooltip: "Delete Permanently",
+                                    icon: Icon(
+                                      Icons.delete_forever_rounded,
+                                      size: 22,
+                                      color:
+                                          Theme.of(context).colorScheme.error,
+                                    ),
+                                    onPressed: () =>
+                                        _deleteSelectedPermanently(
+                                            selectedPks, trashItems),
                                   ),
                                 ],
-                              ),
+                              ],
                             ),
-                            IconButton(
-                              tooltip: "Restore All",
-                              icon: const Icon(Icons.restore_rounded, size: 22),
-                              onPressed: () => _restoreAll(trashItems),
-                            ),
-                            IconButton(
-                              tooltip: "Empty Trash",
-                              icon: Icon(
-                                Icons.delete_sweep_rounded,
-                                size: 22,
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                              onPressed: () => _emptyTrash(trashItems),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -330,7 +448,7 @@ class _TrashPageState extends State<TrashPage> {
                         TransactionActivityLog item = trashItems[index];
                         Transaction? transaction = item.transaction;
 
-                        int daysLeft = 30 -
+                        int daysLeft = retentionDays -
                             DateTime.now().difference(item.dateTime).inDays;
                         if (daysLeft < 0) daysLeft = 0;
 

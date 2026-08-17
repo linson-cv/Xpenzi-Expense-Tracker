@@ -613,6 +613,20 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
               },
             ),
             const Divider(height: 1),
+            SettingsContainerSwitch(
+              title: "Persistent Background Monitor",
+              description: appStateSettings["persistentBackgroundListener"] == true
+                  ? "Maintains a silent, low-priority monitor so alerts are captured even when swiped away"
+                  : "Allow background execution only while app remains in memory",
+              icon: Icons.shield_outlined,
+              initialValue: appStateSettings["persistentBackgroundListener"] ?? true,
+              onSwitched: (val) async {
+                await updateSettings("persistentBackgroundListener", val,
+                    updateGlobalState: true);
+                await updatePersistentBackgroundServiceNotification();
+              },
+            ),
+            const Divider(height: 1),
             SettingsContainer(
               title: "Battery Optimization Settings",
               description: "Ensure Android doesn't put background listener to sleep",

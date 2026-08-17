@@ -26,12 +26,15 @@ Future<bool> createDefaultCategories() async {
   print("Creating default categories");
   for (TransactionCategory category in defaultCategories()) {
     try {
-      await database.getCategory(category.categoryPk).$2;
+      TransactionCategory? existing =
+          await database.getCategoryInstanceOrNull(category.categoryPk);
+      if (existing == null) {
+        print("Default category ${category.categoryPk} (${category.name}) does not exist, creating");
+        await database.createOrUpdateCategory(category,
+            customDateTimeModified: DateTime(0));
+      }
     } catch (e) {
-      print(
-          "$e default category does not already exist, creating");
-      await database.createOrUpdateCategory(category,
-          customDateTimeModified: DateTime(0));
+      print("Error checking/creating default category ${category.categoryPk}: $e");
     }
   }
   return true;

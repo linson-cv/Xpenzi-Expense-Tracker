@@ -36,6 +36,8 @@ import 'package:budget/pages/editWalletsPage.dart';
 import 'package:budget/pages/exchangeRatesPage.dart';
 import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/recurringHubPage.dart';
+import 'package:budget/pages/subscriptionsPage.dart';
+import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/pages/aiSettingsPage.dart';
 import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:budget/pages/errorLogsPage.dart';
@@ -130,8 +132,17 @@ class MoreActionsPageState extends State<MoreActionsPage> {
                     child: _ExploreEditToolbar(
                       onReset: () async {
                         HapticFeedback.mediumImpact();
-                        await updateSettings("morePageCardOrder", <String>[], updateGlobalState: true);
-                        await updateSettings("hiddenMorePageItems", <String>[], updateGlobalState: true);
+                        final defaultPrefs = await getDefaultPreferences();
+                        await updateSettings(
+                          "morePageCardOrder",
+                          List<String>.from(defaultPrefs["morePageCardOrder"] ?? []),
+                          updateGlobalState: true,
+                        );
+                        await updateSettings(
+                          "hiddenMorePageItems",
+                          List<String>.from(defaultPrefs["hiddenMorePageItems"] ?? []),
+                          updateGlobalState: true,
+                        );
                         settingsPageStateKey.currentState?.refreshState();
                         setState(() {});
                       },
@@ -386,7 +397,7 @@ class _MorePagesState extends State<MorePages> {
         title: navBarIconsData["subscriptions"]!.label.tr(),
         icon: navBarIconsData["subscriptions"]!.iconData,
         builder: (_) => SettingsContainerOpenPage(
-          openPage: const RecurringHubPage(initialIndex: 0),
+          openPage: const SubscriptionsPage(),
           title: navBarIconsData["subscriptions"]!.label.tr(),
           icon: navBarIconsData["subscriptions"]!.iconData,
           isOutlined: true,
@@ -397,7 +408,7 @@ class _MorePagesState extends State<MorePages> {
         title: navBarIconsData["scheduled"]!.label.tr(),
         icon: navBarIconsData["scheduled"]!.iconData,
         builder: (_) => SettingsContainerOpenPage(
-          openPage: const RecurringHubPage(initialIndex: 1),
+          openPage: const UpcomingOverdueTransactions(overdueTransactions: null),
           title: navBarIconsData["scheduled"]!.label.tr(),
           icon: navBarIconsData["scheduled"]!.iconData,
           isOutlined: true,
@@ -2086,6 +2097,23 @@ class DataManagementSettingsSubPage extends StatelessWidget {
       title: "Data Management & Reset",
       dragDownToDismiss: true,
       listWidgets: [
+        SettingsGroupCard(
+          title: "Trash & Retention",
+          icon: Icons.auto_delete_outlined,
+          children: [
+            SettingsContainerDropdown(
+              title: "Trash Retention Period",
+              icon: Icons.history_rounded,
+              initial: "${appStateSettings["trashRetentionDays"] ?? 30} Days",
+              items: const ["7 Days", "14 Days", "30 Days", "60 Days", "90 Days"],
+              onChanged: (value) {
+                int days = int.tryParse(value.replaceAll(" Days", "")) ?? 30;
+                updateSettings("trashRetentionDays", days, updateGlobalState: true);
+              },
+              getLabel: (item) => item,
+            ),
+          ],
+        ),
         SettingsGroupCard(
           title: "Clear Transactions",
           icon: Icons.cleaning_services_rounded,
@@ -3805,7 +3833,9 @@ class PermissionsSettingsSubPage extends StatelessWidget {
                       icon: Icons.check_circle_rounded,
                     )
                   );
-                  NotificationListenerService.requestPermission();
+                  try {
+                    NotificationListenerService.requestPermission();
+                  } catch (_) {}
                 } else {
                   promptNotificationPermissionPopup(context);
                 }

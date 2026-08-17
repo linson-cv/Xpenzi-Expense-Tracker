@@ -598,15 +598,17 @@ class TransactionEntry extends StatelessWidget {
                     (controller.value[listID ?? "0"] ?? []).length)
                 : globalSelectedID.select(
                     (controller) =>
+                        (controller.value[listID ?? "0"]?.isNotEmpty ?? false)
+                            .toString() +
                         (transactionBefore != null &&
-                                controller.value[listID ?? "0"]!
+                                (controller.value[listID ?? "0"] ?? [])
                                     .contains(transactionBefore?.transactionPk))
                             .toString() +
-                        (controller.value[listID ?? "0"]!
+                        ((controller.value[listID ?? "0"] ?? [])
                                 .contains(transaction.transactionPk))
                             .toString() +
                         (transactionAfter != null &&
-                                controller.value[listID ?? "0"]!
+                                (controller.value[listID ?? "0"] ?? [])
                                     .contains(transactionAfter?.transactionPk))
                             .toString(),
                   ),

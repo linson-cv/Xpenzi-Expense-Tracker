@@ -26,7 +26,19 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.8
+    (A) Persistent Background Monitor: Added low-priority silent background service ensuring bank SMS and payment alerts are captured in real-time even if the app is swiped away from recent tasks
+    (A) Background Auto-Recording & 60s Deduplication: Fixed background SMS auto-recording when app is closed, and enhanced deduplication to 60-second multi-check to eliminate duplicate entries
+    (A) Expanded Essential Default Categories: Added Health & Medical, Education, Rent & Housing, Fuel & Vehicle, and Investments & Savings categories with 1-tap Restore Default Categories
+    (A) Emoji Selector Validation & Warning: Added real-time input verification with friendly guidance alerts when non-emoji characters are typed into custom category icons
+    (A) Robust Notification Permission Handling: Defensive error handling for Android platform channel permission requests
     < 1.2.7
+    (A) Redesigned Trash Experience & Configurable Retention: Moved Empty Trash / Restore All to the top navigation bar, added a dynamic live stats bar showing total/selected items with 1-tap contextual restore & permanent deletion, and added a Trash Retention Period setting (7, 14, 30, 60, 90 days) under Settings > Data Management & Reset
+    (A) 1-Tap Multi-Selection in Trash & Lists: Initiating multi-select with long-press now allows seamless 1-tap selection/deselection of further items without needing repeated long-presses
+    (A) Pro Category Icon Pack & Shapes: App-wide category icon theme presets (Standard Colorful, Solid Minimalist, Line Art) and shape customization (Circle, Rounded Square, Squircle, Diamond) under Settings > Theme & Style
+    (A) 5-Column Category Icon Grid: Clean, unified 5-column icon gallery in Add/Edit Category
+    (A) Subscriptions & Scheduled Add FAB: Added dynamic Floating Action Button to Recurring Hub to quickly add new Subscriptions or Scheduled bills, and routed Explore cards directly to full pages
+    (A) Full Header Titles & Dynamic Auto-Scaling: Fixed header truncation for lengthy settings sections (e.g. Localization & Formatting, Data Management & Reset, Intelligence & Automation) with clean auto-scaling and multi-line wrapping
     (A) Universal Notification NLP Engine: Enhanced offline regex parser to seamlessly capture multi-format WhatsApp chats, bank SMS, and payment alerts (e.g. "debited for INR 101 at Starbucks")
     (A) Category Icon Packs & Shapes: Brand new Standard and Pro icon pack galleries under Theme & Style with customizable icon shapes (Circle, Rounded Square, Squircle, Diamond)
     (A) Modernized Parsing Templates: Redesigned template cards with Material You container styling, status badges, and streamlined rule configuration
@@ -187,6 +199,7 @@ String getChangelogString() {
     Rebranded application baseline
 end""";
 }
+
 // If they were not already seen by a user, they are shown at the top of the changelog
 Map<String, List<MajorChanges>> getMajorChanges() {
   return {
@@ -494,10 +507,12 @@ bool showChangelog(
   List<Widget>? changelogPoints = getChangelogPointsWidgets(
     context,
     forceShow: forceShow,
-    majorChangesOnly:
-        !Localizations.localeOf(context).toString().toLowerCase().startsWith("en")
-            ? true
-            : majorChangesOnly,
+    majorChangesOnly: !Localizations.localeOf(context)
+            .toString()
+            .toLowerCase()
+            .startsWith("en")
+        ? true
+        : majorChangesOnly,
   );
 
   updateSettings(
@@ -522,7 +537,10 @@ bool showChangelog(
         showCloseButton: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [(extraWidget ?? const SizedBox.shrink()), ...changelogPoints],
+          children: [
+            (extraWidget ?? const SizedBox.shrink()),
+            ...changelogPoints
+          ],
         ),
       ),
       showScrollbar: true,

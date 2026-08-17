@@ -9,6 +9,12 @@ import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:budget/widgets/fab.dart';
+import 'package:budget/widgets/fadeIn.dart';
+import 'package:budget/widgets/openPopup.dart';
+import 'package:budget/pages/addTransactionPage.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 class RecurringHubPage extends StatefulWidget {
   final int initialIndex;
   const RecurringHubPage({super.key, this.initialIndex = 0});
@@ -25,6 +31,9 @@ class _RecurringHubPageState extends State<RecurringHubPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialIndex);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -38,6 +47,17 @@ class _RecurringHubPageState extends State<RecurringHubPage>
     return PageFramework(
       title: "Recurring & Subscriptions",
       dragDownToDismiss: true,
+      floatingActionButton: AnimateFABDelayed(
+        fab: AddFAB(
+          tooltip: _tabController.index == 0 ? "add-subscription".tr() : "add-upcoming".tr(),
+          openPage: AddTransactionPage(
+            selectedType: _tabController.index == 0
+                ? TransactionSpecialType.subscription
+                : TransactionSpecialType.upcoming,
+            routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+          ),
+        ),
+      ),
       listWidgets: [
         // Top Projections Summary Banner
         Padding(

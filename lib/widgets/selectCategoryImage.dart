@@ -1,8 +1,8 @@
 import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
-import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/premiumPage.dart';
 import 'package:budget/struct/settings.dart';
+import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
@@ -14,9 +14,7 @@ import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' hide TextInput;
 
 // Future<List<String>> getCategoryImages() async {
 //   final manifestContent = await rootBundle.loadString('AssetManifest.json');
@@ -55,7 +53,6 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
   String? selectedImage;
   String searchTerm = "";
   bool isEmoji = false;
-  int selectedTabIndex = 0; // 0 = Free/Regular Icons, 1 = Pro Icon Packs
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -81,21 +78,10 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
       popupWithKeyboard: true,
       PopupFramework(
         title: "enter-emoji".tr(),
-        child: SelectText(
-          buttonLabel: null,
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.emoji_emotions_outlined
-              : Icons.emoji_emotions_rounded,
-          setSelectedText: (value) {
+        child: EmojiSelectorInput(
+          onEmojiSelected: (value) {
             widget.setSelectedEmoji(value);
           },
-          popContextWhenSet: true,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(
-                r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])'))
-          ],
-          placeholder: "${"enter-emoji-placeholder".tr()} 😀...",
-          autoFocus: true,
         ),
       ),
     );
@@ -103,201 +89,150 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
 
   @override
   Widget build(BuildContext context) {
+    List<IconForCategory> filteredIcons = iconObjects
+        .where((image) =>
+            searchTerm == "" ||
+            image.tags.any(
+                (item) => item.toLowerCase().contains(searchTerm.toLowerCase())))
+        .toList();
+
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: 8.0),
       child: Column(
         children: [
-          // Segmented Tab Switcher: Free Icons vs Pro Packs
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Tappable(
-                      borderRadius: 10,
-                      color: selectedTabIndex == 0
-                          ? Theme.of(context).colorScheme.surface
-                          : Colors.transparent,
-                      onTap: () {
-                        setState(() {
-                          selectedTabIndex = 0;
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Center(
-                          child: TextFont(
-                            text: "Standard Icons (${iconObjects.length})",
-                            fontSize: 13,
-                            fontWeight: selectedTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                            textColor: selectedTabIndex == 0
-                                ? Theme.of(context).colorScheme.onSurface
-                                : getColor(context, "textLight"),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Tappable(
-                      borderRadius: 10,
-                      color: selectedTabIndex == 1
-                          ? Theme.of(context).colorScheme.surface
-                          : Colors.transparent,
-                      onTap: () {
-                        setState(() {
-                          selectedTabIndex = 1;
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextFont(
-                              text: "Pro Packs",
-                              fontSize: 13,
-                              fontWeight: selectedTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                              textColor: selectedTabIndex == 1
-                                  ? Theme.of(context).colorScheme.onSurface
-                                  : getColor(context, "textLight"),
-                            ),
-                            const SizedBox(width: 5),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const TextFont(
-                                text: "PRO",
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                                textColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          if (selectedTabIndex == 0) ...[
-            context.locale.toString() != "en"
-                ? UseEmoji(onTap: () {
-                    popRoute(context);
-                    openEmojiSelectorPopup();
-                  })
-                : const SizedBox.shrink(),
-            context.locale.toString() == "en"
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        child: TextInput(
-                          controller: _searchController,
-                          labelText: "search-placeholder".tr(),
-                          icon: searchTerm.trim().isNotEmpty
-                              ? (appStateSettings["outlinedIcons"]
-                                  ? Icons.close_outlined
-                                  : Icons.close_rounded)
-                              : (appStateSettings["outlinedIcons"]
-                                  ? Icons.search_outlined
-                                  : Icons.search_rounded),
-                          iconOnTap: searchTerm.trim().isNotEmpty
-                              ? () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    searchTerm = "";
-                                  });
-                                  bottomSheetControllerGlobal.snapToExtent(0);
-                                }
-                              : null,
-                          onSubmitted: (value) {},
-                          onChanged: (value) {
-                            setState(() {
-                              searchTerm = value.trim();
-                            });
-                            bottomSheetControllerGlobal.snapToExtent(0);
-                          },
-                          padding: const EdgeInsetsDirectional.all(0),
-                          autoFocus: kIsWeb,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      ButtonIcon(
-                        onTap: () {
-                          popRoute(context);
-                          openEmojiSelectorPopup();
-                        },
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.emoji_emotions_outlined
-                            : Icons.emoji_emotions_rounded,
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
-            const SizedBox(height: 6),
-            Center(
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                children: [
-                  for (IconForCategory image in iconObjects)
-                    if (searchTerm == "" ||
-                        image.tags.any((item) =>
-                            item.toLowerCase().contains(searchTerm.toLowerCase())))
-                      ImageIcon(
-                        sizePadding: 8,
-                        margin: const EdgeInsetsDirectional.all(5),
-                        color: Colors.transparent,
-                        size: 55,
-                        iconPath: "assets/categories/" + image.icon,
-                        onTap: () {
-                          widget.setSelectedImage(image.icon);
-                          if (context.locale.toString() == "en" &&
-                              image.mostLikelyCategoryName != null) {
-                            widget.setSelectedTitle(image.mostLikelyCategoryName);
-                          }
+          context.locale.toString() != "en"
+              ? UseEmoji(onTap: () {
+                  popRoute(context);
+                  openEmojiSelectorPopup();
+                })
+              : const SizedBox.shrink(),
+          context.locale.toString() == "en"
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Expanded(
+                      child: TextInput(
+                        controller: _searchController,
+                        labelText: "search-placeholder".tr(),
+                        icon: searchTerm.trim().isNotEmpty
+                            ? (appStateSettings["outlinedIcons"]
+                                ? Icons.close_outlined
+                                : Icons.close_rounded)
+                            : (appStateSettings["outlinedIcons"]
+                                ? Icons.search_outlined
+                                : Icons.search_rounded),
+                        iconOnTap: searchTerm.trim().isNotEmpty
+                            ? () {
+                                _searchController.clear();
+                                setState(() {
+                                  searchTerm = "";
+                                });
+                                bottomSheetControllerGlobal.snapToExtent(0);
+                              }
+                            : null,
+                        onSubmitted: (value) {},
+                        onChanged: (value) {
                           setState(() {
-                            selectedImage = image.icon;
+                            searchTerm = value.trim();
                           });
-                          Future.delayed(const Duration(milliseconds: 70), () {
-                            popRoute(context);
-                            if (widget.next != null) {
-                              widget.next!();
-                            }
-                          });
+                          bottomSheetControllerGlobal.snapToExtent(0);
                         },
-                        outline: selectedImage == image.icon,
+                        padding: const EdgeInsetsDirectional.all(0),
+                        autoFocus: kIsWeb,
                       ),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 10),
+                    ButtonIcon(
+                      onTap: () {
+                        popRoute(context);
+                        openEmojiSelectorPopup();
+                      },
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.emoji_emotions_outlined
+                          : Icons.emoji_emotions_rounded,
+                    ),
+                  ],
+                )
+              : const SizedBox.shrink(),
+          const SizedBox(height: 10),
+          // // Change icon theme and style button
+          // Tappable(
+          //   onTap: () {
+          //     pushRoute(context, const CategoryIconPackGalleryPage());
+          //   },
+          //   color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.6),
+          //   borderRadius: 14,
+          //   child: Padding(
+          //     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          //     child: Row(
+          //       children: [
+          //         Icon(
+          //           appStateSettings["outlinedIcons"]
+          //               ? Icons.category_outlined
+          //               : Icons.category_rounded,
+          //           size: 22,
+          //           color: Theme.of(context).colorScheme.primary,
+          //         ),
+          //         const SizedBox(width: 12),
+          //         Expanded(
+          //           child: TextFont(
+          //             text: "Change icon theme and style",
+          //             fontSize: 14,
+          //             fontWeight: FontWeight.w600,
+          //             textColor: Theme.of(context).colorScheme.onSecondaryContainer,
+          //           ),
+          //         ),
+          //         Icon(
+          //           Icons.chevron_right_rounded,
+          //           size: 20,
+          //           color: Theme.of(context).colorScheme.onSecondaryContainer.withValues(alpha: 0.6),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: 12),
+          // 5 Columns Grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+              childAspectRatio: 1.0,
             ),
-          ] else ...[
-            // Dedicated Pro Packs Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              child: TextFont(
-                text: "Explore specialized themed icon packs crafted for premium members. Tap any pack to browse and select icons.",
-                fontSize: 12.5,
-                textColor: getColor(context, "textLight"),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ..._buildProIconPacksList(context),
-          ],
+            itemCount: filteredIcons.length,
+            itemBuilder: (context, index) {
+              final image = filteredIcons[index];
+              return Center(
+                child: ImageIcon(
+                  sizePadding: 8,
+                  margin: EdgeInsetsDirectional.zero,
+                  color: Colors.transparent,
+                  size: 55,
+                  iconPath: "assets/categories/" + image.icon,
+                  onTap: () {
+                    widget.setSelectedImage(image.icon);
+                    if (context.locale.toString() == "en" &&
+                        image.mostLikelyCategoryName != null) {
+                      widget.setSelectedTitle(image.mostLikelyCategoryName);
+                    }
+                    setState(() {
+                      selectedImage = image.icon;
+                    });
+                    Future.delayed(const Duration(milliseconds: 70), () {
+                      popRoute(context);
+                      if (widget.next != null) {
+                        widget.next!();
+                      }
+                    });
+                  },
+                  outline: selectedImage == image.icon,
+                ),
+              );
+            },
+          ),
           context.locale.toString() == "en"
               ? Padding(
                   padding: const EdgeInsetsDirectional.only(top: 8.0),
@@ -311,258 +246,114 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
             padding: EdgeInsetsDirectional.only(top: 8.0),
             child: SuggestIcon(),
           ),
-          if (appStateSettings["purchaseID"] == null)
-            const Padding(
-              padding: EdgeInsetsDirectional.only(top: 8.0),
-              child: ProIconPackBanner(),
-            ),
         ],
-      ),
-    );
-  }
-
-  List<Widget> _buildProIconPacksList(BuildContext context) {
-    final List<Map<String, dynamic>> packs = [
-      {
-        "title": "Finance & Banking Pro",
-        "category": "Finance",
-        "description": "Premium icons for banks, investments, and assets",
-        "sampleIcons": ["bank.png", "credit-card.png", "crypto.png", "loan.png", "piggy-bank.png"],
-      },
-      {
-        "title": "Food & Dining Pro",
-        "category": "Food",
-        "description": "Restaurants, drinks, fast food, and groceries",
-        "sampleIcons": ["fast-food.png", "coffee.png", "pizza.png", "sushi.png", "curry.png"],
-      },
-      {
-        "title": "Shopping & Lifestyle Pro",
-        "category": "Shopping",
-        "description": "Clothing, electronics, gifts, and beauty items",
-        "sampleIcons": ["shopping.png", "gift.png", "sneakers.png", "camera.png", "diamond.png"],
-      },
-      {
-        "title": "Travel & Transportation Pro",
-        "category": "Travel",
-        "description": "Airlines, taxis, trains, hotels, and rentals",
-        "sampleIcons": ["plane.png", "taxi(1).png", "car(1).png", "bicycle.png", "compass.png"],
-      },
-    ];
-
-    return packs.map((pack) {
-      final List<String> sampleIcons = pack["sampleIcons"] as List<String>;
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Tappable(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: 14,
-          onTap: () {
-            _openProPackSheet(context, pack["title"] as String, pack["category"] as String, sampleIcons);
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (String icon in sampleIcons.take(3))
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Image(
-                            image: AssetImage("assets/categories/$icon"),
-                            width: 22,
-                            height: 22,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: TextFont(
-                              text: pack["title"],
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: TextFont(
-                              text: "${sampleIcons.length} icons",
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                              textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      TextFont(
-                        text: pack["description"],
-                        fontSize: 11.5,
-                        textColor: getColor(context, "textLight"),
-                        maxLines: 2,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 22,
-                  color: getColor(context, "textLight"),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }).toList();
-  }
-
-  void _openProPackSheet(BuildContext context, String title, String category, List<String> packIcons) {
-    openBottomSheet(
-      context,
-      PopupFramework(
-        title: title,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              child: TextFont(
-                text: "Select any icon from this pack below to apply it to your category.",
-                fontSize: 13,
-                textColor: getColor(context, "textLight"),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              alignment: WrapAlignment.center,
-              children: [
-                for (String icon in packIcons)
-                  ImageIcon(
-                    sizePadding: 8,
-                    margin: const EdgeInsetsDirectional.all(5),
-                    color: Colors.transparent,
-                    size: 55,
-                    iconPath: "assets/categories/$icon",
-                    onTap: () {
-                      widget.setSelectedImage(icon);
-                      setState(() {
-                        selectedImage = icon;
-                      });
-                      popRoute(context);
-                      popRoute(context);
-                      if (widget.next != null) {
-                        widget.next!();
-                      }
-                    },
-                    outline: selectedImage == icon,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
       ),
     );
   }
 }
 
-class ProIconPackBanner extends StatelessWidget {
-  const ProIconPackBanner({super.key});
+class EmojiSelectorInput extends StatefulWidget {
+  const EmojiSelectorInput({required this.onEmojiSelected, super.key});
+  final Function(String) onEmojiSelected;
+
+  @override
+  State<EmojiSelectorInput> createState() => _EmojiSelectorInputState();
+}
+
+class _EmojiSelectorInputState extends State<EmojiSelectorInput> {
+  final TextEditingController _controller = TextEditingController();
+  bool _showWarning = false;
+
+  static final RegExp _emojiRegex = RegExp(
+    r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])',
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    if (value.isEmpty) {
+      if (_showWarning) {
+        setState(() {
+          _showWarning = false;
+        });
+      }
+      return;
+    }
+
+    if (_emojiRegex.hasMatch(value)) {
+      if (_showWarning) {
+        setState(() {
+          _showWarning = false;
+        });
+      }
+      // Valid emoji entered, apply and close
+      widget.onEmojiSelected(value.trim());
+      popRoute(context);
+    } else {
+      // Non-emoji characters entered
+      setState(() {
+        _showWarning = true;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Tappable(
-      onTap: () {
-        pushRoute(
-          context,
-          const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
-        );
-      },
-      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
-      borderRadius: 15,
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(
-            start: 15, end: 12, top: 12, bottom: 12),
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: 12),
-              child: Icon(
-                appStateSettings["outlinedIcons"]
-                    ? Icons.workspace_premium_outlined
-                    : Icons.workspace_premium_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 31,
-              ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      TextFont(
-                        text: "Pro Icon Packs",
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.bold,
-                        textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const TextFont(
-                          text: "PRO",
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          textColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  TextFont(
-                    text: "Unlock exclusive HD category icon collections & custom packs",
-                    fontSize: 12,
-                    textColor: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              appStateSettings["outlinedIcons"]
-                  ? Icons.chevron_right_outlined
-                  : Icons.chevron_right_rounded,
-              size: 25,
-            ),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextInput(
+          controller: _controller,
+          labelText: "${"enter-emoji".tr()} 😀...",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.emoji_emotions_outlined
+              : Icons.emoji_emotions_rounded,
+          autoFocus: true,
+          onChanged: _onChanged,
+          onSubmitted: (value) {
+            if (_emojiRegex.hasMatch(value)) {
+              widget.onEmojiSelected(value.trim());
+              popRoute(context);
+            } else {
+              setState(() {
+                _showWarning = true;
+              });
+            }
+          },
         ),
-      ),
+        AnimatedExpanded(
+          expand: _showWarning,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(
+                start: 12, end: 12, top: 8, bottom: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFont(
+                    text:
+                        "Please enter a valid emoji (e.g. 🍕, 🚗, 💡) instead of letters or text.",
+                    fontSize: 12.5,
+                    textColor: Theme.of(context).colorScheme.error,
+                    maxLines: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
     );
   }
 }
@@ -803,7 +594,7 @@ class _CategoryIconPackGalleryPageState
         "assets/categories/fast-food.png",
         "assets/categories/groceries.png",
         "assets/categories/shopping.png",
-        "assets/categories/train.png",
+        "assets/categories/tram.png",
       ],
       "iconBgColors": [
         Color(0xFF2C3E50),
@@ -820,7 +611,7 @@ class _CategoryIconPackGalleryPageState
         "assets/categories/fast-food.png",
         "assets/categories/groceries.png",
         "assets/categories/shopping.png",
-        "assets/categories/train.png",
+        "assets/categories/tram.png",
       ],
       "iconBgColors": [
         Color(0xFF2B3A42),
@@ -838,7 +629,7 @@ class _CategoryIconPackGalleryPageState
         "assets/categories/fast-food.png",
         "assets/categories/groceries.png",
         "assets/categories/shopping.png",
-        "assets/categories/train.png",
+        "assets/categories/tram.png",
       ],
       "iconBgColors": [
         Color(0xFF1E2B37),

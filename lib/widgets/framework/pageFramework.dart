@@ -985,13 +985,14 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
                     AnimatedSizeSwitcher(
                       child: TextFont(
                         key: ValueKey(titleString),
-                        text: getIsFullScreen(context) == false &&
-                                titleString.length > 20
-                            ? titleString.split(" ")[0]
-                            : titleString,
+                        text: titleString,
+                        maxLines: 2,
+                        autoSizeText: true,
+                        minFontSize: centeredTitleSmallWithDefault ? 13 : 16,
+                        overflow: TextOverflow.ellipsis,
                         fontSize: centeredTitleSmallWithDefault
                             ? (enableDoubleColumn(context) ? 19 : 16)
-                            : 22,
+                            : (titleString.length > 20 ? 19 : 22),
                         fontWeight: FontWeight.bold,
                         textColor: textColor ?? Theme.of(context).colorScheme.onSecondaryContainer,
                         textAlign: centeredTitleWithDefault
