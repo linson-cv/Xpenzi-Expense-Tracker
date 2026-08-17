@@ -26,9 +26,18 @@ List<MapEntry<String, Transaction>> recentlyDeletedTransactions = [];
 
 void addTransactionToRecentlyDeleted(Transaction transaction,
     {bool save = true}) {
-  while (recentlyDeletedTransactions.length >= 50) {
+  // Prune items older than 30 days
+  final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+  recentlyDeletedTransactions.removeWhere((entry) {
+    DateTime entryDate = entry.value.dateTimeModified ?? entry.value.dateCreated;
+    return entryDate.isBefore(thirtyDaysAgo);
+  });
+
+  while (recentlyDeletedTransactions.length >= 500) {
     recentlyDeletedTransactions.removeAt(0);
   }
+  // Avoid duplicates
+  recentlyDeletedTransactions.removeWhere((entry) => entry.key == transaction.transactionPk);
   recentlyDeletedTransactions
       .add(MapEntry(transaction.transactionPk, transaction));
   if (save) saveRecentlyDeletedTransactions();
@@ -51,7 +60,6 @@ Future<void> saveRecentlyDeletedTransactions() async {
           })
       .toList();
   String jsonString = jsonEncode(encodedData);
-  print(jsonString);
   await sharedPreferences.setString("recentlyDeletedTransactions", jsonString);
 }
 
@@ -62,11 +70,16 @@ Future<void> loadRecentlyDeletedTransactions() async {
   if (jsonString != null) {
     try {
       List<dynamic> decodedData = jsonDecode(jsonString);
+      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
       recentlyDeletedTransactions = decodedData
           .map((entry) => MapEntry<String, Transaction>(
                 entry['key'] as String,
                 Transaction.fromJson(entry['value'] as Map<String, dynamic>),
               ))
+          .where((entry) {
+            DateTime entryDate = entry.value.dateTimeModified ?? entry.value.dateCreated;
+            return entryDate.isAfter(thirtyDaysAgo);
+          })
           .toList();
     } catch (e) {
       print("Error loading recently deleted transactions: $e");

@@ -1230,12 +1230,25 @@ String getDevicesDefaultCurrencyCode() {
   try {
     String? currentCountryCode =
         WidgetsBinding.instance.platformDispatcher.locale.countryCode;
-    // print(currentCountryCode);
-    for (String currencyKey in currenciesJSON.keys) {
-      if (currenciesJSON[currencyKey] != null &&
-          currenciesJSON[currencyKey]["CountryCode"] != null &&
-          currenciesJSON[currencyKey]["CountryCode"] == currentCountryCode) {
-        return currencyKey;
+
+    // Fallback to list of system locales if primary has no countryCode
+    if (currentCountryCode == null || currentCountryCode.isEmpty) {
+      for (var locale in WidgetsBinding.instance.platformDispatcher.locales) {
+        if (locale.countryCode != null && locale.countryCode!.isNotEmpty) {
+          currentCountryCode = locale.countryCode;
+          break;
+        }
+      }
+    }
+
+    if (currentCountryCode != null && currentCountryCode.isNotEmpty) {
+      String upperCountry = currentCountryCode.toUpperCase();
+      for (String currencyKey in currenciesJSON.keys) {
+        if (currenciesJSON[currencyKey] != null &&
+            currenciesJSON[currencyKey]["CountryCode"] != null &&
+            currenciesJSON[currencyKey]["CountryCode"].toString().toUpperCase() == upperCountry) {
+          return currencyKey;
+        }
       }
     }
   } catch (e) {

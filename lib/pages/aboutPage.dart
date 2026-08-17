@@ -127,6 +127,14 @@ class AboutPageState extends State<AboutPage> {
         padding:
             const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
         child: AboutInfoBox(
+          title: "Xpenzi Source Code (GPL-3.0)",
+          link: "https://github.com/linson-cv/Xpenzi-Expense-Tracker",
+        ),
+      ),
+      Padding(
+        padding:
+            const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
+        child: AboutInfoBox(
           title: "Cashew (Original Fork Baseline)",
           link: "https://github.com/jameskokoska/Cashew",
         ),
@@ -191,7 +199,7 @@ class AboutPageState extends State<AboutPage> {
         padding:
             const EdgeInsetsDirectional.symmetric(horizontal: 15, vertical: 5),
         child: AboutInfoBox(
-          title: "community-translations".tr(),
+          title: "Community & Translations",
           showLink: false,
           list: const [
             "Special thanks to all open-source contributors and community volunteers who helped translate and test Xpenzi in over 20 languages worldwide.",

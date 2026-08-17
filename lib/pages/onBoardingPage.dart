@@ -2,6 +2,7 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/generatePreviewData.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/pages/addBudgetPage.dart';
+import 'package:budget/pages/addObjectivePage.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/languageMap.dart';
@@ -17,7 +18,9 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
+import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/widgets/textInput.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/pages/offlineIntelligencePage.dart';
@@ -27,7 +30,7 @@ import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' hide TextInput;
 import 'package:budget/functions.dart';
 import 'package:budget/widgets/radioItems.dart';
 import 'package:budget/database/initializeDefaultDatabase.dart';
@@ -70,12 +73,14 @@ class OnBoardingPageBody extends StatefulWidget {
 class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
   final PageController controller = PageController();
 
+  bool isGoalSelected = false;
   double? selectedAmount;
   int selectedPeriodLength = 1;
   DateTime selectedStartDate = DateTime.now().firstDayOfMonth();
   DateTime? selectedEndDate;
   String selectedRecurrence = "Monthly";
   bool selectedIncludeIncome = false;
+  String selectedGoalTitle = "Savings Goal";
 
   bool showImage = false;
   final Image imageLanding1 = Image(
@@ -98,36 +103,59 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
 
   nextNavigation({bool generatePreview = false}) async {
     if (selectedAmount != null && selectedAmount != 0) {
-      int order = await database.getAmountOfBudgets();
-      await database.createOrUpdateBudget(
-        insert: true,
-        Budget(
-          budgetPk: "-1",
-          name: "default-budget-name".tr(),
-          amount: selectedAmount ?? 0,
-          startDate: selectedStartDate,
-          endDate: selectedEndDate ?? DateTime.now(),
-          addedTransactionsOnly: false,
-          periodLength: selectedPeriodLength,
-          dateCreated: DateTime.now(),
-          pinned: true,
-          order: order,
-          walletFk: "0",
-          reoccurrence: mapRecurrence(selectedRecurrence),
-          isAbsoluteSpendingLimit: false,
-          budgetTransactionFilters: [
-            ...(selectedIncludeIncome == false
-                ? [BudgetTransactionFilters.defaultBudgetTransactionFilters]
-                : [
-                    BudgetTransactionFilters.includeIncome,
-                    BudgetTransactionFilters.addedToOtherBudget,
-                    BudgetTransactionFilters.addedToObjective,
-                  ])
-          ],
-          income: false,
-          archived: false,
-        ),
-      );
+      if (isGoalSelected) {
+        int order = (await database.getAllObjectives(objectiveType: ObjectiveType.goal)).length;
+        await database.createOrUpdateObjective(
+          Objective(
+            objectivePk: "-1",
+            name: selectedGoalTitle.trim().isEmpty ? "Savings Goal" : selectedGoalTitle.trim(),
+            amount: selectedAmount ?? 0,
+            order: order,
+            colour: "0xff66bb6a",
+            dateCreated: selectedStartDate,
+            endDate: selectedEndDate,
+            dateTimeModified: DateTime.now(),
+            iconName: "piggy-bank.png",
+            emojiIconName: null,
+            income: true,
+            pinned: true,
+            walletFk: "0",
+            archived: false,
+            type: ObjectiveType.goal,
+          ),
+        );
+      } else {
+        int order = await database.getAmountOfBudgets();
+        await database.createOrUpdateBudget(
+          insert: true,
+          Budget(
+            budgetPk: "-1",
+            name: "default-budget-name".tr(),
+            amount: selectedAmount ?? 0,
+            startDate: selectedStartDate,
+            endDate: selectedEndDate ?? DateTime.now(),
+            addedTransactionsOnly: false,
+            periodLength: selectedPeriodLength,
+            dateCreated: DateTime.now(),
+            pinned: true,
+            order: order,
+            walletFk: "0",
+            reoccurrence: mapRecurrence(selectedRecurrence),
+            isAbsoluteSpendingLimit: false,
+            budgetTransactionFilters: [
+              ...(selectedIncludeIncome == false
+                  ? [BudgetTransactionFilters.defaultBudgetTransactionFilters]
+                  : [
+                      BudgetTransactionFilters.includeIncome,
+                      BudgetTransactionFilters.addedToOtherBudget,
+                      BudgetTransactionFilters.addedToObjective,
+                    ])
+            ],
+            income: false,
+            archived: false,
+          ),
+        );
+      }
     }
     if (generatePreview) {
       openLoadingPopup(context);
@@ -472,7 +500,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
           Padding(
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 25),
             child: TextFont(
-              text: "onboarding-title-2".tr(),
+              text: isGoalSelected ? "Set Your Savings Goal" : "Set Your Spending Budget",
               fontWeight: FontWeight.bold,
               textAlign: TextAlign.center,
               fontSize: 25,
@@ -480,68 +508,182 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
             ),
           ),
           const SizedBox(height: 10),
-          BudgetDetails(
-            determineBottomButton: () {},
-            setSelectedAmount: (amount, _) {
-              setState(() {
-                selectedAmount = amount;
-              });
-            },
-            initialSelectedAmount: selectedAmount,
-            setSelectedPeriodLength: (length) {
-              setState(() {
-                selectedPeriodLength = length;
-              });
-            },
-            initialSelectedPeriodLength: selectedPeriodLength,
-            setSelectedRecurrence: (recurrence) {
-              setState(() {
-                selectedRecurrence = recurrence;
-              });
-            },
-            initialSelectedRecurrence: selectedRecurrence,
-            setSelectedStartDate: (date) {
-              setState(() {
-                selectedStartDate = date;
-              });
-            },
-            initialSelectedStartDate: selectedStartDate,
-            setSelectedEndDate: (date) {
-              setState(() {
-                selectedEndDate = date;
-              });
-            },
-            initialSelectedEndDate: selectedEndDate,
+          // Toggle Selector for Budget vs Goal
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ChoiceChip(
+                    avatar: Icon(
+                      Icons.pie_chart_outline_rounded,
+                      size: 16,
+                      color: !isGoalSelected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    label: TextFont(
+                      text: "Budget",
+                      fontSize: 13.5,
+                      fontWeight: !isGoalSelected ? FontWeight.bold : FontWeight.normal,
+                      textColor: !isGoalSelected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    selected: !isGoalSelected,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    showCheckmark: false,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          isGoalSelected = false;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                  ChoiceChip(
+                    avatar: Icon(
+                      Icons.savings_outlined,
+                      size: 16,
+                      color: isGoalSelected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    label: TextFont(
+                      text: "Savings Goal",
+                      fontSize: 13.5,
+                      fontWeight: isGoalSelected ? FontWeight.bold : FontWeight.normal,
+                      textColor: isGoalSelected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    selected: isGoalSelected,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    showCheckmark: false,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          isGoalSelected = true;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
-          // This is pretty confusing, users can enable this later by editing the budget
-          // Opacity(
-          //   opacity: 0.8,
-          //   child: ChoiceChip(
-          //     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          //     selectedColor: appStateSettings["materialYou"]
-          //         ? null
-          //         : getColor(context, "lightDarkAccentHeavy"),
-          //     label: TextFont(
-          //       text: "include-income-onboarding-label".tr() +
-          //           (selectedIncludeIncome == false ? "?" : ""),
-          //       fontSize: 15,
-          //     ),
-          //     selected: selectedIncludeIncome,
-          //     onSelected: (bool selected) {
-          //       setState(() {
-          //         selectedIncludeIncome = selected;
-          //       });
-          //     },
-          //   ),
-          // ),
-
-
+          const SizedBox(height: 10),
+          if (!isGoalSelected)
+            BudgetDetails(
+              determineBottomButton: () {},
+              setSelectedAmount: (amount, _) {
+                setState(() {
+                  selectedAmount = amount;
+                });
+              },
+              initialSelectedAmount: selectedAmount,
+              setSelectedPeriodLength: (length) {
+                setState(() {
+                  selectedPeriodLength = length;
+                });
+              },
+              initialSelectedPeriodLength: selectedPeriodLength,
+              setSelectedRecurrence: (recurrence) {
+                setState(() {
+                  selectedRecurrence = recurrence;
+                });
+              },
+              initialSelectedRecurrence: selectedRecurrence,
+              setSelectedStartDate: (date) {
+                setState(() {
+                  selectedStartDate = date;
+                });
+              },
+              initialSelectedStartDate: selectedStartDate,
+              setSelectedEndDate: (date) {
+                setState(() {
+                  selectedEndDate = date;
+                });
+              },
+              initialSelectedEndDate: selectedEndDate,
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  SelectAmount(
+                    amountPassed: (selectedAmount ?? 0).toString(),
+                    setSelectedAmount: (amount, _) {
+                      setState(() {
+                        selectedAmount = amount;
+                      });
+                    },
+                    selectedWalletPk: appStateSettings["selectedWalletPk"] ?? "0",
+                    setSelectedWalletPk: (_) {},
+                    enableWalletPicker: false,
+                    onlyShowCurrencyIcon: true,
+                    padding: const EdgeInsetsDirectional.symmetric(horizontal: 8),
+                  ),
+                  const SizedBox(height: 10),
+                  TextInput(
+                    labelText: "Goal Name (e.g. Vacation, Emergency Fund)",
+                    initialValue: selectedGoalTitle,
+                    icon: Icons.flag_outlined,
+                    onChanged: (val) {
+                      selectedGoalTitle = val;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 10),
+          // Custom / Detailed Creator Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              LowKeyButton(
+                extraWidget: const Padding(
+                  padding: EdgeInsetsDirectional.only(end: 6),
+                  child: Icon(Icons.add_circle_outline_rounded, size: 18),
+                ),
+                extraWidgetAtBeginning: true,
+                text: isGoalSelected ? "Custom Goal Options..." : "Custom Budget Options...",
+                onTap: () {
+                  if (isGoalSelected) {
+                    pushRoute(
+                      context,
+                      const AddObjectivePage(
+                        routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                        objectiveType: ObjectiveType.goal,
+                      ),
+                    );
+                  } else {
+                    pushRoute(
+                      context,
+                      const AddBudgetPage(
+                        routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
           Padding(
-            padding: const EdgeInsetsDirectional.symmetric(horizontal: 25),
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 25, vertical: 8),
             child: TextFont(
-              text: "onboarding-info-2-1".tr(),
+              text: isGoalSelected
+                  ? "Track your target savings, milestones, and dreams with automated progress."
+                  : "onboarding-info-2-1".tr(),
               textAlign: TextAlign.center,
-              fontSize: 15,
+              fontSize: 14,
               maxLines: 5,
               textColor: getColor(context, "black").withValues(alpha: 0.35),
             ),

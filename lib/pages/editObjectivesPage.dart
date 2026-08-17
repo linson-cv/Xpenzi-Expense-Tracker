@@ -47,6 +47,13 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
   int currentReorder = -1;
   String searchValue = "";
   bool isFocused = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -134,12 +141,25 @@ class _EditObjectivesPageState extends State<EditObjectivesPage> {
                   });
                 },
                 child: TextInput(
+                  controller: _searchController,
                   labelText: widget.objectiveType == ObjectiveType.loan
                       ? "search-loans-placeholder".tr()
                       : "search-goals-placeholder".tr(),
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.search_outlined
-                      : Icons.search_rounded,
+                  icon: searchValue.trim().isNotEmpty
+                      ? (appStateSettings["outlinedIcons"]
+                          ? Icons.close_outlined
+                          : Icons.close_rounded)
+                      : (appStateSettings["outlinedIcons"]
+                          ? Icons.search_outlined
+                          : Icons.search_rounded),
+                  iconOnTap: searchValue.trim().isNotEmpty
+                      ? () {
+                          _searchController.clear();
+                          setState(() {
+                            searchValue = "";
+                          });
+                        }
+                      : null,
                   onSubmitted: (value) {
                     setState(() {
                       searchValue = value;

@@ -118,19 +118,21 @@ class _EditHomePageState extends State<EditHomePage> {
             extraWidgetsBelow: [
               HorizontalBreakAbove(
                 enabled: true,
-                child: SettingsContainerSwitch(
-                  enableBorderRadius: true,
-                  title: "Group by color",
-                  description: "Visually group accounts by color in the list",
-                  onSwitched: (value) {
-                    updateSettings("walletsListGroupByColor", value,
-                        updateGlobalState: true);
-                  },
-                  initialValue:
-                      appStateSettings["walletsListGroupByColor"] ?? false,
+                child: SettingsContainerDropdown(
+                  title: "Group Accounts By",
                   icon: appStateSettings["outlinedIcons"]
-                      ? Icons.palette_outlined
-                      : Icons.palette_rounded,
+                      ? Icons.category_outlined
+                      : Icons.category_rounded,
+                  initial: appStateSettings["walletsListGroupStyle"] ?? "Account Type",
+                  items: const ["Account Type", "Color", "None"],
+                  onChanged: (value) {
+                    updateSettings(
+                      "walletsListGroupStyle",
+                      value,
+                      updateGlobalState: true,
+                    );
+                  },
+                  getLabel: (item) => item,
                 ),
               ),
             ],

@@ -47,10 +47,17 @@ class UpcomingOverdueTransactionsState
     extends State<UpcomingOverdueTransactions> {
   late bool? overdueTransactions = widget.overdueTransactions;
   String? searchValue;
+  final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   SelectedSubscriptionsType selectedType = SelectedSubscriptionsType
       .values[appStateSettings["selectedSubscriptionType"]];
   GlobalKey<PageFrameworkState> pageState = GlobalKey();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void scrollToTop() {
     pageState.currentState?.scrollToTop();
@@ -215,10 +222,23 @@ class UpcomingOverdueTransactionsState
                   padding:
                       const EdgeInsetsDirectional.only(bottom: 4.0, top: 8),
                   child: TextInput(
+                    controller: _searchController,
                     labelText: "search-transactions-placeholder".tr(),
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.search_outlined
-                        : Icons.search_rounded,
+                    icon: (searchValue != null && searchValue!.trim().isNotEmpty)
+                        ? (appStateSettings["outlinedIcons"]
+                            ? Icons.close_outlined
+                            : Icons.close_rounded)
+                        : (appStateSettings["outlinedIcons"]
+                            ? Icons.search_outlined
+                            : Icons.search_rounded),
+                    iconOnTap: (searchValue != null && searchValue!.trim().isNotEmpty)
+                        ? () {
+                            _searchController.clear();
+                            setState(() {
+                              searchValue = null;
+                            });
+                          }
+                        : null,
                     focusNode: _searchFocusNode,
                     onSubmitted: (value) {
                       setState(() {

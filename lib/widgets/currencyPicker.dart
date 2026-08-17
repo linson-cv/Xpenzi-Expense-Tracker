@@ -37,7 +37,14 @@ class _CurrencyPickerState extends State<CurrencyPicker> {
   bool viewAll = false;
   String? selectedCurrency;
   String? searchText = "";
+  final TextEditingController _searchController = TextEditingController();
   Map<String, dynamic> currencies = {};
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
   late String? initialCurrency = widget.initialCurrency;
   List<String> popularCurrenciesLocal = popularCurrencies;
 
@@ -140,10 +147,21 @@ class _CurrencyPickerState extends State<CurrencyPicker> {
                           }
                         },
                         child: TextInput(
+                          controller: _searchController,
                           labelText: "search-currencies-placeholder".tr(),
-                          icon: appStateSettings["outlinedIcons"]
-                              ? Icons.search_outlined
-                              : Icons.search_rounded,
+                          icon: (searchText != null && searchText!.trim().isNotEmpty)
+                              ? (appStateSettings["outlinedIcons"]
+                                  ? Icons.close_outlined
+                                  : Icons.close_rounded)
+                              : (appStateSettings["outlinedIcons"]
+                                  ? Icons.search_outlined
+                                  : Icons.search_rounded),
+                          iconOnTap: (searchText != null && searchText!.trim().isNotEmpty)
+                              ? () {
+                                  _searchController.clear();
+                                  searchCurrencies("");
+                                }
+                              : null,
                           onChanged: (text) {
                             searchCurrencies(text);
                           },

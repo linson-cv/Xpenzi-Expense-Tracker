@@ -28,6 +28,7 @@ import 'package:budget/widgets/importCSV.dart';
 import 'package:budget/widgets/exportCSV.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/pages/activityPage.dart';
+import 'package:budget/pages/trashPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
 import 'package:budget/pages/editBudgetPage.dart';
 import 'package:budget/pages/editCategoriesPage.dart';
@@ -195,11 +196,9 @@ class _ExploreCard {
 
 // ─── Canonical ordered card list (default order) ────────────────────────────
 
-// ─── Canonical ordered card list (default order) ────────────────────────────
-
 const List<String> _kDefaultCardOrder = [
   "premium", "about", "betaFeedback", "faq", "googleAccount",
-  "calendar", "activityLog", "subscriptions", "scheduled",
+  "calendar", "activityLog", "trash", "subscriptions", "scheduled",
   "goals", "loans", "accounts", "budgets",
   "intelligence", "offlineIntelligence",
   "billSplitter", "transactions", "search",
@@ -368,6 +367,17 @@ class _MorePagesState extends State<MorePages> {
           openPage: const ActivityPage(),
           title: "Activity Log",
           icon: appStateSettings["outlinedIcons"] ? Icons.receipt_long_outlined : Icons.receipt_long_rounded,
+          isOutlined: true,
+        ),
+      ),
+      "trash": _ExploreCard(
+        key: "trash",
+        title: "Trash (30 Days)",
+        icon: appStateSettings["outlinedIcons"] ? Icons.delete_outline_rounded : Icons.delete_rounded,
+        builder: (_) => SettingsContainerOpenPage(
+          openPage: const TrashPage(),
+          title: "Trash (30 Days)",
+          icon: appStateSettings["outlinedIcons"] ? Icons.delete_outline_rounded : Icons.delete_rounded,
           isOutlined: true,
         ),
       ),
@@ -695,8 +705,8 @@ class _MorePagesState extends State<MorePages> {
                         const EditDataOverviewPage(),
                       );
                     },
-                    title: "Edit, Delete, and Reorder Data",
-                    description: "For accounts, categories, titles, budgets, goals, loans",
+                    title: "Edit, Delete & Reorder Data",
+                    description: "Manage accounts, categories, titles, budgets, goals & loans",
                     icon: appStateSettings["outlinedIcons"]
                         ? Icons.edit_note_outlined
                         : Icons.edit_note_rounded,
@@ -890,6 +900,13 @@ class SettingsPageFramework extends StatefulWidget {
 
 class SettingsPageFrameworkState extends State<SettingsPageFramework> {
   String searchValue = "";
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void refreshState() {
     print("refresh settings framework");
@@ -898,31 +915,52 @@ class SettingsPageFrameworkState extends State<SettingsPageFramework> {
 
   @override
   Widget build(BuildContext context) {
-    return PageFramework(
-      title: "settings".tr(),
-      dragDownToDismiss: true,
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 15, end: 15),
-            child: TextInput(
-              labelText: "Find settings, preferences & features...",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.search_outlined
-                  : Icons.search_rounded,
-              onChanged: (value) {
-                setState(() {
-                  searchValue = value.toLowerCase();
-                });
-              },
-              autoFocus: false,
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          Navigator.of(context).maybePop();
+        }
+      },
+      child: PageFramework(
+        title: "settings".tr(),
+        dragDownToDismiss: true,
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(bottom: 8.0, start: 15, end: 15),
+              child: TextInput(
+                controller: _searchController,
+                labelText: "Find settings, preferences & features...",
+                icon: searchValue.trim().isNotEmpty
+                    ? (appStateSettings["outlinedIcons"]
+                        ? Icons.close_outlined
+                        : Icons.close_rounded)
+                    : (appStateSettings["outlinedIcons"]
+                        ? Icons.search_outlined
+                        : Icons.search_rounded),
+                iconOnTap: searchValue.trim().isNotEmpty
+                    ? () {
+                        _searchController.clear();
+                        setState(() {
+                          searchValue = "";
+                        });
+                      }
+                    : null,
+                onChanged: (value) {
+                  setState(() {
+                    searchValue = value.toLowerCase();
+                  });
+                },
+                autoFocus: false,
+              ),
             ),
           ),
-        ),
-        SliverToBoxAdapter(
-          child: SettingsPageContent(searchValue: searchValue),
-        ),
-      ],
+          SliverToBoxAdapter(
+            child: SettingsPageContent(searchValue: searchValue),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1016,7 +1054,7 @@ class SettingsPageContent extends StatelessWidget {
         children: [
           AnimatedExpanded(
             expand: _match("General Settings", "Biometric lock, haptic feedback, edit data", [
-              "general", "preferences", "biometric", "biometrics", "fingerprint", "face id", "lock", "passcode", "pin", "security", "haptic", "feedback", "vibration", "edit home", "widgets", "layout", "floating", "dock", "navbar", "navigation bar", "labels", "reset home", "default layout"
+              "general", "preferences", "biometric", "biometrics", "fingerprint", "face id", "lock", "passcode", "pin", "security", "haptic", "feedback", "vibration", "edit home", "widgets", "layout", "floating", "dock", "navbar", "navigation bar", "labels", "reset home", "default layout", "username", "display name", "greeting"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1034,7 +1072,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("Theme & Style", "Theme color, icon style, animations, font", [
-              "theme", "style", "appearance", "dark mode", "light mode", "color", "accent", "outlined", "icons", "font", "typography", "animation", "animations", "count up", "black background", "palette"
+              "theme", "style", "appearance", "dark mode", "light mode", "color", "accent", "outlined", "icons", "font", "typography", "animation", "animations", "count up", "black background", "palette", "amoled", "custom color", "colorful"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1052,7 +1090,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("Transactions", "New transaction, scheduled transactions", [
-              "transaction", "transactions", "auto pay", "automatic", "subscriptions", "recurring", "repetitive", "upcoming", "compact", "title", "note", "layout"
+              "transaction", "transactions", "auto pay", "automatic", "subscriptions", "recurring", "repetitive", "upcoming", "compact", "title", "note", "layout", "pin account", "account filters", "balance transfer", "attachments"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1068,7 +1106,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("Localization & Formatting", "Language, currency, formatting", [
-              "localization", "formatting", "language", "locale", "translation", "currency", "currencies", "exchange rate", "24-hour", "time format", "format", "decimals"
+              "localization", "formatting", "language", "locale", "translation", "currency", "currencies", "exchange rate", "24-hour", "time format", "format", "decimals", "first day of week", "number format", "percentage", "precision"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1086,7 +1124,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("Notifications", "Daily & upcoming transaction reminders", [
-              "notification", "notifications", "reminder", "reminders", "daily", "upcoming", "alert"
+              "notification", "notifications", "reminder", "reminders", "daily", "upcoming", "alert", "notification time"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1104,7 +1142,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("Data, Backup & Sync", "Backup to Google Drive, spreadsheets, restore", [
-              "import", "export", "csv", "pdf", "backup", "restore", "google drive", "data", "file", "spreadsheets", "sync"
+              "import", "export", "csv", "pdf", "backup", "restore", "google drive", "data", "file", "spreadsheets", "sync", "cloud", "sheets", "export data"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1122,7 +1160,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("Data Management & Reset", "Erase local data, wipe cloud backups", [
-              "erase", "delete", "wipe", "reset", "clear", "clear database", "delete all data", "factory reset", "erase cloud"
+              "erase", "delete", "wipe", "reset", "clear", "clear database", "delete all data", "factory reset", "erase cloud", "purge"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1140,7 +1178,7 @@ class SettingsPageContent extends StatelessWidget {
           ),
           AnimatedExpanded(
             expand: _match("about-app".tr(namedArgs: {"app": globalAppName}), "App version, changelog, licensing info", [
-              "about", "version", "changelog", "license", "licensing", "app info"
+              "about", "version", "changelog", "license", "licensing", "app info", "what's new", "updates", "privacy policy"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1159,7 +1197,7 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: _match("Intelligent & Automation", "Offline intelligence, Gemini AI, email automation", [
-              "ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence"
+              "ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence", "bank sms", "auto detect", "gemini model", "custom prompt", "receipt scanner"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1178,8 +1216,9 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Permissions", "", ["permission", "permissions", "security", "device", "access"]) || 
-                    _match("Device Permissions", "", ["permission", "permissions", "security", "device", "access"]),
+                    _match("Device Permissions", "Storage, notification access, biometrics & security", [
+                      "permission", "permissions", "security", "device", "access", "notification listener", "read notifications", "biometrics permission", "app settings"
+                    ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -1197,9 +1236,9 @@ class SettingsPageContent extends StatelessWidget {
 
           AnimatedExpanded(
             expand: searchValue.trim().isEmpty || 
-                    _match("Tools & Extras", "", ["bill", "splitter", "display", "preferences", "visual", "layout"]) || 
-                    _match("Bill Splitter", "", ["bill", "splitter", "split", "divide bill", "group bill"]) || 
-                    _match("Display Preferences", "", ["display", "preferences", "visual", "layout", "cards", "icons", "animations"]),
+                    _match("Tools & Extras", "Bill splitter, display & visual preferences", [
+                      "tool", "tools", "extras", "bill", "splitter", "split", "divide bill", "group bill", "tip", "calculate tip", "diagnostic", "error logs", "logs", "error log", "report bug", "performance", "animations", "budget cards", "display preferences", "visual"
+                    ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
@@ -1230,12 +1269,12 @@ class GeneralSettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "general".tr(),
+      title: "General Settings",
       dragDownToDismiss: true,
       listWidgets: [
         // Security & Preferences Section
         SettingsGroupCard(
-          title: "preferences".tr(),
+          title: "Preferences & Security",
           icon: appStateSettings["outlinedIcons"]
               ? Icons.tune_outlined
               : Icons.tune_rounded,
@@ -1310,7 +1349,7 @@ class GeneralSettingsSubPage extends StatelessWidget {
 
         // Widgets Section
         SettingsGroupCard(
-          title: "widgets".tr(),
+          title: "Home Widgets",
           icon: appStateSettings["outlinedIcons"]
               ? Icons.widgets_outlined
               : Icons.widgets_rounded,
@@ -1321,7 +1360,7 @@ class GeneralSettingsSubPage extends StatelessWidget {
 
         // Edit Data Section
         SettingsGroupCard(
-          title: "data".tr(),
+          title: "Manage App Data",
           icon: appStateSettings["outlinedIcons"]
               ? Icons.edit_note_outlined
               : Icons.edit_note_rounded,
@@ -1470,6 +1509,24 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
               },
               getLabel: (item) => item,
             ),
+            SettingsContainerDropdown(
+              title: "Account Total Style",
+              icon: appStateSettings["outlinedIcons"]
+                  ? Icons.account_balance_wallet_outlined
+                  : Icons.account_balance_wallet_rounded,
+              initial: appStateSettings["accountColorfulAmountsWithArrows"] == true
+                  ? "Colorful with Arrows"
+                  : "Simple",
+              items: const ["Simple", "Colorful with Arrows"],
+              onChanged: (value) {
+                updateSettings(
+                  "accountColorfulAmountsWithArrows",
+                  value == "Colorful with Arrows",
+                  updateGlobalState: true,
+                );
+              },
+              getLabel: (item) => item,
+            ),
           ],
         ),
 
@@ -1529,7 +1586,7 @@ class TransactionsSettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "transactions".tr(),
+      title: "Transactions",
       dragDownToDismiss: true,
       listWidgets: [
         // Add New Transactions Section
@@ -1664,7 +1721,7 @@ class LocalizationSettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "Localization",
+      title: "Localization & Formatting",
       dragDownToDismiss: true,
       listWidgets: [
         // Language Section
@@ -1767,37 +1824,56 @@ class IntelligentAutomationSettingsSubPage extends StatelessWidget {
       title: "Intelligent & Automation",
       dragDownToDismiss: true,
       listWidgets: [
+        // Section 1: Offline SMS & Notification Intelligence
         SettingsGroupCard(
-          title: "Intelligent & Automation",
+          title: "Offline Intelligence",
           icon: appStateSettings["outlinedIcons"]
-              ? Icons.auto_awesome_outlined
-              : Icons.auto_awesome_rounded,
+              ? Icons.sms_outlined
+              : Icons.sms_rounded,
           children: [
             SettingsContainerOpenPage(
               openPage: const OfflineIntelligencePage(),
               title: "Auto-Detect Bank SMS & Alerts",
               description: "100% Private on-device bank SMS & payment notification parser",
               icon: appStateSettings["outlinedIcons"]
-                  ? Icons.sms_outlined
-                  : Icons.sms_rounded,
+                  ? Icons.mark_chat_read_outlined
+                  : Icons.mark_chat_read_rounded,
             ),
-            const Divider(height: 1),
+          ],
+        ),
+
+        // Section 2: Gemini AI Intelligence
+        SettingsGroupCard(
+          title: "Xpenzi AI Intelligence",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.auto_awesome_outlined
+              : Icons.auto_awesome_rounded,
+          children: [
             SettingsContainerOpenPage(
               openPage: const AiSettingsPage(),
               title: "Xpenzi Intelligence",
               description: "Google Gemini AI model, category suggestions, and custom prompt rules",
               icon: appStateSettings["outlinedIcons"]
-                  ? Icons.auto_awesome_outlined
-                  : Icons.auto_awesome_rounded,
+                  ? Icons.psychology_outlined
+                  : Icons.psychology_rounded,
             ),
-            const Divider(height: 1),
+          ],
+        ),
+
+        // Section 3: Advanced Email Automation
+        SettingsGroupCard(
+          title: "Mailbox Automation",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.mark_email_read_outlined
+              : Icons.mark_email_read_rounded,
+          children: [
             SettingsContainerOpenPage(
               openPage: const AutoTransactionsPageEmail(),
-              title: "Advanced Automation",
+              title: "Email Receipt Scanner",
               description: "Connect mailbox to automatically track bank transaction receipts",
               icon: appStateSettings["outlinedIcons"]
-                  ? Icons.mark_email_read_outlined
-                  : Icons.mark_email_read_rounded,
+                  ? Icons.alternate_email_outlined
+                  : Icons.alternate_email_rounded,
             ),
           ],
         ),
@@ -1869,10 +1945,48 @@ void deleteAllDataFlow(BuildContext context) {
 
 Future clearDatabase(BuildContext context) async {
   openLoadingPopup(context);
+  try {
+    await cancelUpcomingTransactionsNotification();
+  } catch (e) {
+    print("Error cancelling notifications: $e");
+  }
   await Future.wait([database.deleteEverything(), sharedPreferences.clear()]);
-  await database.close();
   popRoute(context);
   restartAppPopup(context);
+}
+
+Future clearTransactionsFlow(BuildContext context) async {
+  openPopup(
+    context,
+    title: "Clear Transactions & History",
+    description:
+        "This will permanently remove all transactions, activity logs, and expense records, while keeping your Accounts, Categories, Budgets, and Savings Goals intact.",
+    icon: appStateSettings["outlinedIcons"]
+        ? Icons.delete_sweep_outlined
+        : Icons.delete_sweep_rounded,
+    onSubmit: () async {
+      popRoute(context);
+      openLoadingPopup(context);
+      try {
+        await database.clearTransactionsOnly();
+      } catch (e) {
+        print("Error clearing transactions: $e");
+      }
+      popRoute(context);
+      openSnackbar(
+        SnackbarMessage(
+          title: "Transactions Cleared",
+          description: "All transactions have been removed.",
+          icon: Icons.check_circle_outline_rounded,
+        ),
+      );
+    },
+    onSubmitLabel: "Clear",
+    onCancelLabel: "cancel".tr(),
+    onCancel: () {
+      popRoute(context);
+    },
+  );
 }
 
 class EraseDataConfirmationPopup extends StatefulWidget {
@@ -1965,12 +2079,24 @@ class DataManagementSettingsSubPage extends StatelessWidget {
       dragDownToDismiss: true,
       listWidgets: [
         SettingsGroupCard(
+          title: "Clear Transactions",
+          icon: Icons.cleaning_services_rounded,
+          children: [
+            SettingsContainer(
+              title: "Clear Transactions & History",
+              description: "Erase all transaction records while keeping your accounts, categories, budgets, and savings goals intact.",
+              icon: Icons.delete_sweep_rounded,
+              onTap: () => clearTransactionsFlow(context),
+            ),
+          ],
+        ),
+        SettingsGroupCard(
           title: "Reset & Data Management",
           icon: Icons.restart_alt_rounded,
           children: [
             SettingsContainer(
-              title: "Erase Local Data",
-              description: "Permanently erase all local accounts, transactions, categories, budgets, and preferences on this device.",
+              title: "Erase Local Data (Factory Reset)",
+              description: "Permanently erase all local accounts, transactions, categories, budgets, goals, and preferences on this device.",
               icon: Icons.phonelink_erase_rounded,
               onTap: () => deleteAllDataFlow(context),
             ),
@@ -1992,41 +2118,93 @@ class DataManagementSettingsSubPage extends StatelessWidget {
 class EditDataOverviewPage extends StatelessWidget {
   const EditDataOverviewPage({super.key});
 
+  Widget _buildTile(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Widget openPage,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: SettingsContainerOpenPage(
+        openPage: openPage,
+        title: title,
+        description: subtitle,
+        icon: icon,
+        iconSize: 24,
+        isOutlined: true,
+        isWideOutlined: true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return PopupFramework(
-      title: "Edit, Delete, and Reorder Data",
+      title: "Edit, Delete & Reorder Data",
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SettingsContainerOpenPage(
-            openPage: const EditWalletsPage(),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 12),
+            child: TextFont(
+              text: "Select a data module to customize order, rename items, or manage entries.",
+              fontSize: 13,
+              textColor: getColor(context, "textLight"),
+            ),
+          ),
+          _buildTile(
+            context,
             title: navBarIconsData["accountDetails"]!.label.tr(),
+            subtitle: "Manage accounts, balance transfers, and types",
             icon: navBarIconsData["accountDetails"]!.iconData,
+            openPage: const EditWalletsPage(),
+            color: primaryColor,
           ),
-          SettingsContainerOpenPage(
-            openPage: const EditBudgetPage(),
-            title: navBarIconsData["budgetDetails"]!.label.tr(),
-            icon: navBarIconsData["budgetDetails"]!.iconData,
-          ),
-          SettingsContainerOpenPage(
-            openPage: const EditCategoriesPage(),
+          _buildTile(
+            context,
             title: navBarIconsData["categoriesDetails"]!.label.tr(),
+            subtitle: "Organize main categories and subcategories",
             icon: navBarIconsData["categoriesDetails"]!.iconData,
+            openPage: const EditCategoriesPage(),
+            color: Colors.orange,
           ),
-          SettingsContainerOpenPage(
-            openPage: const EditAssociatedTitlesPage(),
+          _buildTile(
+            context,
+            title: navBarIconsData["budgetDetails"]!.label.tr(),
+            subtitle: "Adjust budget spending targets and cycles",
+            icon: navBarIconsData["budgetDetails"]!.iconData,
+            openPage: const EditBudgetPage(),
+            color: Colors.teal,
+          ),
+          _buildTile(
+            context,
             title: navBarIconsData["titlesDetails"]!.label.tr(),
+            subtitle: "Auto-associated payee titles and rules",
             icon: navBarIconsData["titlesDetails"]!.iconData,
+            openPage: const EditAssociatedTitlesPage(),
+            color: Colors.purple,
           ),
-          SettingsContainerOpenPage(
-            openPage: const ObjectivesListPage(backButton: true),
+          _buildTile(
+            context,
             title: navBarIconsData["goals"]!.label.tr(),
+            subtitle: "Savings goals, milestones, and targets",
             icon: navBarIconsData["goals"]!.iconData,
+            openPage: const ObjectivesListPage(backButton: true),
+            color: Colors.green,
           ),
-          SettingsContainerOpenPage(
-            openPage: const CreditDebtTransactions(isCredit: null),
+          _buildTile(
+            context,
             title: navBarIconsData["loans"]!.label.tr(),
+            subtitle: "Borrowing, lending, debts, and payments",
             icon: navBarIconsData["loans"]!.iconData,
+            openPage: const CreditDebtTransactions(isCredit: null),
+            color: Colors.indigo,
           ),
         ],
       ),
@@ -3576,7 +3754,7 @@ class PermissionsSettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "Permissions",
+      title: "Device Permissions",
       dragDownToDismiss: true,
       listWidgets: [
         SettingsGroupCard(

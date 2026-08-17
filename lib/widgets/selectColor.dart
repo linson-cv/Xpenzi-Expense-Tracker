@@ -171,7 +171,11 @@ class _SelectColorState extends State<SelectColor> {
                                     selectedIndex ==
                                         selectableColorsList.length - 1 &&
                                     index == selectedIndex) ||
-                                selectedColor.toString() == color.toString(),
+                                (selectedColor != null &&
+                                    (colorToHex(selectedColor!) ==
+                                            colorToHex(color) ||
+                                        selectedColor!.toARGB32() ==
+                                            color.toARGB32())),
                           ),
               );
             },

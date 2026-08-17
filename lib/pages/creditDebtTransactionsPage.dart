@@ -55,6 +55,7 @@ class CreditDebtTransactionsState extends State<CreditDebtTransactions>
 
   late bool? isCredit = widget.isCredit;
   String? searchValue;
+  final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   int? numberLongTerm;
   GlobalKey<PageFrameworkState> pageState = GlobalKey();
@@ -81,6 +82,7 @@ class CreditDebtTransactionsState extends State<CreditDebtTransactions>
   void dispose() {
     _tabController.removeListener(onTabController);
     _tabController.dispose();
+    _searchController.dispose();
     // PageFramework takes care of the dispose lifecycle
     // _scrollController.dispose();
     super.dispose();
@@ -283,10 +285,23 @@ class CreditDebtTransactionsState extends State<CreditDebtTransactions>
             child: Padding(
               padding: const EdgeInsetsDirectional.only(top: 8),
               child: TextInput(
+                controller: _searchController,
                 labelText: "search-loans-placeholder".tr(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.search_outlined
-                    : Icons.search_rounded,
+                icon: (searchValue != null && searchValue!.trim().isNotEmpty)
+                    ? (appStateSettings["outlinedIcons"]
+                        ? Icons.close_outlined
+                        : Icons.close_rounded)
+                    : (appStateSettings["outlinedIcons"]
+                        ? Icons.search_outlined
+                        : Icons.search_rounded),
+                iconOnTap: (searchValue != null && searchValue!.trim().isNotEmpty)
+                    ? () {
+                        _searchController.clear();
+                        setState(() {
+                          searchValue = null;
+                        });
+                      }
+                    : null,
                 focusNode: _searchFocusNode,
                 onSubmitted: (value) {
                   setState(() {

@@ -41,6 +41,13 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
   bool dragDownToDismissEnabled = true;
   int currentReorder = -1;
   String searchValue = "";
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -114,10 +121,23 @@ class _EditCategoriesPageState extends State<EditCategoriesPage> {
             child: Padding(
               padding: const EdgeInsetsDirectional.only(bottom: 8.0),
               child: TextInput(
+                controller: _searchController,
                 labelText: "search-categories-placeholder".tr(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.search_outlined
-                    : Icons.search_rounded,
+                icon: searchValue.trim().isNotEmpty
+                    ? (appStateSettings["outlinedIcons"]
+                        ? Icons.close_outlined
+                        : Icons.close_rounded)
+                    : (appStateSettings["outlinedIcons"]
+                        ? Icons.search_outlined
+                        : Icons.search_rounded),
+                iconOnTap: searchValue.trim().isNotEmpty
+                    ? () {
+                        _searchController.clear();
+                        setState(() {
+                          searchValue = "";
+                        });
+                      }
+                    : null,
                 onSubmitted: (value) {
                   setState(() {
                     searchValue = value;

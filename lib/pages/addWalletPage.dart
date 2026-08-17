@@ -33,6 +33,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:budget/colors.dart';
 import 'package:provider/provider.dart';
+import 'package:budget/widgets/walletEntry.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class AddWalletPage extends StatefulWidget {
@@ -170,12 +171,8 @@ class _AddWalletPageState extends State<AddWalletPage> {
       selectedCurrency = widget.wallet!.currency ?? "usd";
       selectedDecimals = widget.wallet!.decimals;
       canAddWallet = true;
-      // Restore account type from currencyFormat field
-      if (widget.wallet!.currencyFormat != null &&
-          ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
-              .contains(widget.wallet!.currencyFormat)) {
-        selectedAccountType = widget.wallet!.currencyFormat!;
-      }
+      // Restore account type from currencyFormat field or inferred type
+      selectedAccountType = getWalletAccountType(widget.wallet!);
     }
     populateCurrencies();
     Future.delayed(Duration.zero, () async {

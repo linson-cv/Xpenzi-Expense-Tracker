@@ -226,15 +226,20 @@ class HandleWillPopScope extends StatelessWidget {
           return false;
         }
 
-        // 2. If any sub-route, sheet, or dialog is open, pop it first
-        bool popResult = await maybePopRoute(navigatorKey.currentContext);
-        if (popResult == true) return false;
-
-        if (navigatorKey.currentContext != null &&
-            Navigator.of(navigatorKey.currentContext!, rootNavigator: true).canPop()) {
-          Navigator.of(navigatorKey.currentContext!, rootNavigator: true).pop();
+        // 2. If any sub-route, sheet, dialog, or nested page is open, pop it first
+        BuildContext? navContext = navigatorKey.currentContext ?? context;
+        if (Navigator.of(navContext, rootNavigator: false).canPop()) {
+          Navigator.of(navContext, rootNavigator: false).pop();
           return false;
         }
+
+        if (Navigator.of(navContext, rootNavigator: true).canPop()) {
+          Navigator.of(navContext, rootNavigator: true).pop();
+          return false;
+        }
+
+        bool popResult = await maybePopRoute(navContext);
+        if (popResult == true) return false;
 
         // 3. Deselect selected transactions if any
         int notEmpty = 0;
@@ -254,7 +259,7 @@ class HandleWillPopScope extends StatelessWidget {
           return false;
         }
 
-        // 5. Allow back button to exit app only when already on Home page (tab 0)
+        // 5. Allow back button to exit app only when already on Home page (tab 0) with no sub-routes open
         return true;
       },
     );

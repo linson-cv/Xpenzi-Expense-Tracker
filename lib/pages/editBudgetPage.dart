@@ -71,6 +71,13 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
   int currentReorder = -1;
   String searchValue = "";
   bool isFocused = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -150,10 +157,23 @@ class _EditBudgetPageState extends State<EditBudgetPage> {
                   });
                 },
                 child: TextInput(
+                  controller: _searchController,
                   labelText: "search-budgets-placeholder".tr(),
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.search_outlined
-                      : Icons.search_rounded,
+                  icon: searchValue.trim().isNotEmpty
+                      ? (appStateSettings["outlinedIcons"]
+                          ? Icons.close_outlined
+                          : Icons.close_rounded)
+                      : (appStateSettings["outlinedIcons"]
+                          ? Icons.search_outlined
+                          : Icons.search_rounded),
+                  iconOnTap: searchValue.trim().isNotEmpty
+                      ? () {
+                          _searchController.clear();
+                          setState(() {
+                            searchValue = "";
+                          });
+                        }
+                      : null,
                   onSubmitted: (value) {
                     setState(() {
                       searchValue = value;

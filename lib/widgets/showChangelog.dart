@@ -26,6 +26,18 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.6
+    (A) App Notification Filter: Ability to restrict notification parsing to specific bank, payment (GPay, PhonePe, Paytm), or SMS apps
+    (A) Notification Deduplication: Prevented double transaction inserts on arrival & removal with strict amount + 15-second time window deduplication
+    (A) Background Notification Alerts: Instant system status notifications when transactions are auto-recorded while the app is in the background or killed
+    (A) Clear Auto-Detection Notes: Annotated auto-recorded transactions with timestamped notification provenance notes
+    (A) 1-Tap Multi-Selection: Initiate multi-select with long-press, then easily select/deselect further transactions with a single tap across all screens
+    (A) 30-Day Trash & Recovery: Added a dedicated Trash card in Explore keeping deleted transactions for 30 days with instant single-tap restore, restore all, and empty trash
+    < 1.2.5
+    (A) Enhanced System Back Navigation: Returning to Home tab before app exit, and seamless pop handling when opening system/app settings
+    (A) Smart Account Grouping: Group accounts on Home by Account Type (Bank Account, Credit Card, Meal Card, Cash, Savings) with dedicated category headers, icons, and subtotals
+    (A) Accounts List & Home Enhancements: Enabled colorful polarity amounts by default and fixed Pay Bill layout spacing
+    (A) Universal Account Type Detection & Persistence: Automatically deduce and save account types from imports and account name heuristics
     < 1.2.4
     (A) Notification Engine Architecture: Extracted background SMS & push notification processing into a dedicated, modular engine
     (A) Google Sign-In & Drive OAuth Resolution: Configured explicit serverClientId for seamless Google Drive and Gmail scope authorization

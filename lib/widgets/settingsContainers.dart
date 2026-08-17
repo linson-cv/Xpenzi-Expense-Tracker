@@ -228,7 +228,7 @@ class SettingsContainerOpenPage extends StatelessWidget {
         onClosed: onClosed,
         onOpen: onOpen,
         closedColor:
-            backgroundColor ?? Theme.of(context).colorScheme.surface,
+            backgroundColor ?? (isOutlined == true ? Theme.of(context).colorScheme.surface : Colors.transparent),
         borderRadius: isOutlined == true
             ? 10
             : getIsFullScreen(context)

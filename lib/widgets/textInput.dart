@@ -70,6 +70,8 @@ class TextInput extends StatelessWidget {
   final VoidCallback? onTap;
   final bool obscureText;
   final IconData? icon;
+  final VoidCallback? iconOnTap;
+  final Widget? suffixIcon;
   final EdgeInsetsDirectional padding;
   final bool autoFocus;
   final VoidCallback? onEditingComplete;
@@ -108,6 +110,8 @@ class TextInput extends StatelessWidget {
     this.onTap,
     this.obscureText = false,
     this.icon,
+    this.iconOnTap,
+    this.suffixIcon,
     this.padding = const EdgeInsetsDirectional.only(start: 18.0, end: 18),
     this.autoFocus = false,
     this.onEditingComplete,
@@ -225,24 +229,33 @@ class TextInput extends StatelessWidget {
                 filled: bubbly == false ? true : false,
                 fillColor: Colors.transparent,
                 isDense: true,
-                suffixIconConstraints: const BoxConstraints(maxHeight: 20),
-                suffixIcon: bubbly == false || icon == null
-                    ? null
-                    : Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                            end: 13.0, start: 5),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            Icon(
-                              icon,
-                              size: 20,
-                              color: Theme.of(context).colorScheme.secondary,
+                suffixIconConstraints: const BoxConstraints(maxHeight: 28),
+                suffixIcon: suffixIcon != null
+                    ? Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 10.0),
+                        child: suffixIcon,
+                      )
+                    : bubbly == false || icon == null
+                        ? null
+                        : Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                                end: 13.0, start: 5),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                GestureDetector(
+                                  onTap: iconOnTap,
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Icon(
+                                    icon,
+                                    size: 20,
+                                    color: Theme.of(context).colorScheme.secondary,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
                 icon: bubbly == false
                     ? icon != null
                         ? Icon(

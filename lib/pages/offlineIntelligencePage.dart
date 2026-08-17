@@ -9,6 +9,7 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
+import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
@@ -185,6 +186,237 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
     }
   }
 
+  void _openAppFilterBottomSheet(BuildContext context) {
+    String currentRaw = (appStateSettings["notificationAllowedPackages"] ?? "").toString();
+    List<String> selectedKeywords = currentRaw
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    // Collect package names from captured logs
+    Set<String> detectedPackages = {};
+    for (String log in recentCapturedNotifications) {
+      for (String line in log.split('\n')) {
+        if (line.toLowerCase().startsWith("package name:")) {
+          String pkg = line.replaceFirst(RegExp(r'package name:\s*', caseSensitive: false), '').trim();
+          if (pkg.isNotEmpty) detectedPackages.add(pkg);
+        }
+      }
+    }
+
+    final List<Map<String, String>> presets = [
+      {"name": "SMS & Messages", "key": "sms,mms,messaging,telephony,samsung.android.messaging,google.android.apps.messaging", "desc": "All device SMS & messaging apps", "icon": "sms"},
+      {"name": "Google Pay", "key": "com.google.android.apps.nbu.paisa.user,com.google.android.apps.walletnfcrel,gpay", "desc": "GPay UPI & Wallet payments", "icon": "gpay"},
+      {"name": "PhonePe", "key": "com.phonepe.app,phonepe", "desc": "PhonePe wallet & UPI", "icon": "phonepe"},
+      {"name": "Paytm", "key": "net.one97.paytm,paytm", "desc": "Paytm UPI & wallet", "icon": "paytm"},
+      {"name": "Banking & Cards", "key": "bank,card,citi,hdfc,icici,sbi,chase,wellsfargo,bofa,revolut,axis,kotak", "desc": "Bank transaction alerts & apps", "icon": "bank"},
+      {"name": "WhatsApp Pay", "key": "com.whatsapp,whatsapp", "desc": "WhatsApp payment alerts", "icon": "whatsapp"},
+      {"name": "CRED", "key": "com.dreamplug.androidapp,cred", "desc": "CRED credit card & UPI alerts", "icon": "cred"},
+      {"name": "Amazon Pay", "key": "in.amazon.mShop.android.shopping,com.amazon.mShop.android.shopping,amazon", "desc": "Amazon Pay UPI alerts", "icon": "amazon"},
+    ];
+
+    TextEditingController customController = TextEditingController();
+
+    openBottomSheet(
+      context,
+      StatefulBuilder(
+        builder: (context, setSheetState) {
+          bool isSelected(String key) {
+            return selectedKeywords.any((k) => k == key.toLowerCase() || key.toLowerCase().contains(k));
+          }
+
+          void toggleSelection(String key) {
+            String lower = key.toLowerCase().trim();
+            if (selectedKeywords.contains(lower)) {
+              selectedKeywords.remove(lower);
+            } else {
+              selectedKeywords.add(lower);
+            }
+            setSheetState(() {});
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.apps_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFont(
+                            text: "Select Apps & Services",
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          TextFont(
+                            text: selectedKeywords.isEmpty
+                                ? "Currently listening to ALL apps & SMS"
+                                : "${selectedKeywords.length} filter keyword${selectedKeywords.length > 1 ? 's' : ''} active",
+                            fontSize: 12.5,
+                            textColor: getColor(context, "textLight"),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (selectedKeywords.isNotEmpty)
+                      IconButton(
+                        tooltip: "Allow All Apps",
+                        icon: const Icon(Icons.clear_all_rounded, size: 22),
+                        onPressed: () {
+                          selectedKeywords.clear();
+                          setSheetState(() {});
+                        },
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextFont(
+                  text: "Popular Payment Apps & Services",
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  textColor: getColor(context, "textLight"),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (var preset in presets)
+                      FilterChip(
+                        label: Text(preset["name"]!),
+                        selected: isSelected(preset["key"]!),
+                        onSelected: (_) => toggleSelection(preset["key"]!),
+                        selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                        checkmarkColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                  ],
+                ),
+                if (detectedPackages.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  TextFont(
+                    text: "Detected from Recent Notifications",
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    textColor: getColor(context, "textLight"),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (String pkg in detectedPackages)
+                        FilterChip(
+                          label: Text(pkg.split('.').last.capitalizeFirst),
+                          selected: isSelected(pkg),
+                          onSelected: (_) => toggleSelection(pkg),
+                          selectedColor: Theme.of(context).colorScheme.secondaryContainer,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 16),
+                TextFont(
+                  text: "Add Custom Package / Keyword",
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  textColor: getColor(context, "textLight"),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: customController,
+                        decoration: InputDecoration(
+                          hintText: "e.g. revolut, sbi, chase",
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Button(
+                      label: "Add",
+                      icon: Icons.add_rounded,
+                      padding: const EdgeInsetsDirectional.symmetric(horizontal: 14, vertical: 10),
+                      onTap: () {
+                        if (customController.text.trim().isNotEmpty) {
+                          toggleSelection(customController.text.trim());
+                          customController.clear();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Button(
+                        label: "Cancel",
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        textColor: getColor(context, "blackAndWhite"),
+                        onTap: () => popRoute(context),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Button(
+                        label: "Apply Selection",
+                        color: Theme.of(context).colorScheme.primary,
+                        textColor: Theme.of(context).colorScheme.onPrimary,
+                        onTap: () async {
+                          await updateSettings(
+                            "notificationAllowedPackages",
+                            selectedKeywords.join(','),
+                            updateGlobalState: true,
+                          );
+                          popRoute(context);
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isScanningActive =
@@ -337,6 +569,20 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
               onSwitched: (val) {
                 updateSettings("localNlpParsing", val,
                     updateGlobalState: true);
+              },
+            ),
+            const Divider(height: 1),
+            SettingsContainer(
+              title: "App Filter / Whitelist",
+              description: (appStateSettings["notificationAllowedPackages"] ?? "")
+                      .toString()
+                      .trim()
+                      .isNotEmpty
+                  ? "Filtering active (${(appStateSettings["notificationAllowedPackages"] as String).split(',').where((e) => e.trim().isNotEmpty).length} selected)"
+                  : "All apps and SMS (tap to select specific apps)",
+              icon: Icons.filter_list_rounded,
+              onTap: () {
+                _openAppFilterBottomSheet(context);
               },
             ),
             const Divider(height: 1),

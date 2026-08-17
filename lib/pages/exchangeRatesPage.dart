@@ -31,6 +31,13 @@ class ExchangeRates extends StatefulWidget {
 
 class _ExchangeRatesState extends State<ExchangeRates> {
   String searchCurrenciesText = "";
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future addCustomCurrency(String customKey) async {
     List<dynamic> customCurrencies = appStateSettings["customCurrencies"];
@@ -154,10 +161,23 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                 const SizedBox(width: 15),
                 Expanded(
                   child: TextInput(
+                    controller: _searchController,
                     labelText: "search-currencies-placeholder".tr(),
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.search_outlined
-                        : Icons.search_rounded,
+                    icon: searchCurrenciesText.trim().isNotEmpty
+                        ? (appStateSettings["outlinedIcons"]
+                            ? Icons.close_outlined
+                            : Icons.close_rounded)
+                        : (appStateSettings["outlinedIcons"]
+                            ? Icons.search_outlined
+                            : Icons.search_rounded),
+                    iconOnTap: searchCurrenciesText.trim().isNotEmpty
+                        ? () {
+                            _searchController.clear();
+                            setState(() {
+                              searchCurrenciesText = "";
+                            });
+                          }
+                        : null,
                     onChanged: (value) {
                       setState(() {
                         searchCurrenciesText = value;

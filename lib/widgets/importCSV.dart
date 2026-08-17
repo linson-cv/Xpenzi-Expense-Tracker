@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
@@ -30,6 +30,7 @@ import 'package:csv/csv.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:provider/provider.dart';
+import 'package:budget/widgets/walletEntry.dart';
 import 'package:http/http.dart' as http;
 
 class ImportCSV extends StatefulWidget {
@@ -976,19 +977,26 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
           try {
             int numberOfWallets =
                 (await database.getTotalCountOfWallets())[0] ?? 0;
+            String newWalletName =
+                row[assignedColumns["wallet"]!["setHeaderIndex"]]
+                    .toString()
+                    .trim();
+            TransactionWallet baseWallet =
+                Provider.of<AllWallets>(context, listen: false)
+                    .indexedByPk[appStateSettings["selectedWalletPk"]]!;
+            TransactionWallet walletToCreate = baseWallet.copyWith(
+              walletPk: "-1",
+              name: newWalletName,
+              dateCreated: DateTime.now(),
+              dateTimeModified: Value(DateTime.now()),
+              order: numberOfWallets,
+            );
+            walletToCreate = walletToCreate.copyWith(
+              currencyFormat: Value(getWalletAccountType(walletToCreate)),
+            );
             await database.createOrUpdateWallet(
               insert: true,
-              Provider.of<AllWallets>(context, listen: false)
-                  .indexedByPk[appStateSettings["selectedWalletPk"]]!
-                  .copyWith(
-                    walletPk: "-1",
-                    name: row[assignedColumns["wallet"]!["setHeaderIndex"]]
-                        .toString()
-                        .trim(),
-                    dateCreated: DateTime.now(),
-                    dateTimeModified: Value(DateTime.now()),
-                    order: numberOfWallets,
-                  ),
+              walletToCreate,
             );
             walletFk = (await database.getWalletInstanceGivenName(
                     row[assignedColumns["wallet"]!["setHeaderIndex"]]

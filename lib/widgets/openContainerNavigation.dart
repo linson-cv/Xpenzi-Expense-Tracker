@@ -57,7 +57,7 @@ class OpenContainerNavigation extends StatelessWidget {
           ? const Duration(milliseconds: 475)
           : const Duration(milliseconds: 400),
       closedElevation: closedElevation ?? 0,
-      openColor: closedColor ?? Colors.transparent,
+      openColor: Theme.of(context).canvasColor,
       closedColor: closedColor ?? Colors.transparent,
       closedBuilder: (BuildContext context, VoidCallback openContainer) {
         return button(() {

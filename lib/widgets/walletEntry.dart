@@ -96,38 +96,40 @@ class WalletEntry extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              if (walletWithDetails.wallet.name.toLowerCase().contains("cred") ||
-                                  walletWithDetails.wallet.name.toLowerCase().contains("card"))
-                                Tappable(
-                                  color: Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: 8,
-                                  onTap: () {
-                                    pushRoute(
-                                      context,
-                                      AddTransactionPage(
-                                        transferBalancePopup: true,
-                                        routesToPopAfterDelete: RoutesToPopAfterDelete.All,
+                              if (getWalletAccountType(walletWithDetails.wallet) == "Credit Card")
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.only(end: 14),
+                                  child: Tappable(
+                                    color: Theme.of(context).colorScheme.primaryContainer,
+                                    borderRadius: 8,
+                                    onTap: () {
+                                      pushRoute(
+                                        context,
+                                        AddTransactionPage(
+                                          transferBalancePopup: true,
+                                          routesToPopAfterDelete: RoutesToPopAfterDelete.All,
+                                        ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.credit_card_rounded,
+                                            size: 13,
+                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          TextFont(
+                                            text: "Pay Bill",
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                                          ),
+                                        ],
                                       ),
-                                    );
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.credit_card_rounded,
-                                          size: 13,
-                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        TextFont(
-                                          text: "Pay Bill",
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                                        ),
-                                      ],
                                     ),
                                   ),
                                 ),
@@ -466,26 +468,31 @@ Future<bool> setPrimaryWallet(String walletPk, {AllWallets? allWallets}) async {
   return true;
 }
 
-IconData getWalletAccountIconData(TransactionWallet wallet) {
-  if (wallet.iconName != null && wallet.iconName!.isNotEmpty) {
-    switch (wallet.iconName) {
-      case "Bank Account":
-        return Icons.account_balance_rounded;
-      case "Credit Card":
-        return Icons.credit_card_rounded;
-      case "Meal Card":
-        return Icons.restaurant_rounded;
-      case "Cash":
-        return Icons.payments_rounded;
-      case "Savings":
-        return Icons.savings_rounded;
-      default:
-        return Icons.account_balance_wallet_rounded;
-    }
+String getWalletAccountType(TransactionWallet wallet) {
+  if (wallet.currencyFormat != null &&
+      ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
+          .contains(wallet.currencyFormat)) {
+    return wallet.currencyFormat!;
+  }
+  if (wallet.iconName != null &&
+      ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
+          .contains(wallet.iconName)) {
+    return wallet.iconName!;
   }
   String nameLower = wallet.name.toLowerCase();
   if (nameLower.contains("cred") || nameLower.contains("card")) {
-    return Icons.credit_card_rounded;
+    return "Credit Card";
+  } else if (nameLower.contains("pluxee") ||
+      nameLower.contains("meal") ||
+      nameLower.contains("sodexo") ||
+      nameLower.contains("food")) {
+    return "Meal Card";
+  } else if (nameLower.contains("cash") ||
+      nameLower.contains("wallet") ||
+      nameLower.contains("pay")) {
+    return "Cash";
+  } else if (nameLower.contains("sav")) {
+    return "Savings";
   } else if (nameLower.contains("bank") ||
       nameLower.contains("icici") ||
       nameLower.contains("federal") ||
@@ -499,18 +506,25 @@ IconData getWalletAccountIconData(TransactionWallet wallet) {
       nameLower.contains("pnb") ||
       nameLower.contains("bob") ||
       nameLower.contains("idfc")) {
-    return Icons.account_balance_rounded;
-  } else if (nameLower.contains("pluxee") ||
-      nameLower.contains("meal") ||
-      nameLower.contains("sodexo") ||
-      nameLower.contains("food")) {
-    return Icons.restaurant_rounded;
-  } else if (nameLower.contains("cash") ||
-      nameLower.contains("wallet") ||
-      nameLower.contains("pay")) {
-    return Icons.payments_rounded;
-  } else if (nameLower.contains("sav")) {
-    return Icons.savings_rounded;
+    return "Bank Account";
   }
-  return Icons.account_balance_wallet_rounded;
+  return "Bank Account";
+}
+
+IconData getWalletAccountIconData(TransactionWallet wallet) {
+  String accountType = getWalletAccountType(wallet);
+  switch (accountType) {
+    case "Credit Card":
+      return Icons.credit_card_rounded;
+    case "Meal Card":
+      return Icons.restaurant_rounded;
+    case "Cash":
+      return Icons.payments_rounded;
+    case "Savings":
+      return Icons.savings_rounded;
+    case "Bank Account":
+      return Icons.account_balance_rounded;
+    default:
+      return Icons.account_balance_wallet_rounded;
+  }
 }

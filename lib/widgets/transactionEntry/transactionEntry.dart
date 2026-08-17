@@ -310,7 +310,13 @@ class TransactionEntry extends StatelessWidget {
         sizePadding: 20,
         margin: EdgeInsetsDirectional.zero,
         borderRadius: 100,
-        onTap: openContainer,
+        onTap: () {
+          if (areTransactionsBeingSelected == true) {
+            selectTransaction(transaction, selected, false);
+          } else {
+            openContainer();
+          }
+        },
       );
       Widget actionButton(EdgeInsetsDirectional padding) {
         Widget actionButton = TransactionEntryActionButton(
@@ -677,7 +683,11 @@ class TransactionEntry extends StatelessWidget {
                               selectTransaction(transaction, selected, true);
                             },
                             onTap: () async {
-                              openContainer();
+                              if (areTransactionsBeingSelected == true) {
+                                selectTransaction(transaction, selected, false);
+                              } else {
+                                openContainer();
+                              }
                             },
                             child: AnimatedContainer(
                               clipBehavior: Clip.none,

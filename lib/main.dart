@@ -16,6 +16,7 @@ import 'package:budget/widgets/util/watchForDayChange.dart';
 import 'package:budget/widgets/watchAllWallets.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/notificationEngine.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/notificationsGlobal.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
@@ -76,6 +77,7 @@ void main() async {
     await loadCurrencyJSON();
     await loadLanguageNamesJSON();
     await initializeSettings();
+    await initNotificationScanning();
     tz.initializeTimeZones();
     final String locationName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(locationName ?? "America/New_York"));

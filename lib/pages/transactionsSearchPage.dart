@@ -202,9 +202,23 @@ class TransactionsSearchPageState extends State<TransactionsSearchPage>
                         controller: searchInputController,
                         autoFocus: true,
                         labelText: "search-placeholder".tr(),
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.search_outlined
-                            : Icons.search_rounded,
+                        icon: (searchFilters.searchQuery != null &&
+                                searchFilters.searchQuery!.trim().isNotEmpty)
+                            ? (appStateSettings["outlinedIcons"]
+                                ? Icons.close_outlined
+                                : Icons.close_rounded)
+                            : (appStateSettings["outlinedIcons"]
+                                ? Icons.search_outlined
+                                : Icons.search_rounded),
+                        iconOnTap: (searchFilters.searchQuery != null &&
+                                searchFilters.searchQuery!.trim().isNotEmpty)
+                            ? () {
+                                searchInputController.clear();
+                                setState(() {
+                                  searchFilters.searchQuery = "";
+                                });
+                              }
+                            : null,
                         onSubmitted: (value) {
                           setState(() {
                             searchFilters.searchQuery = value;

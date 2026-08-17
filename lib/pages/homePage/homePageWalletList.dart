@@ -91,11 +91,212 @@ class HomePageWalletList extends StatelessWidget {
                           );
                         }
 
-                        bool groupByColor = appStateSettings["walletsListGroupByColor"] == true;
+                        String groupStyle = appStateSettings["walletsListGroupStyle"] ??
+                            (appStateSettings["walletsListGroupByColor"] == true
+                                ? "Color"
+                                : "None");
                         List<Widget> children = [];
                         children.add(const SizedBox(height: 4));
 
-                        if (groupByColor) {
+                        if (groupStyle == "Account Type") {
+                          List<String> accountTypeOrder = [
+                            "Bank Account",
+                            "Credit Card",
+                            "Meal Card",
+                            "Cash",
+                            "Savings",
+                          ];
+                          Map<String, List<WalletWithDetails>> grouped = {};
+                          for (var w in wallets) {
+                            String type = getWalletAccountType(w.wallet);
+                            grouped.putIfAbsent(type, () => []).add(w);
+                          }
+                          // Sort group keys by defined logical order
+                          List<String> sortedTypes = grouped.keys.toList()
+                            ..sort((a, b) {
+                              int indexA = accountTypeOrder.indexOf(a);
+                              int indexB = accountTypeOrder.indexOf(b);
+                              if (indexA == -1) indexA = 999;
+                              if (indexB == -1) indexB = 999;
+                              return indexA.compareTo(indexB);
+                            });
+
+                          for (String type in sortedTypes) {
+                            List<WalletWithDetails> groupWallets =
+                                grouped[type]!;
+                            double groupTotal = 0;
+                            for (var w in groupWallets) {
+                              groupTotal += (w.totalSpent ?? 0.0) *
+                                  amountRatioToPrimaryCurrency(
+                                      Provider.of<AllWallets>(context),
+                                      w.wallet.currency);
+                            }
+
+                            IconData typeIcon;
+                            switch (type) {
+                              case "Credit Card":
+                                typeIcon = Icons.credit_card_rounded;
+                                break;
+                              case "Meal Card":
+                                typeIcon = Icons.restaurant_rounded;
+                                break;
+                              case "Cash":
+                                typeIcon = Icons.payments_rounded;
+                                break;
+                              case "Savings":
+                                typeIcon = Icons.savings_rounded;
+                                break;
+                              case "Bank Account":
+                              default:
+                                typeIcon = Icons.account_balance_rounded;
+                                break;
+                            }
+
+                            children.add(
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: getColor(
+                                      context, "lightDarkAccentHeavyLight"),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsetsDirectional.only(
+                                        start: 16,
+                                        end: 16,
+                                        top: 10,
+                                        bottom: 4,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            typeIcon,
+                                            size: 18,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          TextFont(
+                                            text: type,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            textColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                          const Spacer(),
+                                          TextFont(
+                                            text:
+                                                "${groupWallets.length} ${groupWallets.length == 1 ? "account".tr() : "accounts".tr()}",
+                                            fontSize: 12,
+                                            textColor: getColor(
+                                                    context, "textLight")
+                                                .withValues(alpha: 0.8),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    for (var w in groupWallets)
+                                      WalletEntryRow(
+                                        selected: Provider.of<SelectedWalletPk>(
+                                                    context)
+                                                .selectedWalletPk ==
+                                            w.wallet.walletPk,
+                                        walletWithDetails: w,
+                                        closedColor: Colors.transparent,
+                                      ),
+                                    if (groupWallets.length > 1) ...[
+                                      const SizedBox(height: 2),
+                                      Container(
+                                        height: 1,
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        color: getColor(context, "dividerColor")
+                                            .withValues(alpha: 0.3),
+                                      ),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.only(
+                                          start: 48,
+                                          end: 18,
+                                          top: 10,
+                                          bottom: 10,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            TextFont(
+                                              text: "total".tr(),
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (appStateSettings[
+                                                            "accountColorfulAmountsWithArrows"] ==
+                                                        true &&
+                                                    groupTotal != 0)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsetsDirectional
+                                                            .only(end: 4),
+                                                    child: IncomeOutcomeArrow(
+                                                      isIncome: groupTotal > 0,
+                                                      iconSize: 24,
+                                                      width: 14,
+                                                      height: 10,
+                                                    ),
+                                                  ),
+                                                TextFont(
+                                                  text: convertToMoney(
+                                                    Provider.of<AllWallets>(
+                                                        context),
+                                                    appStateSettings[
+                                                                "accountColorfulAmountsWithArrows"] ==
+                                                            true
+                                                        ? groupTotal.abs()
+                                                        : groupTotal,
+                                                  ),
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  textColor: appStateSettings[
+                                                              "accountColorfulAmountsWithArrows"] ==
+                                                          true
+                                                      ? (groupTotal == 0
+                                                          ? getColor(
+                                                              context, "black")
+                                                          : (groupTotal > 0
+                                                              ? getColor(
+                                                                  context,
+                                                                  "incomeAmount")
+                                                              : getColor(
+                                                                  context,
+                                                                  "expenseAmount")))
+                                                      : getColor(
+                                                          context, "black"),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      const SizedBox(height: 4),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                        } else if (groupStyle == "Color") {
                           Map<String, List<WalletWithDetails>> grouped = {};
                           for (var w in wallets) {
                             String color = w.wallet.colour ?? "";

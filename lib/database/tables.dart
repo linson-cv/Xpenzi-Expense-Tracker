@@ -1269,9 +1269,26 @@ class FinanceDatabase extends _$FinanceDatabase {
 
   Future<void> deleteEverything() {
     return transaction(() async {
+      await delete(categoryBudgetLimits).go();
+      await delete(transactions).go();
+      await delete(budgets).go();
+      await delete(objectives).go();
+      await delete(associatedTitles).go();
+      await delete(scannerTemplates).go();
+      await delete(deleteLogs).go();
+      await delete(categories).go();
+      await delete(wallets).go();
+      await delete(appSettings).go();
       for (final table in allTables) {
         await delete(table).go();
       }
+    });
+  }
+
+  Future<void> clearTransactionsOnly() {
+    return transaction(() async {
+      await delete(transactions).go();
+      await delete(deleteLogs).go();
     });
   }
 
@@ -7509,6 +7526,23 @@ class FinanceDatabase extends _$FinanceDatabase {
           ..where((t) => t.transactionPk.isIn(transactionPks))
           ..orderBy([(t) => OrderingTerm.desc(t.dateCreated)]))
         .get();
+  }
+
+  Future<Transaction?> findDuplicateTransaction({
+    required double amount,
+    required DateTime timestamp,
+    Duration window = const Duration(seconds: 15),
+  }) async {
+    final start = timestamp.subtract(window);
+    final end = timestamp.add(window);
+    final matching = await (select(transactions)
+          ..where((t) =>
+              t.amount.equals(amount) &
+              t.dateCreated.isBiggerOrEqualValue(start) &
+              t.dateCreated.isSmallerOrEqualValue(end))
+          ..limit(1))
+        .get();
+    return matching.firstOrNull;
   }
 
   // when a change is made we can listen to it, debounce and sync after debounce timer

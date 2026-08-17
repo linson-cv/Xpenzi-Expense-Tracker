@@ -56,6 +56,13 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
   String? selectedImage;
   String searchTerm = "";
   bool isEmoji = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -128,20 +135,34 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
                           //   },
                           // child:
                           TextInput(
-                        labelText: "search-placeholder".tr(),
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.search_outlined
-                            : Icons.search_rounded,
-                        onSubmitted: (value) {},
-                        onChanged: (value) {
-                          setState(() {
-                            searchTerm = value.trim();
-                          });
-                          bottomSheetControllerGlobal.snapToExtent(0);
-                        },
-                        padding: const EdgeInsetsDirectional.all(0),
-                        autoFocus: kIsWeb,
-                      ),
+                            controller: _searchController,
+                            labelText: "search-placeholder".tr(),
+                            icon: searchTerm.trim().isNotEmpty
+                                ? (appStateSettings["outlinedIcons"]
+                                    ? Icons.close_outlined
+                                    : Icons.close_rounded)
+                                : (appStateSettings["outlinedIcons"]
+                                    ? Icons.search_outlined
+                                    : Icons.search_rounded),
+                            iconOnTap: searchTerm.trim().isNotEmpty
+                                ? () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      searchTerm = "";
+                                    });
+                                    bottomSheetControllerGlobal.snapToExtent(0);
+                                  }
+                                : null,
+                            onSubmitted: (value) {},
+                            onChanged: (value) {
+                              setState(() {
+                                searchTerm = value.trim();
+                              });
+                              bottomSheetControllerGlobal.snapToExtent(0);
+                            },
+                            padding: const EdgeInsetsDirectional.all(0),
+                            autoFocus: kIsWeb,
+                          ),
                       // ),
                     ),
                     const SizedBox(width: 10),
@@ -183,21 +204,6 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
   }
 
   List<Widget> _buildIconPacks(BuildContext context) {
-    bool isProUser = appStateSettings["purchaseID"] != null;
-
-    // Categorize icons into Starter Pack (Free) and Pro Packs
-    final List<String> starterPackIconNames = [
-      "food.png", "groceries.png", "restaurant.png", "fast-food.png", "coffee.png",
-      "shopping-bag.png", "cart.png", "gift.png", "clothing.png", "t-shirt.png",
-      "car.png", "bus.png", "train.png", "fuel.png", "taxi.png",
-      "home.png", "electricity.png", "water.png", "wifi.png", "phone.png",
-      "salary.png", "wallet.png", "cash.png", "bank.png", "money-bag.png",
-      "entertainment.png", "movie.png", "popcorn.png", "game-controller.png",
-      "health.png", "medicine.png", "hospital.png", "fitness.png", "gym.png",
-      "education.png", "book.png", "school.png", "travel.png", "flight.png",
-      "credit-card.png", "savings.png", "piggy-bank.png", "receipt.png",
-    ];
-
     List<IconForCategory> filtered = iconObjects.where((IconForCategory image) {
       if (searchTerm.isEmpty) return true;
       return image.tags.any((t) => t.toLowerCase().contains(searchTerm.toLowerCase()));
@@ -208,52 +214,36 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
         Center(
           child: Wrap(
             alignment: WrapAlignment.center,
-            children: filtered.map((image) => _buildIconTile(image, isProUser, starterPackIconNames)).toList(),
+            children: filtered.map((image) => _buildStandardIconTile(image)).toList(),
           ),
         ),
       ];
     }
 
-    List<IconForCategory> starterPack = [];
-    List<IconForCategory> proPack = [];
-
-    for (var icon in filtered) {
-      if (starterPackIconNames.contains(icon.icon) || starterPack.length < 35) {
-        starterPack.add(icon);
-      } else {
-        proPack.add(icon);
-      }
-    }
-
     return [
-      _buildPackHeader(context, title: "Starter Collection", isPro: false),
+      _buildPackHeader(context, title: "Category Icons (${iconObjects.length})"),
       const SizedBox(height: 4),
       Center(
         child: Wrap(
           alignment: WrapAlignment.center,
-          children: starterPack.map((image) => _buildIconTile(image, isProUser, starterPackIconNames, isFreeCollection: true)).toList(),
+          children: filtered.map((image) => _buildStandardIconTile(image)).toList(),
         ),
       ),
-      const SizedBox(height: 12),
-      _buildPackHeader(context, title: "Pro Icon Collection", isPro: true),
-      const SizedBox(height: 4),
-      Center(
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          children: proPack.map((image) => _buildIconTile(image, isProUser, starterPackIconNames, isFreeCollection: false)).toList(),
-        ),
-      ),
+      const SizedBox(height: 16),
+      _buildPackHeader(context, title: "Premium Icon Packs", isPro: true),
+      const SizedBox(height: 8),
+      ..._buildProPacksList(context),
     ];
   }
 
-  Widget _buildPackHeader(BuildContext context, {required String title, required bool isPro}) {
+  Widget _buildPackHeader(BuildContext context, {required String title, bool isPro = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Row(
         children: [
           TextFont(
             text: title,
-            fontSize: 14,
+            fontSize: 14.5,
             fontWeight: FontWeight.bold,
             textColor: getColor(context, "textLight"),
           ),
@@ -278,66 +268,161 @@ class _SelectCategoryImageState extends State<SelectCategoryImage> {
     );
   }
 
-  Widget _buildIconTile(IconForCategory image, bool isProUser, List<String> starterPackNames, {bool isFreeCollection = false}) {
-    bool isLocked = !isProUser && !isFreeCollection && !starterPackNames.contains(image.icon);
+  Widget _buildStandardIconTile(IconForCategory image) {
+    return ImageIcon(
+      sizePadding: 8,
+      margin: const EdgeInsetsDirectional.all(5),
+      color: Colors.transparent,
+      size: 55,
+      iconPath: "assets/categories/${image.icon}",
+      onTap: () {
+        widget.setSelectedImage(image.icon);
+        if (context.locale.toString() == "en" && image.mostLikelyCategoryName != null) {
+          widget.setSelectedTitle(image.mostLikelyCategoryName);
+        }
+        setState(() {
+          selectedImage = image.icon;
+        });
+        Future.delayed(const Duration(milliseconds: 70), () {
+          popRoute(context);
+          if (widget.next != null) {
+            widget.next!();
+          }
+        });
+      },
+      outline: selectedImage == image.icon,
+    );
+  }
 
-    return Stack(
-      children: [
-        ImageIcon(
-          sizePadding: 8,
-          margin: const EdgeInsetsDirectional.all(5),
-          color: Colors.transparent,
-          size: 55,
-          iconPath: "assets/categories/${image.icon}",
+  List<Widget> _buildProPacksList(BuildContext context) {
+    final List<Map<String, dynamic>> proPacks = [
+      {
+        "title": "Minimalist Line Art Pack",
+        "description": "Clean, modern monochrome outline icons for minimalists",
+        "sampleIcons": ["wallet.png", "receipt.png", "credit-card.png", "bank.png"],
+        "count": "60+ icons",
+      },
+      {
+        "title": "3D Glossy Material Pack",
+        "description": "Vibrant 3D high-definition renders with depth and gradients",
+        "sampleIcons": ["shopping-bag.png", "gift.png", "game-controller.png", "coffee.png"],
+        "count": "80+ icons",
+      },
+      {
+        "title": "Finance & Crypto Pack",
+        "description": "Specialized investment, stocks, forex, and cryptocurrency icons",
+        "sampleIcons": ["money-bag.png", "savings.png", "piggy-bank.png", "salary.png"],
+        "count": "50+ icons",
+      },
+      {
+        "title": "Lifestyle & Wellness Pack",
+        "description": "Travel, hobbies, fitness, wellness, pets, and recreation",
+        "sampleIcons": ["flight.png", "fitness.png", "movie.png", "restaurant.png"],
+        "count": "75+ icons",
+      },
+    ];
+
+    return proPacks.map((pack) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Tappable(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: 14,
           onTap: () {
-            if (isLocked) {
-              pushRoute(
-                context,
-                const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
-              );
-              return;
-            }
-            widget.setSelectedImage(image.icon);
-            if (context.locale.toString() == "en") {
-              widget.setSelectedTitle(image.mostLikelyCategoryName);
-            }
-            setState(() {
-              selectedImage = image.icon;
-            });
-            Future.delayed(const Duration(milliseconds: 70), () {
-              popRoute(context);
-              if (widget.next != null) {
-                widget.next!();
-              }
-            });
+            pushRoute(
+              context,
+              const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
+            );
           },
-          outline: selectedImage == image.icon,
-        ),
-        if (isLocked)
-          Positioned(
-            right: 4,
-            top: 4,
-            child: Container(
-              padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Sample Icons Preview Row
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
                   ),
-                ],
-              ),
-              child: Icon(
-                Icons.lock_rounded,
-                size: 11,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (String icon in (pack["sampleIcons"] as List<String>).take(3))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Image(
+                            image: AssetImage("assets/categories/$icon"),
+                            width: 22,
+                            height: 22,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: TextFont(
+                              text: pack["title"],
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: TextFont(
+                              text: pack["count"],
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      TextFont(
+                        text: pack["description"],
+                        fontSize: 11.5,
+                        textColor: getColor(context, "textLight"),
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.lock_rounded,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
             ),
           ),
-      ],
-    );
+        ),
+      );
+    }).toList();
   }
 }
 

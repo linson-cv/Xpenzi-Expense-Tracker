@@ -7,12 +7,14 @@ import 'package:budget/struct/autoTransactionTracker.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/geminiAi.dart';
 import 'package:budget/struct/localNlpParser.dart';
+import 'package:budget/struct/notificationsGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:provider/provider.dart';
@@ -210,14 +212,78 @@ Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
   return status;
 }
 
+final Map<String, DateTime> _recentlyProcessedNotificationKeys = {};
+
 onNotification(ServiceNotificationEvent event) async {
+  // 1. Ignore notification removal/dismissal events to prevent duplicate processing
+  if (event.hasRemoved == true) {
+    return;
+  }
+
+  // 2. App-specific package name filtering (if configured)
+  String? pkg = event.packageName?.trim().toLowerCase();
+  String? allowedPackagesString = appStateSettings["notificationAllowedPackages"]?.toString().trim();
+  if (allowedPackagesString != null && allowedPackagesString.isNotEmpty) {
+    List<String> allowedList = allowedPackagesString
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (allowedList.isNotEmpty && pkg != null && !allowedList.any((allowed) => pkg.contains(allowed))) {
+      // Ignore notification from unselected packages
+      return;
+    }
+  }
+
   String messageString = getNotificationMessage(event);
   recentCapturedNotifications.insert(0, messageString);
   int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "50") ?? 50;
   if (recentCapturedNotifications.length > maxCount) {
     recentCapturedNotifications.removeRange(maxCount, recentCapturedNotifications.length);
   }
-  queueTransactionFromMessage(messageString);
+  queueTransactionFromMessage(messageString, dateTime: DateTime.now());
+}
+
+Future<void> _showBackgroundInsertedNotification({
+  required String title,
+  required double amount,
+  required bool isIncome,
+  required String? transactionPk,
+}) async {
+  try {
+    AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'auto_transactions_channel',
+      'Auto-Detected Transactions',
+      channelDescription: 'Alerts when payment or bank SMS notifications are automatically recorded',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+    );
+
+    DarwinNotificationDetails darwinDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
+
+    int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+    String payload = transactionPk != null ? "openTransaction?transactionPk=$transactionPk" : "transactions";
+
+    await flutterLocalNotificationsPlugin.show(
+      notificationId,
+      isIncome ? "Auto-Recorded Income" : "Auto-Recorded Transaction",
+      "$title · ${amount.abs().toStringAsFixed(2)}",
+      notificationDetails,
+      payload: payload,
+    );
+  } catch (e) {
+    print("Error showing background local notification: $e");
+  }
 }
 
 class InitializeNotificationService extends StatefulWidget {
@@ -329,6 +395,34 @@ Future queueTransactionFromMessage(String messageString,
 
   if (amountDouble == null || title == null) return false;
 
+  final DateTime eventTime = dateTime ?? DateTime.now();
+  final double absoluteAmount = amountDouble.abs();
+
+  // ─── Deduplication Check (In-Memory Key + Database Check) ─────────────────
+  final String dedupKey = "${title.trim().toLowerCase()}_${absoluteAmount.toStringAsFixed(2)}";
+  final DateTime? lastSeen = _recentlyProcessedNotificationKeys[dedupKey];
+  if (lastSeen != null && eventTime.difference(lastSeen).inSeconds.abs() <= 15) {
+    print("Notification Engine: Ignored in-memory duplicate notification for $dedupKey within 15 seconds.");
+    return false;
+  }
+
+  // Check existing database records with matching amount within 15 seconds window
+  Transaction? existingDbDuplicate = await database.findDuplicateTransaction(
+    amount: absoluteAmount,
+    timestamp: eventTime,
+    window: const Duration(seconds: 15),
+  );
+  if (existingDbDuplicate != null) {
+    print("Notification Engine: Ignored database duplicate for amount $absoluteAmount matching '${existingDbDuplicate.name}'");
+    return false;
+  }
+
+  // Register in deduplication cache
+  _recentlyProcessedNotificationKeys[dedupKey] = eventTime;
+  // Prune keys older than 60 seconds
+  _recentlyProcessedNotificationKeys.removeWhere(
+      (_, time) => DateTime.now().difference(time).inSeconds.abs() > 60);
+
   TransactionCategory? category;
   TransactionAssociatedTitleWithCategory? foundTitle =
       (await database.getSimilarAssociatedTitles(title: title, limit: 1))
@@ -397,16 +491,18 @@ Future queueTransactionFromMessage(String messageString,
       // and income transactions have income: true with positive amount
       double finalAmount = amountDouble.abs();
 
+      final String transactionNote = "Auto-detected from notification • ${getWordedDateShortMore(eventTime)}";
+
       final int? rowId = await database.createOrUpdateTransaction(
         Transaction(
           transactionPk: "-1",
           name: title,
           amount: finalAmount,
-          note: "Auto-detected notification",
+          note: transactionNote,
           categoryFk: categoryPk,
           subCategoryFk: null,
           walletFk: walletPk,
-          dateCreated: dateTime ?? DateTime.now(),
+          dateCreated: eventTime,
           income: isIncome,
           paid: true,
           skipPaid: false,
@@ -421,13 +517,23 @@ Future queueTransactionFromMessage(String messageString,
 
       registerAutoAddedTransaction(title, amountDouble);
 
-      if (rowId != null) {
+      // Check if the app is currently in the foreground
+      BuildContext? currentCtx = navigatorKey.currentContext;
+      if (currentCtx != null && rowId != null) {
         openSnackbar(
           SnackbarMessage(
             title: isIncome ? "Auto-Recorded Income" : "Auto-Recorded Transaction",
             description: "$title · ${amountDouble.abs().toStringAsFixed(2)}",
             icon: isIncome ? Icons.arrow_downward_rounded : Icons.auto_awesome_rounded,
           ),
+        );
+      } else {
+        // App is in the background or killed: Send a system status bar notification
+        await _showBackgroundInsertedNotification(
+          title: title,
+          amount: amountDouble,
+          isIncome: isIncome,
+          transactionPk: null,
         );
       }
     } catch (e) {
