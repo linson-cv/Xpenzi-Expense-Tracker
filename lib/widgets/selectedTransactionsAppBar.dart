@@ -31,8 +31,14 @@ import 'package:budget/widgets/countNumber.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 
 class SelectedTransactionsAppBar extends StatelessWidget {
-  const SelectedTransactionsAppBar(
-      {super.key, required this.pageID, this.enableSettleAllButton = false});
+  const SelectedTransactionsAppBar({
+    super.key,
+    required this.pageID,
+    this.enableSettleAllButton = false,
+    this.customAction,
+  });
+
+  final Widget? customAction;
 
   Future shareSelectedTransactions(
       {required BuildContext context,
@@ -223,11 +229,14 @@ class SelectedTransactionsAppBar extends StatelessWidget {
                           },
                         ),
                       ),
-                      SelectedTransactionsAppBarMenu(
-                        pageID: pageID,
-                        selectedTransactionPks: listOfIDs,
-                        enableSettleAllButton: enableSettleAllButton,
-                      )
+                      if (customAction != null)
+                        customAction!
+                      else
+                        SelectedTransactionsAppBarMenu(
+                          pageID: pageID,
+                          selectedTransactionPks: listOfIDs,
+                          enableSettleAllButton: enableSettleAllButton,
+                        )
                     ],
                   ),
                 ),

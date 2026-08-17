@@ -756,16 +756,18 @@ class TemplateInfoBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasError = selectedText == "" ||
+        (extraCheck != null && extraCheck!(selectedText) == false);
+
     return Tappable(
       onTap: onTap,
-      color: selectedText == "" ||
-              (extraCheck != null && extraCheck!(selectedText) == false)
-          ? Theme.of(context).colorScheme.selectableColorRed.withValues(alpha: 0.5)
-          : getColor(context, "lightDarkAccent"),
-      borderRadius: 15,
+      color: hasError
+          ? Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.7)
+          : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      borderRadius: 16,
       child: Padding(
-        padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: 18.0,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
           vertical: 14,
         ),
         child: Column(
@@ -777,38 +779,49 @@ class TemplateInfoBox extends StatelessWidget {
                 TextFont(
                   text: label,
                   fontWeight: FontWeight.bold,
-                  fontSize: 17,
+                  fontSize: 15,
+                  textColor: hasError
+                      ? Theme.of(context).colorScheme.onErrorContainer
+                      : Theme.of(context).colorScheme.primary,
                 ),
                 Expanded(
                   child: TextFont(
-                    text: selectedText,
-                    fontSize: 17,
-                    textColor:
-                        Theme.of(context).colorScheme.onSecondaryContainer,
+                    text: selectedText.isEmpty ? "Tap to select..." : selectedText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    textColor: hasError
+                        ? Theme.of(context).colorScheme.onErrorContainer
+                        : Theme.of(context).colorScheme.onSurface,
                     maxLines: 10,
                   ),
-                )
+                ),
+                Icon(
+                  Icons.edit_rounded,
+                  size: 16,
+                  color: hasError
+                      ? Theme.of(context).colorScheme.onErrorContainer
+                      : getColor(context, "textLight"),
+                ),
               ],
             ),
-            (extraCheck != null &&
-                    extraCheck!(selectedText) == false &&
-                    extraCheckMessage != null)
-                ? TextFont(
-                    fontSize: 14,
-                    text: extraCheckMessage ?? "",
-                    textColor: getColor(context, "black").withValues(alpha: 0.9),
-                    maxLines: 10,
-                  )
-                : const SizedBox.shrink(),
-            const SizedBox(height: 3),
+            if (hasError && extraCheckMessage != null && selectedText.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: TextFont(
+                  fontSize: 12,
+                  text: extraCheckMessage ?? "",
+                  textColor: Theme.of(context).colorScheme.error,
+                  maxLines: 2,
+                ),
+              ),
+            const SizedBox(height: 4),
             TextFont(
-              fontSize: 14,
+              fontSize: 12,
               text: secondaryLabel,
-              textColor: selectedText == "" ||
-                      (extraCheck != null && extraCheck!(selectedText) == false)
-                  ? getColor(context, "black").withValues(alpha: 0.5)
+              textColor: hasError
+                  ? Theme.of(context).colorScheme.onErrorContainer.withValues(alpha: 0.8)
                   : getColor(context, "textLight"),
-              maxLines: 10,
+              maxLines: 3,
             )
           ],
         ),

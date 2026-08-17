@@ -3447,9 +3447,9 @@ void deleteTransactionPopup(
       await database.deleteTransaction(transaction.transactionPk);
       openSnackbar(
         SnackbarMessage(
-          title: "deleted-transaction".tr(),
-          icon: Icons.delete,
-          description: transactionName,
+          title: "Moved to Trash",
+          icon: Icons.delete_outline_rounded,
+          description: transactionName.isNotEmpty ? "$transactionName • Recoverable for 30 days" : "Recoverable for 30 days in Explore > Trash",
         ),
       );
     });
@@ -3533,11 +3533,9 @@ Future deleteTransactionsPopup(
       await database.deleteTransactions(transactionPks);
       openSnackbar(
         SnackbarMessage(
-          title: "deleted-transactions".tr(),
-          icon: Icons.delete,
-          description: "${transactionPks.length} ${transactionPks.length == 1
-                  ? "transaction".tr().toLowerCase()
-                  : "transactions".tr().toLowerCase()}",
+          title: "Moved to Trash",
+          icon: Icons.delete_outline_rounded,
+          description: "${transactionPks.length} ${transactionPks.length == 1 ? "transaction" : "transactions"} • Recoverable for 30 days in Explore > Trash",
         ),
       );
     });

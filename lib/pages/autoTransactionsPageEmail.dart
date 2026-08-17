@@ -637,41 +637,66 @@ class ScannerTemplateEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsetsDirectional.only(start: 15, end: 15, bottom: 10),
+      padding: const EdgeInsetsDirectional.only(start: 12, end: 12, bottom: 8),
       child: OpenContainerNavigation(
         openPage: AddEmailTemplate(
           messagesList: messagesList,
           scannerTemplate: scannerTemplate,
         ),
-        borderRadius: 15,
+        borderRadius: 16,
         button: (openContainer) {
           return Tappable(
-            borderRadius: 15,
-            color: getColor(context, "lightDarkAccent"),
+            borderRadius: 16,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             onTap: openContainer,
             child: Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: 7,
-                end: 15,
-                top: 5,
-                bottom: 5,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
                   CategoryIcon(
                     categoryPk: scannerTemplate.defaultCategoryFk,
-                    size: 25,
+                    size: 28,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: TextFont(
-                      text: scannerTemplate.templateName,
-                      fontWeight: FontWeight.bold,
-                      maxLines: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFont(
+                          text: scannerTemplate.templateName,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          maxLines: 1,
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: TextFont(
+                                text: "Contains: \"${scannerTemplate.contains}\"",
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                textColor: Theme.of(context).colorScheme.primary,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
                   ButtonIcon(
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.delete_outline_rounded
+                        : Icons.delete_rounded,
+                    size: 20,
+                    padding: const EdgeInsetsDirectional.all(6),
                     onTap: () async {
                       DeletePopupAction? action = await openDeletePopup(
                         context,
@@ -681,7 +706,6 @@ class ScannerTemplateEntry extends StatelessWidget {
                       if (action == DeletePopupAction.Delete) {
                         await database.deleteScannerTemplate(
                             scannerTemplate.scannerTemplatePk);
-                        popRoute(context);
                         openSnackbar(
                           SnackbarMessage(
                             title: "Deleted ${scannerTemplate.templateName}",
@@ -690,9 +714,12 @@ class ScannerTemplateEntry extends StatelessWidget {
                         );
                       }
                     },
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.delete_outlined
-                        : Icons.delete_rounded,
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: getColor(context, "textLight"),
                   ),
                 ],
               ),

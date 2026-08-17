@@ -236,6 +236,8 @@ onNotification(ServiceNotificationEvent event) async {
   }
 
   String messageString = getNotificationMessage(event);
+  print("[NotificationEngine] Captured event from $pkg: ${event.title} - ${event.content}");
+
   recentCapturedNotifications.insert(0, messageString);
   int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "50") ?? 50;
   if (recentCapturedNotifications.length > maxCount) {

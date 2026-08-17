@@ -220,13 +220,26 @@ class HandleWillPopScope extends StatelessWidget {
     return WillPopScope(
       child: child,
       onWillPop: () async {
-        // 1. If in Explore customization mode, exit edit mode first
+        // 1. If any transactions are selected (on Home, Transactions, Accounts, etc.), deselect them first!
+        bool hadSelectedTransactions = false;
+        for (String key in globalSelectedID.value.keys) {
+          if (globalSelectedID.value[key]?.isNotEmpty == true) {
+            hadSelectedTransactions = true;
+            globalSelectedID.value[key] = [];
+          }
+        }
+        if (hadSelectedTransactions) {
+          globalSelectedID.notifyListeners();
+          return false;
+        }
+
+        // 2. If in Explore customization mode, exit edit mode first
         if (isExploreEditingNotifier.value == true) {
           isExploreEditingNotifier.value = false;
           return false;
         }
 
-        // 2. If any sub-route, sheet, dialog, or nested page is open, pop it first
+        // 3. If any sub-route, sheet, dialog, or nested page is open, pop it
         BuildContext? navContext = navigatorKey.currentContext ?? context;
         if (Navigator.of(navContext, rootNavigator: false).canPop()) {
           Navigator.of(navContext, rootNavigator: false).pop();
@@ -241,17 +254,6 @@ class HandleWillPopScope extends StatelessWidget {
         bool popResult = await maybePopRoute(navContext);
         if (popResult == true) return false;
 
-        // 3. Deselect selected transactions if any
-        int notEmpty = 0;
-        for (String key in globalSelectedID.value.keys) {
-          if (globalSelectedID.value[key]?.isNotEmpty == true) notEmpty++;
-          globalSelectedID.value[key] = [];
-        }
-        if (notEmpty > 0) {
-          globalSelectedID.notifyListeners();
-          return false;
-        }
-
         // 4. If on another navigation tab (Transactions, Budgets, Explore, etc.), return to Home first
         if (pageNavigationFrameworkKey.currentState?.currentPage != null &&
             pageNavigationFrameworkKey.currentState!.currentPage != 0) {
@@ -259,7 +261,7 @@ class HandleWillPopScope extends StatelessWidget {
           return false;
         }
 
-        // 5. Allow back button to exit app only when already on Home page (tab 0) with no sub-routes open
+        // 5. Allow back button to exit app only when already on Home page (tab 0) with no sub-routes or selections active
         return true;
       },
     );

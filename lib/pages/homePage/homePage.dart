@@ -30,6 +30,7 @@ import 'package:budget/widgets/selectedTransactionsAppBar.dart';
 import 'package:budget/widgets/util/keepAliveClientMixin.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/transactionEntry/swipeToSelectTransactions.dart';
+import 'package:budget/widgets/transactionEntry/transactionEntry.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -246,11 +247,31 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
     }
 
-    return SwipeToSelectTransactions(
-      listID: "0",
-      child: PullDownToRefreshSync(
-        scrollController: _scrollController,
-        child: Stack(
+    return WillPopScope(
+      onWillPop: () async {
+        if ((globalSelectedID.value["0"] ?? []).isNotEmpty) {
+          globalSelectedID.value["0"] = [];
+          globalSelectedID.notifyListeners();
+          return false;
+        }
+        bool hadSelected = false;
+        for (String key in globalSelectedID.value.keys) {
+          if (globalSelectedID.value[key]?.isNotEmpty == true) {
+            hadSelected = true;
+            globalSelectedID.value[key] = [];
+          }
+        }
+        if (hadSelected) {
+          globalSelectedID.notifyListeners();
+          return false;
+        }
+        return true;
+      },
+      child: SwipeToSelectTransactions(
+        listID: "0",
+        child: PullDownToRefreshSync(
+          scrollController: _scrollController,
+          child: Stack(
           children: [
             const AndroidOnly(child: CheckWidgetLaunch()),
             const AndroidOnly(child: RenderHomePageWidgets()),
@@ -435,6 +456,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -1196,14 +1196,14 @@ class SettingsPageContent extends StatelessWidget {
           ),
 
           AnimatedExpanded(
-            expand: _match("Intelligent & Automation", "Offline intelligence, Gemini AI, email automation", [
+            expand: _match("Intelligence & Automation", "Offline intelligence, Gemini AI, email automation", [
               "ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence", "bank sms", "auto detect", "gemini model", "custom prompt", "receipt scanner"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
                 openPage: const IntelligentAutomationSettingsSubPage(),
-                title: "Intelligent & Automation",
+                title: "Intelligence & Automation",
                 description: "Offline intelligence, Gemini AI, email automation",
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.auto_awesome_outlined
@@ -1491,8 +1491,8 @@ class ThemeStyleSettingsSubPage extends StatelessWidget {
             const OutlinedIconsSetting(),
             SettingsContainerOpenPage(
               openPage: const CategoryIconPackGalleryPage(),
-              title: "Category Icon Pack & Gallery",
-              description: "Browse 450+ category icons & packs",
+              title: "Category Icon Pack",
+              description: "Choose category icon style & shape",
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.category_outlined
                   : Icons.category_rounded,
@@ -1821,7 +1821,7 @@ class IntelligentAutomationSettingsSubPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageFramework(
-      title: "Intelligent & Automation",
+      title: "Intelligence & Automation",
       dragDownToDismiss: true,
       listWidgets: [
         // Section 1: Offline SMS & Notification Intelligence
@@ -1891,12 +1891,20 @@ class ImportExportSettingsSubPage extends StatelessWidget {
       title: "Data, Backup & Sync",
       dragDownToDismiss: true,
       listWidgets: [
+        // Reports & Statements Section
+        SettingsGroupCard(
+          title: "Reports & Statements",
+          icon: Icons.picture_as_pdf_outlined,
+          children: const [
+            ExportPDF(),
+          ],
+        ),
+
         // Spreadsheets Section
         SettingsGroupCard(
           title: "Spreadsheets",
           icon: Icons.table_chart_outlined,
           children: const [
-            ExportPDF(),
             ExportCSV(),
             ImportCSV(),
           ],
@@ -2121,29 +2129,52 @@ class EditDataOverviewPage extends StatelessWidget {
   Widget _buildTile(
     BuildContext context, {
     required String title,
-    required String subtitle,
     required IconData icon,
     required Widget openPage,
-    required Color color,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: SettingsContainerOpenPage(
-        openPage: openPage,
-        title: title,
-        description: subtitle,
-        icon: icon,
-        iconSize: 24,
-        isOutlined: true,
-        isWideOutlined: true,
-      ),
+    return SettingsContainerOpenPage(
+      openPage: openPage,
+      title: title,
+      icon: icon,
+      iconSize: 22,
+      isOutlined: true,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+    final modules = [
+      {
+        "title": navBarIconsData["accountDetails"]!.label.tr(),
+        "icon": navBarIconsData["accountDetails"]!.iconData,
+        "page": const EditWalletsPage(),
+      },
+      {
+        "title": navBarIconsData["categoriesDetails"]!.label.tr(),
+        "icon": navBarIconsData["categoriesDetails"]!.iconData,
+        "page": const EditCategoriesPage(),
+      },
+      {
+        "title": navBarIconsData["budgetDetails"]!.label.tr(),
+        "icon": navBarIconsData["budgetDetails"]!.iconData,
+        "page": const EditBudgetPage(),
+      },
+      {
+        "title": navBarIconsData["titlesDetails"]!.label.tr(),
+        "icon": navBarIconsData["titlesDetails"]!.iconData,
+        "page": const EditAssociatedTitlesPage(),
+      },
+      {
+        "title": navBarIconsData["goals"]!.label.tr(),
+        "icon": navBarIconsData["goals"]!.iconData,
+        "page": const ObjectivesListPage(backButton: true),
+      },
+      {
+        "title": navBarIconsData["loans"]!.label.tr(),
+        "icon": navBarIconsData["loans"]!.iconData,
+        "page": const CreditDebtTransactions(isCredit: null),
+      },
+    ];
 
     return PopupFramework(
       title: "Edit, Delete & Reorder Data",
@@ -2158,54 +2189,39 @@ class EditDataOverviewPage extends StatelessWidget {
               textColor: getColor(context, "textLight"),
             ),
           ),
-          _buildTile(
-            context,
-            title: navBarIconsData["accountDetails"]!.label.tr(),
-            subtitle: "Manage accounts, balance transfers, and types",
-            icon: navBarIconsData["accountDetails"]!.iconData,
-            openPage: const EditWalletsPage(),
-            color: primaryColor,
-          ),
-          _buildTile(
-            context,
-            title: navBarIconsData["categoriesDetails"]!.label.tr(),
-            subtitle: "Organize main categories and subcategories",
-            icon: navBarIconsData["categoriesDetails"]!.iconData,
-            openPage: const EditCategoriesPage(),
-            color: Colors.orange,
-          ),
-          _buildTile(
-            context,
-            title: navBarIconsData["budgetDetails"]!.label.tr(),
-            subtitle: "Adjust budget spending targets and cycles",
-            icon: navBarIconsData["budgetDetails"]!.iconData,
-            openPage: const EditBudgetPage(),
-            color: Colors.teal,
-          ),
-          _buildTile(
-            context,
-            title: navBarIconsData["titlesDetails"]!.label.tr(),
-            subtitle: "Auto-associated payee titles and rules",
-            icon: navBarIconsData["titlesDetails"]!.iconData,
-            openPage: const EditAssociatedTitlesPage(),
-            color: Colors.purple,
-          ),
-          _buildTile(
-            context,
-            title: navBarIconsData["goals"]!.label.tr(),
-            subtitle: "Savings goals, milestones, and targets",
-            icon: navBarIconsData["goals"]!.iconData,
-            openPage: const ObjectivesListPage(backButton: true),
-            color: Colors.green,
-          ),
-          _buildTile(
-            context,
-            title: navBarIconsData["loans"]!.label.tr(),
-            subtitle: "Borrowing, lending, debts, and payments",
-            icon: navBarIconsData["loans"]!.iconData,
-            openPage: const CreditDebtTransactions(isCredit: null),
-            color: Colors.indigo,
-          ),
+          for (int i = 0; i < modules.length; i += 2)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 64,
+                      child: _buildTile(
+                        context,
+                        title: modules[i]["title"] as String,
+                        icon: modules[i]["icon"] as IconData,
+                        openPage: modules[i]["page"] as Widget,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: i + 1 < modules.length
+                        ? SizedBox(
+                            height: 64,
+                            child: _buildTile(
+                              context,
+                              title: modules[i + 1]["title"] as String,
+                              icon: modules[i + 1]["icon"] as IconData,
+                              openPage: modules[i + 1]["page"] as Widget,
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

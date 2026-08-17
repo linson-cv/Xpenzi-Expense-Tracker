@@ -10,7 +10,9 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/scrollbarWrap.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
+import 'package:budget/main.dart';
 import 'package:budget/widgets/transactionEntry/swipeToSelectTransactions.dart';
+import 'package:budget/widgets/transactionEntry/transactionEntry.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/widgets/pullDownToRefreshSync.dart';
@@ -783,15 +785,53 @@ class PageFrameworkState extends State<PageFramework>
       },
     );
 
-    if (backButtonEnabled == false) {
-      return PullDownToRefreshSync(
-        scrollController: _scrollController,
-        checkEnabled: () => widget.dragDownToDismissEnabled != false,
-        child: childListener,
-      );
-    } else {
-      return childListener;
-    }
+    Widget output = backButtonEnabled == false
+        ? PullDownToRefreshSync(
+            scrollController: _scrollController,
+            checkEnabled: () => widget.dragDownToDismissEnabled != false,
+            child: childListener,
+          )
+        : childListener;
+
+    return WillPopScope(
+      onWillPop: () async {
+        // 1. If this page has selected transactions, clear them
+        String effectiveListId = widget.listID ?? "0";
+        if (globalSelectedID.value[effectiveListId]?.isNotEmpty == true) {
+          globalSelectedID.value[effectiveListId] = [];
+          globalSelectedID.notifyListeners();
+          return false;
+        }
+
+        // 2. If any selected transactions anywhere in app, clear them
+        bool hadSelected = false;
+        for (String key in globalSelectedID.value.keys) {
+          if (globalSelectedID.value[key]?.isNotEmpty == true) {
+            hadSelected = true;
+            globalSelectedID.value[key] = [];
+          }
+        }
+        if (hadSelected) {
+          globalSelectedID.notifyListeners();
+          return false;
+        }
+
+        // 3. If modal / pushed route can pop, allow it to pop
+        if (ModalRoute.of(context)?.isFirst == false) {
+          return true;
+        }
+
+        // 4. If on another tab, return to home
+        if (pageNavigationFrameworkKey.currentState?.currentPage != null &&
+            pageNavigationFrameworkKey.currentState!.currentPage != 0) {
+          pageNavigationFrameworkKey.currentState?.changePage(0);
+          return false;
+        }
+
+        return true;
+      },
+      child: output,
+    );
   }
 }
 

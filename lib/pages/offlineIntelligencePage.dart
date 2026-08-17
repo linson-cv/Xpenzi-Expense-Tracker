@@ -287,6 +287,33 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                       ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiaryContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onTertiaryContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFont(
+                          text:
+                              "Note: Notifications from non-whitelisted apps are ignored. Custom keywords must match the Android Package ID (e.g. com.whatsapp, com.google.android.apps.messaging).",
+                          fontSize: 11.5,
+                          textColor: Theme.of(context).colorScheme.onTertiaryContainer,
+                          maxLines: 4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 14),
                 TextFont(
                   text: "Popular Payment Apps & Services",

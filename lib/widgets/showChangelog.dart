@@ -26,13 +26,20 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.2.7
+    (A) Universal Notification NLP Engine: Enhanced offline regex parser to seamlessly capture multi-format WhatsApp chats, bank SMS, and payment alerts (e.g. "debited for INR 101 at Starbucks")
+    (A) Category Icon Packs & Shapes: Brand new Standard and Pro icon pack galleries under Theme & Style with customizable icon shapes (Circle, Rounded Square, Squircle, Diamond)
+    (A) Modernized Parsing Templates: Redesigned template cards with Material You container styling, status badges, and streamlined rule configuration
+    (A) Concurrent SQLite Stability: Configured Write-Ahead Logging (WAL) and busy timeout handlers to prevent database lock contention during concurrent background inserts
+    (A) Google Drive & OAuth Alignment: Fixed native Android OAuth authentication resolution for cloud backups and sync
     < 1.2.6
+    (A) Prioritized Back Navigation: Pressing system back first clears active multi-selected transactions before navigating back or closing sheets
     (A) App Notification Filter: Ability to restrict notification parsing to specific bank, payment (GPay, PhonePe, Paytm), or SMS apps
     (A) Notification Deduplication: Prevented double transaction inserts on arrival & removal with strict amount + 15-second time window deduplication
     (A) Background Notification Alerts: Instant system status notifications when transactions are auto-recorded while the app is in the background or killed
     (A) Clear Auto-Detection Notes: Annotated auto-recorded transactions with timestamped notification provenance notes
     (A) 1-Tap Multi-Selection: Initiate multi-select with long-press, then easily select/deselect further transactions with a single tap across all screens
-    (A) 30-Day Trash & Recovery: Added a dedicated Trash card in Explore keeping deleted transactions for 30 days with instant single-tap restore, restore all, and empty trash
+    (A) 30-Day Trash & Recovery: Added a dedicated Trash card in Explore with full multi-selection, 1-tap select, top action bar with "Restore Selected" and "Delete Permanently", plus "Restore All" and "Empty Trash"
     < 1.2.5
     (A) Enhanced System Back Navigation: Returning to Home tab before app exit, and seamless pop handling when opening system/app settings
     (A) Smart Account Grouping: Group accounts on Home by Account Type (Bank Account, Credit Card, Meal Card, Cash, Savings) with dedicated category headers, icons, and subtotals

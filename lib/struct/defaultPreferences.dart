@@ -138,7 +138,7 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "notificationScanningDebug": false,
     "notificationScanning": false,
     "accountColorfulAmountsWithArrows": true,
-    "netTotalsColorful": false,
+    "netTotalsColorful": true,
     "EmailAutoTransactions-amountOfEmails": 10,
     "autoBackups": true,
     "autoBackupsFrequency": 3, //in days

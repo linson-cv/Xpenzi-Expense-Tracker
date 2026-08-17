@@ -15,9 +15,18 @@ Future<FinanceDatabase> constructDb(String dbName,
     // for your app.
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, '$dbName.sqlite'));
-    // return NativeDatabase(file);
-    QueryExecutor foregroundExecutor = NativeDatabase(file);
-    QueryExecutor backgroundExecutor = NativeDatabase.createInBackground(file);
+    void setupDb(dynamic database) {
+      try {
+        database.execute('PRAGMA journal_mode = WAL;');
+        database.execute('PRAGMA busy_timeout = 5000;');
+        database.execute('PRAGMA synchronous = NORMAL;');
+      } catch (e) {
+        print("Error setting PRAGMA for SQLite: $e");
+      }
+    }
+
+    QueryExecutor foregroundExecutor = NativeDatabase(file, setup: setupDb);
+    QueryExecutor backgroundExecutor = NativeDatabase.createInBackground(file, setup: setupDb);
     return MultiExecutor(read: foregroundExecutor, write: backgroundExecutor);
   });
   return FinanceDatabase(db);

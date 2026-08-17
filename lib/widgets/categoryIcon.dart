@@ -56,6 +56,24 @@ class CategoryIcon extends StatelessWidget {
   final double emojiScale;
 
   Widget categoryIconWidget(context, TransactionCategory? category) {
+    int shapeSetting = appStateSettings["categoryIconShape"] ?? 0;
+    double effectiveRadius = borderRadius;
+    if (borderRadius == 18) {
+      if (shapeSetting == 0) {
+        effectiveRadius = 500; // Circle
+      } else if (shapeSetting == 1) {
+        effectiveRadius = 14; // Rounded square
+      } else if (shapeSetting == 2) {
+        effectiveRadius = 22; // Squircle
+      } else if (shapeSetting == 3) {
+        effectiveRadius = 6; // Asymmetric
+      }
+    }
+
+    int packSetting = appStateSettings["categoryIconPack"] ?? 0;
+    bool isMonochromePack = packSetting == 1 || packSetting == 2;
+    Color? packTintColor = packSetting == 2 ? const Color(0xFFF39C12) : null;
+
     Widget child = Column(
       children: [
         Stack(
@@ -83,7 +101,7 @@ class CategoryIcon extends StatelessWidget {
                         width: 3,
                       ),
                       borderRadius: BorderRadiusDirectional.all(
-                          Radius.circular(borderRadius)),
+                          Radius.circular(effectiveRadius)),
                     )
                   : BoxDecoration(
                       border: Border.all(
@@ -91,7 +109,7 @@ class CategoryIcon extends StatelessWidget {
                         width: 0,
                       ),
                       borderRadius: BorderRadiusDirectional.all(
-                          Radius.circular(borderRadius)),
+                          Radius.circular(effectiveRadius)),
                     ),
               child: Tappable(
                 color: noBackground && category != null
@@ -129,13 +147,14 @@ class CategoryIcon extends StatelessWidget {
                           );
                         }
                       },
-                borderRadius: borderRadius - 3,
+                borderRadius: effectiveRadius > 10 ? effectiveRadius - 3 : effectiveRadius,
                 child: Center(
                   child: (category?.emojiIconName == null &&
                           category != null &&
                           category.iconName != null
-                      ? !appStateSettings["colorTintCategoryIcon"] ||
-                              !tintEnabled
+                      ? (!appStateSettings["colorTintCategoryIcon"] ||
+                                  !tintEnabled) &&
+                              !isMonochromePack
                           ? CacheCategoryIcon(
                               iconName: category.iconName ?? "",
                               size: size,
@@ -143,6 +162,7 @@ class CategoryIcon extends StatelessWidget {
                           : ColorFiltered(
                               colorFilter: ColorFilter.mode(
                                 tintColor ??
+                                    packTintColor ??
                                     Theme.of(context)
                                         .colorScheme
                                         .primary

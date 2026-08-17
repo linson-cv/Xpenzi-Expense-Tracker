@@ -53,7 +53,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   double? amount;
   // Supports global currencies: $, €, £, ¥, ₹, ₩, ₺, ₱, ฿, ₫, ₴, R$, CHF, CAD, AUD, USD, EUR, GBP, INR, etc.
   RegExp amountRegex = RegExp(
-    r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs\.?|debited\s+by|debited\s+for|debit\s+of|debit\s+by|debit\s+for|debit|credited\s+with|credited\s+by|credited\s+for|credit\s+of|credit\s+by|credit\s+for|credit|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
+    r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs\.?|debited\s+(?:by|for|of)?|debit\s+(?:by|for|of)?|credited\s+(?:by|for|of|with)?|credit\s+(?:by|for|of)?|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
     caseSensitive: false,
   );
 
@@ -63,7 +63,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     amount = double.tryParse(cleanAmountStr);
   }
 
-  // Fallback amount regex for any standalone currency symbol or code
+  // Fallback A: standalone currency symbol or code followed by number (e.g. ₹500, Rs 500, $25.50)
   if (amount == null) {
     RegExp fallbackAmountRegex = RegExp(r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|rs\.?)\s*([0-9]+(?:\.[0-9]{1,2})?)', caseSensitive: false);
     var fallbackMatch = fallbackAmountRegex.firstMatch(text);
@@ -72,7 +72,16 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     }
   }
 
-  // Fallback for "debit/credit/debited/credited by/of <amount>" or direct number following debit/credit
+  // Fallback B: number followed by currency or debited/credited (e.g. "500 debited", "250.00 rs debited")
+  if (amount == null) {
+    RegExp numberBeforeKeywordRegex = RegExp(r'([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|rs\.?|debited|credited|paid|spent)', caseSensitive: false);
+    var match = numberBeforeKeywordRegex.firstMatch(text);
+    if (match != null && match.group(1) != null) {
+      amount = double.tryParse(match.group(1)!.replaceAll(',', ''));
+    }
+  }
+
+  // Fallback C: direct "debited/credited/debit/credit" followed by number anywhere (e.g. "debited 500")
   if (amount == null) {
     RegExp debitCreditRegex = RegExp(r'(?:debited|credited|debit|credit)\s+(?:by|of|for)?\s*:?\s*([0-9]+(?:\.[0-9]{1,2})?)', caseSensitive: false);
     var match = debitCreditRegex.firstMatch(text);
