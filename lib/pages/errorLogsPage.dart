@@ -86,7 +86,7 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
     }).toList();
 
     return PageFramework(
-      title: "Diagnostic & Error Logs",
+      title: "error-logs".tr(),
       dragDownToDismiss: true,
       actions: [
         if (allLogs.isNotEmpty)
@@ -97,13 +97,13 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
           ),
         if (allLogs.isNotEmpty)
           IconButton(
-            tooltip: "Copy All Logs",
+            tooltip: "copy-error-logs".tr(),
             icon: const Icon(Icons.copy_rounded),
             onPressed: _copyAllLogs,
           ),
         if (allLogs.isNotEmpty)
           IconButton(
-            tooltip: "Clear Logs",
+            tooltip: "clear-error-logs".tr(),
             icon: const Icon(Icons.delete_sweep_rounded),
             onPressed: _clearLogs,
           ),

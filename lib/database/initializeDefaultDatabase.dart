@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:budget/functions.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -32,6 +33,13 @@ Future<bool> createDefaultCategories() async {
         print("Default category ${category.categoryPk} (${category.name}) does not exist, creating");
         await database.createOrUpdateCategory(category,
             customDateTimeModified: DateTime(0));
+      } else if (existing.iconName == "pill.png" ||
+          existing.iconName == "home.png" ||
+          existing.iconName == "gas-pump.png") {
+        print("Healing default category ${existing.categoryPk} icon to ${category.iconName}");
+        await database.createOrUpdateCategory(
+          existing.copyWith(iconName: Value(category.iconName)),
+        );
       }
     } catch (e) {
       print("Error checking/creating default category ${category.categoryPk}: $e");

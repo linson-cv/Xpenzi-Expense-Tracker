@@ -38,6 +38,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'firebase_options.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+
 // Requires hot restart when changed
 bool enableDevicePreview = false && kDebugMode;
 bool allowDebugFlags = true || kIsWeb;
@@ -46,6 +48,7 @@ bool allowDangerousDebugFlags = kDebugMode;
 void main() async {
   captureLogs(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    FlutterForegroundTask.initCommunicationPort();
 
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.presentError(details);

@@ -18,6 +18,7 @@ import 'package:budget/widgets/transactionEntry/transactionLabel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
@@ -147,6 +148,7 @@ class TransactionEntry extends StatelessWidget {
       globalSelectedID.value[listID ?? "0"]!.remove(transaction.transactionPk);
       if (isSwiping) selectingTransactionsActive = -1;
     }
+    HapticFeedback.mediumImpact();
     globalSelectedID.notifyListeners();
 
     if (onSelected != null) onSelected!(transaction, selected);

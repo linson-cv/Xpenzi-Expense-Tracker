@@ -49,11 +49,10 @@ class OnBoardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: OnBoardingPageBody(
-            popNavigationWhenDone: popNavigationWhenDone,
-            showPreviewDemoButton: showPreviewDemoButton));
+    return OnBoardingPageBody(
+      popNavigationWhenDone: popNavigationWhenDone,
+      showPreviewDemoButton: showPreviewDemoButton,
+    );
   }
 }
 
@@ -836,12 +835,29 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       print("Error: onboarding pages mismatch in length!");
     }
 
-    return Stack(
-      children: [
-        PageView(
-          controller: controller,
-          children: children,
-        ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        int currentPage = controller.page?.round() ?? 0;
+        if (currentPage > 0) {
+          previousOnBoardPage();
+        } else {
+          if (widget.popNavigationWhenDone && Navigator.canPop(context)) {
+            popRoute(context);
+          } else {
+            SystemNavigator.pop();
+          }
+        }
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            PageView(
+              controller: controller,
+              children: children,
+            ),
         PositionedDirectional(
           bottom: 0,
           child: IgnorePointer(
@@ -941,7 +957,9 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
           ),
         ),
       ],
-    );
+    ),
+  ),
+);
   }
 }
 

@@ -13,6 +13,7 @@ import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
+import 'package:budget/struct/backgroundNotificationHandler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_listener_service/notification_event.dart';
@@ -111,39 +112,12 @@ Future<void> populateDefaultScannerTemplatesIfEmpty() async {
 
 Future<void> updatePersistentBackgroundServiceNotification() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
-  const int persistentNotificationId = 888123;
 
   if (appStateSettings["notificationScanning"] == true &&
       appStateSettings["persistentBackgroundListener"] == true) {
-    try {
-      AndroidNotificationDetails androidDetails = const AndroidNotificationDetails(
-        'persistent_listener_channel',
-        'SMS & Alert Background Monitor',
-        channelDescription: 'Keeps Xpenzi notification listener active in the background for real-time transaction detection',
-        importance: Importance.low,
-        priority: Priority.low,
-        ongoing: true,
-        autoCancel: false,
-        showWhen: false,
-      );
-
-      NotificationDetails notificationDetails = NotificationDetails(
-        android: androidDetails,
-      );
-
-      await flutterLocalNotificationsPlugin.show(
-        persistentNotificationId,
-        "Xpenzi Auto-Detection Active",
-        "Monitoring bank SMS & payment alerts in real time",
-        notificationDetails,
-      );
-    } catch (e) {
-      print("Error showing persistent background notification: $e");
-    }
+    await startBackgroundListenerService();
   } else {
-    try {
-      await flutterLocalNotificationsPlugin.cancel(persistentNotificationId);
-    } catch (_) {}
+    await stopBackgroundListenerService();
   }
 }
 
@@ -159,9 +133,14 @@ Future initNotificationScanning() async {
 
   if (status == true) {
     await populateDefaultScannerTemplatesIfEmpty();
-    notificationListenerSubscription =
-        NotificationListenerService.notificationsStream.listen(onNotification);
-    await updatePersistentBackgroundServiceNotification();
+    // If persistent background listener is enabled, run the persistent foreground task
+    if (appStateSettings["persistentBackgroundListener"] == true) {
+      await startBackgroundListenerService();
+    } else {
+      // Otherwise listen within the active app session
+      notificationListenerSubscription =
+          NotificationListenerService.notificationsStream.listen(onNotification);
+    }
   }
 }
 
@@ -464,10 +443,11 @@ Future queueTransactionFromMessage(String messageString,
   Transaction? existingDbDuplicate = await database.findDuplicateTransaction(
     amount: absoluteAmount,
     timestamp: eventTime,
+    name: title,
     window: const Duration(seconds: 60),
   );
   if (existingDbDuplicate != null) {
-    print("Notification Engine: Ignored database duplicate for amount $absoluteAmount matching '${existingDbDuplicate.name}'");
+    print("Notification Engine: Ignored database duplicate for $title ($absoluteAmount) matching '${existingDbDuplicate.name}'");
     return false;
   }
 

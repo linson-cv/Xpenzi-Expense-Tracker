@@ -217,9 +217,11 @@ class HandleWillPopScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      child: child,
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
         // 1. If any transactions are selected (on Home, Transactions, Accounts, etc.), deselect them first!
         bool hadSelectedTransactions = false;
         for (String key in globalSelectedID.value.keys) {
@@ -230,40 +232,41 @@ class HandleWillPopScope extends StatelessWidget {
         }
         if (hadSelectedTransactions) {
           globalSelectedID.notifyListeners();
-          return false;
+          return;
         }
 
         // 2. If in Explore customization mode, exit edit mode first
         if (isExploreEditingNotifier.value == true) {
           isExploreEditingNotifier.value = false;
-          return false;
+          return;
         }
 
         // 3. If any sub-route, sheet, dialog, or nested page is open, pop it
         BuildContext? navContext = navigatorKey.currentContext ?? context;
         if (Navigator.of(navContext, rootNavigator: false).canPop()) {
           Navigator.of(navContext, rootNavigator: false).pop();
-          return false;
+          return;
         }
 
         if (Navigator.of(navContext, rootNavigator: true).canPop()) {
           Navigator.of(navContext, rootNavigator: true).pop();
-          return false;
+          return;
         }
 
         bool popResult = await maybePopRoute(navContext);
-        if (popResult == true) return false;
+        if (popResult == true) return;
 
         // 4. If on another navigation tab (Transactions, Budgets, Explore, etc.), return to Home first
         if (pageNavigationFrameworkKey.currentState?.currentPage != null &&
             pageNavigationFrameworkKey.currentState!.currentPage != 0) {
           pageNavigationFrameworkKey.currentState?.changePage(0);
-          return false;
+          return;
         }
 
-        // 5. Allow back button to exit app only when already on Home page (tab 0) with no sub-routes or selections active
-        return true;
+        // 5. Exit app cleanly when on Home page (tab 0) with nothing active
+        SystemNavigator.pop();
       },
+      child: child,
     );
   }
 }

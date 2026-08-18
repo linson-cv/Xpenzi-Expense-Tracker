@@ -33,9 +33,8 @@ class _TrashPageState extends State<TrashPage> {
   Future<void> _emptyTrash(List<TransactionActivityLog> items) async {
     openPopup(
       context,
-      title: "Empty Trash?",
-      description:
-          "Permanently delete all ${items.length} items from trash? This action cannot be undone.",
+      title: "empty-trash-question".tr(),
+      description: "empty-trash-desc".tr(),
       icon: Icons.delete_forever_rounded,
       onCancelLabel: "cancel".tr(),
       onCancel: () => popRoute(context),
@@ -211,7 +210,7 @@ class _TrashPageState extends State<TrashPage> {
                         return Column(
                           children: [
                             SettingsContainerDropdown(
-                              title: "Trash Retention Period",
+                              title: "trash-retention-period".tr(),
                               description:
                                   "Automatically delete trashed transactions older than this period",
                               icon: Icons.history_rounded,
@@ -244,16 +243,13 @@ class _TrashPageState extends State<TrashPage> {
             ),
             if (trashItems.isNotEmpty) ...[
               IconButton(
-                tooltip: "Restore All",
+                tooltip: "restore-all".tr(),
                 icon: const Icon(Icons.restore_rounded),
                 onPressed: () => _restoreAll(trashItems),
               ),
               IconButton(
-                tooltip: "Empty Trash",
-                icon: Icon(
-                  Icons.delete_sweep_rounded,
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                tooltip: "empty-trash".tr(),
+                icon: const Icon(Icons.delete_sweep_rounded),
                 onPressed: () => _emptyTrash(trashItems),
               ),
             ],

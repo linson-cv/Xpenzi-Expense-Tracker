@@ -7531,15 +7531,21 @@ class FinanceDatabase extends _$FinanceDatabase {
   Future<Transaction?> findDuplicateTransaction({
     required double amount,
     required DateTime timestamp,
+    String? name,
     Duration window = const Duration(seconds: 15),
   }) async {
     final start = timestamp.subtract(window);
     final end = timestamp.add(window);
     final matching = await (select(transactions)
-          ..where((t) =>
-              t.amount.equals(amount) &
-              t.dateCreated.isBiggerOrEqualValue(start) &
-              t.dateCreated.isSmallerOrEqualValue(end))
+          ..where((t) {
+            Expression<bool> predicate = t.amount.equals(amount) &
+                t.dateCreated.isBiggerOrEqualValue(start) &
+                t.dateCreated.isSmallerOrEqualValue(end);
+            if (name != null && name.trim().isNotEmpty) {
+              predicate = predicate & t.name.equals(name.trim());
+            }
+            return predicate;
+          })
           ..limit(1))
         .get();
     return matching.firstOrNull;

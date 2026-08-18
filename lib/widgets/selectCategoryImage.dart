@@ -650,19 +650,19 @@ class _CategoryIconPackGalleryPageState
       "borderRadius": BorderRadius.circular(500),
     },
     {
-      "name": "Rounded Square",
+      "name": "Rounded",
       "isPro": true,
       "radius": 16.0,
       "borderRadius": BorderRadius.circular(16),
     },
     {
-      "name": "Smooth Squircle",
+      "name": "Squircle",
       "isPro": true,
       "radius": 24.0,
       "borderRadius": BorderRadius.circular(24),
     },
     {
-      "name": "Diamond / Asymmetric",
+      "name": "Diamond",
       "isPro": true,
       "radius": 8.0,
       "borderRadius": BorderRadius.circular(8),
@@ -675,8 +675,9 @@ class _CategoryIconPackGalleryPageState
       title: "Theme & Style",
       dragDownToDismiss: true,
       listWidgets: [
+        // Category Icon Pack Section
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -686,57 +687,64 @@ class _CategoryIconPackGalleryPageState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const TextFont(
-                  text: "Category Icon Pack",
+                TextFont(
+                  text: "category-icon-pack".tr(),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
                 const SizedBox(height: 14),
                 for (int i = 0; i < iconPacks.length; i++) ...[
                   _buildPackCard(context, i, iconPacks[i]),
-                  const SizedBox(height: 12),
+                  if (i < iconPacks.length - 1) const SizedBox(height: 12),
                 ],
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 1,
-                        color: getColor(context, "dividerColor"),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: TextFont(
-                        text: "Icon Shape",
-                        fontSize: 12,
-                        textColor: getColor(context, "textLight"),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        height: 1,
-                        color: getColor(context, "dividerColor"),
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+          ),
+        ),
+        // Icon Shape Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFont(
+                  text: "category-icon-shape".tr(),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 4),
+                TextFont(
+                  text: "Customize the background shape of category icons",
+                  fontSize: 13,
+                  textColor: getColor(context, "textLight"),
                 ),
                 const SizedBox(height: 16),
                 SingleChildScrollView(
+                  clipBehavior: Clip.none,
                   scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (int i = 0; i < iconShapes.length; i++) ...[
-                        _buildShapeCard(context, i, iconShapes[i]),
-                        const SizedBox(width: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        for (int i = 0; i < iconShapes.length; i++) ...[
+                          _buildShapeCard(context, i, iconShapes[i]),
+                          if (i < iconShapes.length - 1) const SizedBox(width: 12),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -831,6 +839,7 @@ class _CategoryIconPackGalleryPageState
     final bool isSelected = selectedShapeIndex == index;
     final bool isPro = shape["isPro"] == true;
     final BorderRadius borderRadius = shape["borderRadius"] as BorderRadius;
+    final String shapeName = shape["name"] as String;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -852,8 +861,8 @@ class _CategoryIconPackGalleryPageState
             updateSettings("categoryIconShape", index, updateGlobalState: true);
           },
           child: Container(
-            width: 78,
-            height: 78,
+            width: 82,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
@@ -863,22 +872,36 @@ class _CategoryIconPackGalleryPageState
                 width: isSelected ? 2.2 : 1.2,
               ),
             ),
-            child: Center(
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF93A5CF),
-                  borderRadius: borderRadius,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF93A5CF),
+                    borderRadius: borderRadius,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                TextFont(
+                  text: shapeName,
+                  fontSize: 11,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  textColor: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : getColor(context, "textLight"),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ],
             ),
           ),
         ),
         if (isPro)
           Positioned(
             top: -6,
-            right: 2,
+            right: 4,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(

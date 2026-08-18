@@ -243,6 +243,13 @@ class CategoryIcon extends StatelessWidget {
   }
 }
 
+String resolveCategoryIcon(String iconName) {
+  if (iconName == "pill.png") return "healthcare-and-medical.png";
+  if (iconName == "home.png") return "rent.png";
+  if (iconName == "gas-pump.png") return "fuel.png";
+  return iconName;
+}
+
 class CacheCategoryIcon extends StatefulWidget {
   const CacheCategoryIcon({
     required this.iconName,
@@ -258,13 +265,24 @@ class CacheCategoryIcon extends StatefulWidget {
 class _CacheCategoryIconState extends State<CacheCategoryIcon> {
   late Image image;
 
+  Image _buildImage(String iconName, double size) {
+    final resolved = resolveCategoryIcon(iconName);
+    return Image.asset(
+      "assets/categories/$resolved",
+      width: size,
+      errorBuilder: (context, error, stackTrace) {
+        return Image.asset(
+          "assets/categories/shopping.png",
+          width: size,
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    image = Image.asset(
-      "assets/categories/${widget.iconName}",
-      width: widget.size,
-    );
+    image = _buildImage(widget.iconName, widget.size);
   }
 
   @override
@@ -272,10 +290,7 @@ class _CacheCategoryIconState extends State<CacheCategoryIcon> {
     if (widget.iconName != oldWidget.iconName ||
         widget.size != oldWidget.size) {
       setState(() {
-        image = Image.asset(
-          "assets/categories/${widget.iconName}",
-          width: widget.size,
-        );
+        image = _buildImage(widget.iconName, widget.size);
       });
     }
   }

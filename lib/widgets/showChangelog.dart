@@ -26,13 +26,16 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
-    < 1.2.8
-    (A) Persistent Background Monitor: Added low-priority silent background service ensuring bank SMS and payment alerts are captured in real-time even if the app is swiped away from recent tasks
+    < 1.2.9
+    (Release: Xpenzi 1.2.9 — Google Sign-In & Drive Sync Stability, Background Capture & Deduplication)
+    (A) Google Sign-In & Drive Sync Stability: Complete OAuth configuration alignment with Google Drive & People API for flawless backup & sync
+    (A) Persistent Background Monitor: Added low-priority silent background service ensuring bank SMS and payment alerts are captured in real-time even if the app is closed
     (A) Background Auto-Recording & 60s Deduplication: Fixed background SMS auto-recording when app is closed, and enhanced deduplication to 60-second multi-check to eliminate duplicate entries
     (A) Expanded Essential Default Categories: Added Health & Medical, Education, Rent & Housing, Fuel & Vehicle, and Investments & Savings categories with 1-tap Restore Default Categories
     (A) Emoji Selector Validation & Warning: Added real-time input verification with friendly guidance alerts when non-emoji characters are typed into custom category icons
     (A) Robust Notification Permission Handling: Defensive error handling for Android platform channel permission requests
     < 1.2.7
+    (Release: Xpenzi 1.2.7 — Intelligent Notification Auto-Detect, Trash & Pro Icon Packs)
     (A) Redesigned Trash Experience & Configurable Retention: Moved Empty Trash / Restore All to the top navigation bar, added a dynamic live stats bar showing total/selected items with 1-tap contextual restore & permanent deletion, and added a Trash Retention Period setting (7, 14, 30, 60, 90 days) under Settings > Data Management & Reset
     (A) 1-Tap Multi-Selection in Trash & Lists: Initiating multi-select with long-press now allows seamless 1-tap selection/deselection of further items without needing repeated long-presses
     (A) Pro Category Icon Pack & Shapes: App-wide category icon theme presets (Standard Colorful, Solid Minimalist, Line Art) and shape customization (Circle, Rounded Square, Squircle, Diamond) under Settings > Theme & Style
@@ -45,6 +48,7 @@ String getChangelogString() {
     (A) Concurrent SQLite Stability: Configured Write-Ahead Logging (WAL) and busy timeout handlers to prevent database lock contention during concurrent background inserts
     (A) Google Drive & OAuth Alignment: Fixed native Android OAuth authentication resolution for cloud backups and sync
     < 1.2.6
+    (Release: Xpenzi 1.2.6 — Notification Filters, 30-Day Trash & Multi-Selection)
     (A) Prioritized Back Navigation: Pressing system back first clears active multi-selected transactions before navigating back or closing sheets
     (A) App Notification Filter: Ability to restrict notification parsing to specific bank, payment (GPay, PhonePe, Paytm), or SMS apps
     (A) Notification Deduplication: Prevented double transaction inserts on arrival & removal with strict amount + 15-second time window deduplication
@@ -53,11 +57,13 @@ String getChangelogString() {
     (A) 1-Tap Multi-Selection: Initiate multi-select with long-press, then easily select/deselect further transactions with a single tap across all screens
     (A) 30-Day Trash & Recovery: Added a dedicated Trash card in Explore with full multi-selection, 1-tap select, top action bar with "Restore Selected" and "Delete Permanently", plus "Restore All" and "Empty Trash"
     < 1.2.5
+    (Release: Xpenzi 1.2.5 — Smart Account Grouping & System Back Navigation)
     (A) Enhanced System Back Navigation: Returning to Home tab before app exit, and seamless pop handling when opening system/app settings
     (A) Smart Account Grouping: Group accounts on Home by Account Type (Bank Account, Credit Card, Meal Card, Cash, Savings) with dedicated category headers, icons, and subtotals
     (A) Accounts List & Home Enhancements: Enabled colorful polarity amounts by default and fixed Pay Bill layout spacing
     (A) Universal Account Type Detection & Persistence: Automatically deduce and save account types from imports and account name heuristics
     < 1.2.4
+    (Release: Xpenzi 1.2.4 — Notification Engine Architecture & Drive Authorization)
     (A) Notification Engine Architecture: Extracted background SMS & push notification processing into a dedicated, modular engine
     (A) Google Sign-In & Drive OAuth Resolution: Configured explicit serverClientId for seamless Google Drive and Gmail scope authorization
     (A) Settings & Advanced Automation Layout: Aligned card padding, border radii, and visual styling across Intelligent & Automation settings
@@ -614,6 +620,12 @@ List<Widget>? getChangelogPointsWidgets(BuildContext context,
       }
 
       if (forceShow == false && versionBookmark <= lastLoginVersionInt) {
+        continue;
+      }
+
+      // Ignore internal release metadata comments (e.g. (Release: ...))
+      if (string.trim().startsWith("(Release:") ||
+          string.trim().startsWith("(Build:")) {
         continue;
       }
 
