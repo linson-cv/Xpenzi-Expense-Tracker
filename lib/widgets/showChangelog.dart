@@ -26,11 +26,17 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.1
+    (Release: Xpenzi 1.3.1 — Google Drive OAuth Resolution & Sync Architecture)
+    (A) Google Drive OAuth Alignment: Explicit serverClientId audience configuration for native Android Google Sign-In, resolving Drive permission grants
+    (A) Cloud Sync Lifecycle Hardening: Protected concurrent backup sync executions and eliminated double-completion states
+    (A) Null-Safe Cloud Backups: Defensive verification of Google session tokens prior to cloud sync and backup operations
     < 1.3.0
     (Release: Xpenzi 1.3.0 — Comprehensive Error Logging & Google Authentication Resilience)
     (A) Google Sign-In & Drive Sync Resilience: Seamless dismissal handling when cancelling account selection without false error popups, plus full OAuth flow synchronization
     (A) App-Wide Diagnostic Error Logging: Integrated comprehensive error tracking for asynchronous data imports/exports, Google Drive backup sync, AI parsing, and notification auto-recording into the in-app Diagnostic Logs
     (A) Notification Auto-Record Safety: Fortified database insertion safeguarding background SMS and alert entries with automatic exception recording
+    (A) Notification Permission Dialog Fix: Hardened permission request flow to prevent duplicate completion errors on cancel or barrier dismissals
     < 1.2.9
     (Release: Xpenzi 1.2.9 — High-Accuracy Offline SMS Intelligence, Category Search & Android Compliance)
     (A) High-Accuracy Offline SMS Intelligence: Smart detection of payment reminders, bill generation alerts, due-date notices, and scheduled autopay warnings to prevent pending bills from being mistakenly recorded as expenses

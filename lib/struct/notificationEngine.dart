@@ -201,12 +201,15 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
           promptBatteryOptimizationPopup(ctx);
         });
       }
-      completer.complete(status);
+      if (!completer.isCompleted) completer.complete(status);
     },
     onCancel: () {
-      completer.complete(false);
+      if (!completer.isCompleted) completer.complete(false);
     },
-  );
+  ).then((_) {
+    // If dismissed via barrier or back gesture without tapping Cancel or Submit
+    if (!completer.isCompleted) completer.complete(false);
+  });
 
   return completer.future;
 }

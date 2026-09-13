@@ -23,3 +23,15 @@
 - **State & Preferences**: `appStateSettings` (`lib/struct/settings.dart`), `sharedPreferences`, `databaseGlobal.dart`.
 - **Localization**: `easy_localization` with CSV/JSON maps in `assets/translations/`.
 - **Core Modules**: Multi-wallet/currency, On-device offline SMS & notification intelligence, Gemini AI categorization, Goals/Loans, and Google Drive cloud backups.
+
+## 6. Google Sign-In, OAuth & Cloud Sync Architecture
+- **Android Client Configuration**:
+  - Package Name: `com.navlin.xpenzi`
+  - On Android, `serverClientId` (the Web Client ID from `google-services.json`) MUST be passed to `GoogleSignIn(serverClientId: ..., scopes: ...)` when requesting Drive scopes (`drive.appdata`). NEVER pass an Android client ID to `clientId` on Android.
+- **Keystores & Fingerprints**:
+  - Ensure all 4 key fingerprints (Play Store App Signing classic & PQ, Upload Key, and Local Debug Key) are registered in Firebase / Google Cloud Console.
+  - Keep `key.properties`, `*.jks`, and `google-services.json` strictly excluded via `.gitignore`.
+- **Error Handling & Defensive Coding**:
+  - Use `recordAppError(tag, error, stackTrace: stack, extraInfo: ...)` across async actions, import/export, cloud backups, and notification processing.
+  - User dismissals / cancellation of Google Sign-in must return `false` cleanly without throwing false error popups.
+  - All `Completer` instances must be guarded with `if (!completer.isCompleted)` to prevent `Bad state: Future already completed`.

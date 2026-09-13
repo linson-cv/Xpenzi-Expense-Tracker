@@ -137,6 +137,8 @@ Future<bool> signInGoogle(
               clientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
               scopes: scopes)
           : signIn.GoogleSignIn(
+              serverClientId:
+                  "722336458062-qus0b9e1ffrah6t2sc2aoecnke5aaasr.apps.googleusercontent.com",
               scopes: scopes,
             );
       // googleSignIn?.currentUser?.clearAuthCache();
@@ -444,6 +446,20 @@ Future<void> createBackup(
           silentDelete: true);
     }
 
+    if (googleUser == null) {
+      await signInGoogle(
+        context: context,
+        waitForCompletion: false,
+        silentSignIn: true,
+      );
+    }
+    if (googleUser == null) {
+      if (silentBackup == false || silentBackup == null) {
+        loadingIndeterminateKey.currentState?.setVisibility(false);
+      }
+      return;
+    }
+
     DBFileInfo currentDBFileInfo = await getCurrentDBFileInfo();
 
     final authHeaders = await googleUser!.authHeaders;
@@ -512,6 +528,12 @@ Future<void> deleteRecentBackups(context, amountToKeep,
   try {
     if (silentDelete == false || silentDelete == null) {
       loadingIndeterminateKey.currentState?.setVisibility(true);
+    }
+    if (googleUser == null) {
+      if (silentDelete == false || silentDelete == null) {
+        loadingIndeterminateKey.currentState?.setVisibility(false);
+      }
+      return;
     }
 
     final authHeaders = await googleUser!.authHeaders;

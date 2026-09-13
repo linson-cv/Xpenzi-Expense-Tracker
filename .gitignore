@@ -56,5 +56,9 @@ key.properties
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 
+# Private Local Agent Memory & Secrets
+.agents/secrets/
+.agents/*.local.md
+
 /.firebase
 .firebase/

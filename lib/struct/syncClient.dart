@@ -199,12 +199,15 @@ Future<bool> runForceSignIn(BuildContext context) async {
 }
 
 Future<bool> syncData(BuildContext context) async {
-  // Create a new instance of the completer
-  if (syncDataCompleter.isCompleted) {
-    syncDataCompleter = CancelableCompleter(onCancel: () {
-      requestSyncDataCancel = true;
-    });
+  // If an active sync is already in progress, return the running operation instead of re-completing
+  if (!syncDataCompleter.isCompleted) {
+    return syncDataCompleter.operation.value;
   }
+
+  // Create a fresh instance for the new sync run
+  syncDataCompleter = CancelableCompleter(onCancel: () {
+    requestSyncDataCancel = true;
+  });
 
   syncDataCompleter.complete(Future.value(_syncData(context)));
   return syncDataCompleter.operation.value;
