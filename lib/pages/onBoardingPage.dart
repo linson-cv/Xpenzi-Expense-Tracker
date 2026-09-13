@@ -189,6 +189,8 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
           },
           onCancel: () {
             popRoute(context);
+            updateSettings("skippedOfflineIntelligenceOnboarding", true,
+                updateGlobalState: false);
           },
         );
       }
@@ -222,7 +224,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
             nextWithInput: (text) {
               if (text.trim().isNotEmpty) {
                 updateSettings("username", text.trim(),
-                    pagesNeedingRefresh: [0], updateGlobalState: true);
+                    updateGlobalState: false);
               }
             },
             selectedText: appStateSettings["username"],

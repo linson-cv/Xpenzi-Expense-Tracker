@@ -26,6 +26,11 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.2
+    (Release: Xpenzi 1.3.2 — Onboarding Stability, Popup Fixes & Offline Intelligence Reminder)
+    (A) Onboarding Name Entry Fix: Resolved app freeze when setting username manually during onboarding by deferring global state rebuild until navigation completes
+    (A) Notification Permission Cancel Fix: Fixed "Cancel" button on notification access popup not dismissing the dialog, ensuring clean popup closure
+    (A) Periodic Offline Intelligence Reminder: Users who skipped notification access during onboarding now receive a periodic reminder every 5th app launch with Enable Now, Later, and Never options
     < 1.3.1
     (Release: Xpenzi 1.3.1 — Google Drive OAuth Resolution & Sync Architecture)
     (A) Google Drive OAuth Alignment: Explicit serverClientId audience configuration for native Android Google Sign-In, resolving Drive permission grants

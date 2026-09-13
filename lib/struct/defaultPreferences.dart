@@ -154,6 +154,8 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "dismissedStoreRating": false,
     "submittedFeedback": false,
     "canShowBackupReminderPopup": true,
+    "canShowOfflineIntelligenceReminder": true,
+    "skippedOfflineIntelligenceOnboarding": false,
     "canShowTransactionActionButtonTip": true,
     "autoLoginDisabledOnWebTip": true,
     "forceAutoLogin": false,

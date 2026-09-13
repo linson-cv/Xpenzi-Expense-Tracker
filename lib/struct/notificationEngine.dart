@@ -3,6 +3,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addTransactionPage.dart';
+import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:budget/struct/autoTransactionTracker.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/geminiAi.dart';
@@ -204,6 +205,7 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
       if (!completer.isCompleted) completer.complete(status);
     },
     onCancel: () {
+      popRoute(context);
       if (!completer.isCompleted) completer.complete(false);
     },
   ).then((_) {
@@ -245,6 +247,50 @@ Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
   }
 
   return status;
+}
+
+/// Periodic reminder to enable Offline Intelligence (notification scanning).
+/// Only shows for users who explicitly skipped the notification popup during
+/// onboarding. Shows every 5th app login on Android until the user enables
+/// notification scanning or permanently dismisses with "Never".
+bool openOfflineIntelligenceReminderCheck(BuildContext context) {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return false;
+  if (appStateSettings["notificationScanning"] == true) return false;
+  if (appStateSettings["skippedOfflineIntelligenceOnboarding"] != true) {
+    return false;
+  }
+  if (appStateSettings["canShowOfflineIntelligenceReminder"] != true) {
+    return false;
+  }
+  if ((appStateSettings["numLogins"] + 1) % 5 != 0) return false;
+
+  openPopup(
+    context,
+    icon: Icons.notifications_active_rounded,
+    title: "Enable Offline Intelligence?",
+    description:
+        "Xpenzi can automatically detect bank SMS, UPI payments, and card alerts to create transactions without manual typing.\n\n🔒 100% Private: All processing happens on your device. No data leaves your phone.",
+    onSubmitLabel: "Enable Now",
+    onCancelLabel: "Never",
+    onExtraLabel: "Later",
+    onSubmit: () async {
+      popRoute(context);
+      bool status =
+          await requestReadNotificationPermission(context: context);
+      if (status && context.mounted) {
+        pushRoute(context, const OfflineIntelligencePage());
+      }
+    },
+    onCancel: () async {
+      popRoute(context);
+      await updateSettings("canShowOfflineIntelligenceReminder", false,
+          updateGlobalState: false);
+    },
+    onExtra: () {
+      popRoute(context);
+    },
+  );
+  return true;
 }
 
 final Map<String, DateTime> _recentlyProcessedNotificationKeys = {};

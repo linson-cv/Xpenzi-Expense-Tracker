@@ -450,8 +450,14 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       }
 
       // Do this after cloud functions attempt (i.e. if user is not signed in we can show it)
+      bool isBackupReminderShown = false;
       if (isRatingPopupShown == false && isChangelogShown == false) {
-        openBackupReminderPopupCheck(context);
+        isBackupReminderShown = openBackupReminderPopupCheck(context);
+      }
+      if (isRatingPopupShown == false &&
+          isChangelogShown == false &&
+          isBackupReminderShown == false) {
+        openOfflineIntelligenceReminderCheck(context);
       }
 
       // Mark subscriptions as paid AFTER syncing with cloud
