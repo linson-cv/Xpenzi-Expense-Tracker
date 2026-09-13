@@ -26,8 +26,17 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.0
+    (Release: Xpenzi 1.3.0 — Comprehensive Error Logging & Google Authentication Resilience)
+    (A) Google Sign-In & Drive Sync Resilience: Seamless dismissal handling when cancelling account selection without false error popups, plus full OAuth flow synchronization
+    (A) App-Wide Diagnostic Error Logging: Integrated comprehensive error tracking for asynchronous data imports/exports, Google Drive backup sync, AI parsing, and notification auto-recording into the in-app Diagnostic Logs
+    (A) Notification Auto-Record Safety: Fortified database insertion safeguarding background SMS and alert entries with automatic exception recording
     < 1.2.9
-    (Release: Xpenzi 1.2.9 — Google Sign-In & Drive Sync Stability, Background Capture & Deduplication)
+    (Release: Xpenzi 1.2.9 — High-Accuracy Offline SMS Intelligence, Category Search & Android Compliance)
+    (A) High-Accuracy Offline SMS Intelligence: Smart detection of payment reminders, bill generation alerts, due-date notices, and scheduled autopay warnings to prevent pending bills from being mistakenly recorded as expenses
+    (A) Interactive SMS Parser Sandbox: Added on-device test sandbox in Auto-Detect SMS settings to test and verify parsing accuracy on sample SMS or reminders in real-time
+    (A) Instant Category Search: Added instant real-time search filtering in category picker modal to quickly find categories
+    (A) Android Privacy & Compliance Rationale: Prominent, user-friendly educational dialogs before requesting notification listener and battery optimization permissions
     (A) Google Sign-In & Drive Sync Stability: Complete OAuth configuration alignment with Google Drive & People API for flawless backup & sync
     (A) Persistent Background Monitor: Added low-priority silent background service ensuring bank SMS and payment alerts are captured in real-time even if the app is closed
     (A) Background Auto-Recording & 60s Deduplication: Fixed background SMS auto-recording when app is closed, and enhanced deduplication to 60-second multi-check to eliminate duplicate entries

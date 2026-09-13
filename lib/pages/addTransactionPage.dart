@@ -4065,6 +4065,7 @@ class _SelectCategoryWithIncomeExpenseSelectorState
               setSelectedCategory: widget.setSelectedCategory,
               selectedIncome: selectedIncome,
               allowRearrange: false,
+              showSearch: true,
               // selectedIncome == null && widget.selectedIncomeInitial == null,
             ),
           ),

@@ -19,12 +19,54 @@ class LocalNlpParsedTransaction {
   });
 }
 
+/// Helper to detect payment reminders, bill generation alerts, due-date notices,
+/// and scheduled pre-debit notifications before any actual money has been transferred.
+bool isPaymentReminderOrPendingNotice(String text) {
+  String lower = text.toLowerCase();
+
+  // Explicit confirmation phrases that verify money has ALREADY been debited or transferred.
+  // If present, it is a completed payment, NOT just a reminder.
+  final RegExp completedDebitConfirmation = RegExp(
+    r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|withdrawn from)\b',
+    caseSensitive: false,
+  );
+
+  // Future-tense or non-debited alert indicators that signify reminders or pending dues.
+  final RegExp reminderKeywords = RegExp(
+    r'\b(reminder|bill reminder|payment reminder|due on|is due|due date|due by|pay before|pay now|to avoid late fee|avoid late payment|to avoid disconnection|to avoid service interruption|upcoming debit|will be debited|is scheduled to be debited|scheduled to be debited|is scheduled on|scheduled on|scheduled for|standing instruction|ensure sufficient balance|maintain sufficient balance|maintain balance|keep sufficient balance|outstanding amount|total amount due|min amount due|minimum amount due|total due|min due|minimum due|bill generated|e-bill generated|bill for rs|invoice generated)\b',
+    caseSensitive: false,
+  );
+
+  // If text contains reminder/pre-debit keywords:
+  if (reminderKeywords.hasMatch(lower)) {
+    // If it also contains an explicit completed debit confirmation, verify it isn't negated by "will be"
+    if (completedDebitConfirmation.hasMatch(lower)) {
+      // If it says "will be debited", "scheduled to be debited", or "is due", it's still future/reminder
+      if (lower.contains("will be") || lower.contains("scheduled to") || lower.contains("is due") || lower.contains("due on")) {
+        return true;
+      }
+      // Otherwise confirmed completed transaction
+      return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     String input, BuildContext? context) async {
   if (input.trim().isEmpty) return null;
   String text = input.replaceAll("\n", " ");
 
-  // 1. Promotional and Marketing Message Filter
+  // 1. Payment Reminder & Scheduled Pre-Debit Filter
+  // Prevents bill reminders, due-date notices, and scheduled autopay warnings from being recorded as expenses
+  if (isPaymentReminderOrPendingNotice(text)) {
+    print("[LocalNLP] Ignored message: Detected payment reminder or scheduled bill notice without actual debit.");
+    return null;
+  }
+
+  // 2. Promotional and Marketing Message Filter
   // Ignore shopping spam, discount alerts, coupon codes, and marketing pushes
   RegExp promotionalKeywords = RegExp(
     r'\b(off\b|discount|deal|offer|sale\b|cashback up to|win|won|gift|coupon|promo|voucher|exclusive|free\b|save up to|flat ₹|flat rs|use code|code:|ends soon|hurry|order now|explore)\b',

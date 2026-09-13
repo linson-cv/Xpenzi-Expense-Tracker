@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/pages/settingsPage.dart';
+import 'package:budget/struct/errorLog.dart';
 
 Future<T?> openPopup<T extends Object?>(
   BuildContext? contextPassed, {
@@ -503,8 +504,13 @@ Future openLoadingPopupTryCatch(
     popRoute(context ?? navigatorKey.currentContext!, result);
     if (onSuccess != null) onSuccess(result);
     return result;
-  } catch (e) {
+  } catch (e, stack) {
     print("Error caught: $e");
+    recordAppError(
+      "Async Action Error",
+      e,
+      stackTrace: stack,
+    );
     popRoute(context ?? navigatorKey.currentContext!, null);
     if (onError != null) {
       onError(e);

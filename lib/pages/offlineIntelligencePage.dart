@@ -17,9 +17,9 @@ import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/statusBox.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
-import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:budget/struct/localNlpParser.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 
@@ -631,8 +631,8 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
               title: "Battery Optimization Settings",
               description: "Ensure Android doesn't put background listener to sleep",
               icon: Icons.battery_charging_full_rounded,
-              onTap: () async {
-                await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+              onTap: () {
+                promptBatteryOptimizationPopup(context);
               },
             ),
           ],
@@ -752,6 +752,132 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                               );
                               setState(() {});
                             }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Button(
+                          label: "Test SMS Parser",
+                          icon: Icons.science_rounded,
+                          color: Theme.of(context).colorScheme.secondaryContainer,
+                          textColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                          onTap: () {
+                            TextEditingController testCtrl = TextEditingController();
+                            String? testResult;
+                            bool isError = false;
+
+                            openBottomSheet(
+                              context,
+                              StatefulBuilder(
+                                builder: (context, setModalState) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      left: 20,
+                                      right: 20,
+                                      top: 18,
+                                      bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.biotech_rounded,
+                                              color: Theme.of(context).colorScheme.primary,
+                                              size: 24,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            const TextFont(
+                                              text: "Test SMS & Reminder Parser",
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextFont(
+                                          text: "Paste any bank SMS, bill reminder, or transaction alert to test local parsing accuracy.",
+                                          fontSize: 13,
+                                          textColor: getColor(context, "textLight"),
+                                        ),
+                                        const SizedBox(height: 14),
+                                        TextField(
+                                          controller: testCtrl,
+                                          maxLines: 4,
+                                          decoration: InputDecoration(
+                                            hintText: "e.g. Your electricity bill of Rs. 850 is due on 20-Sep. Pay now.\nOR\nRs. 450 debited from A/c XX1234 at SWIGGY on 13-Sep.",
+                                            hintStyle: TextStyle(fontSize: 12, color: getColor(context, "textLight")),
+                                            filled: true,
+                                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Button(
+                                          label: "Run Accuracy Test",
+                                          icon: Icons.play_arrow_rounded,
+                                          onTap: () async {
+                                            String sample = testCtrl.text.trim();
+                                            if (sample.isEmpty) return;
+
+                                            bool isReminder = isPaymentReminderOrPendingNotice(sample);
+                                            if (isReminder) {
+                                              setModalState(() {
+                                                isError = false;
+                                                testResult = "⚠️ Filtered: Detected as Payment Reminder / Due-Date Notice.\nNo expense created (accurate!).";
+                                              });
+                                              return;
+                                            }
+
+                                            LocalNlpParsedTransaction? parsed = await parseTransactionFromNotificationText(sample, context);
+                                            setModalState(() {
+                                              if (parsed != null) {
+                                                isError = false;
+                                                testResult = "✅ Captured Transaction!\n• Title: ${parsed.title}\n• Amount: ${parsed.amount.toStringAsFixed(2)}\n• Type: ${parsed.income ? 'Income' : 'Expense'}\n• Category: ${parsed.category?.name ?? 'Default'}";
+                                              } else {
+                                                isError = true;
+                                                testResult = "ℹ️ Ignored: Not recognized as an actual completed debit/credit transaction.";
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        if (testResult != null) ...[
+                                          const SizedBox(height: 14),
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: (isError
+                                                      ? Colors.orange
+                                                      : (testResult!.contains("Filtered") ? Colors.blue : Colors.green))
+                                                  .withOpacity(0.12),
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: (isError
+                                                        ? Colors.orange
+                                                        : (testResult!.contains("Filtered") ? Colors.blue : Colors.green))
+                                                    .withOpacity(0.35),
+                                              ),
+                                            ),
+                                            child: TextFont(
+                                              text: testResult!,
+                                              fontSize: 13,
+                                              maxLines: 8,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
                           },
                         ),
                       ),

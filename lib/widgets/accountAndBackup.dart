@@ -158,13 +158,14 @@ Future<bool> signInGoogle(
           : await googleSignIn?.signIn();
 
       if (account != null) {
-        // print("ACCOUNT");
-        // print(account);
         googleUser = account;
         await updateSettings("currentUserEmail", googleUser?.email ?? "",
             updateGlobalState: false);
       } else {
-        throw ("Login failed");
+        // User cancelled the sign-in flow or dismissed the account picker
+        print("[Google Sign-In] Account returned null (cancelled or dismissed).");
+        if (waitForCompletion == true && context != null) popRoute(context);
+        return false;
       }
     }
     if (waitForCompletion == true && context != null) popRoute(context);
@@ -288,32 +289,38 @@ Future<bool> signInAndSync(BuildContext context,
   if (result != true) return false;
   loadingIndeterminateKey.currentState?.setVisibility(true);
   try {
-    await signInGoogle(
+    bool signInSuccess = await signInGoogle(
       context: context,
       waitForCompletion: false,
       next: next,
     );
+    if (!signInSuccess || googleUser == null) {
+      loadingIndeterminateKey.currentState?.setVisibility(false);
+      return false;
+    }
     if (appStateSettings["username"] == "" && googleUser != null) {
       await updateSettings("username", googleUser?.displayName ?? "",
           pagesNeedingRefresh: [0], updateGlobalState: false);
     }
-    if (googleUser != null) {
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-      await syncData(context);
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-      await syncPendingQueueOnServer();
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-      await getCloudBudgets();
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-      await createBackupInBackground(context);
-    } else {
-      throw ("cannot sync data - user not logged in");
-    }
+    loadingIndeterminateKey.currentState?.setVisibility(true);
+    await syncData(context);
+    loadingIndeterminateKey.currentState?.setVisibility(true);
+    await syncPendingQueueOnServer();
+    loadingIndeterminateKey.currentState?.setVisibility(true);
+    await getCloudBudgets();
+    loadingIndeterminateKey.currentState?.setVisibility(true);
+    await createBackupInBackground(context);
     loadingIndeterminateKey.currentState?.setVisibility(false);
     return true;
-  } catch (e) {
+  } catch (e, stack) {
     print("Error syncing data after login!");
     print(e.toString());
+    recordAppError(
+      "Sync Data After Login",
+      e,
+      stackTrace: stack,
+      extraInfo: "User: ${googleUser?.email} | Scopes: ${googleSignIn?.scopes}",
+    );
     loadingIndeterminateKey.currentState?.setVisibility(false);
     return false;
   }
@@ -629,6 +636,11 @@ Future<void> loadBackup(
         );
       },
       onError: (error) {
+        recordAppError(
+          "Sync Data Error",
+          error,
+          extraInfo: "User: ${googleUser?.email}",
+        );
         openSnackbar(
           SnackbarMessage(
               title: error.toString(),
@@ -638,7 +650,13 @@ Future<void> loadBackup(
         );
       },
     );
-  } catch (e) {
+  } catch (e, stack) {
+    recordAppError(
+      "Sync Data Exception",
+      e,
+      stackTrace: stack,
+      extraInfo: "User: ${googleUser?.email}",
+    );
     popRoute(context);
     openSnackbar(
       SnackbarMessage(

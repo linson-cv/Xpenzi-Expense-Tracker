@@ -14,10 +14,12 @@ import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart'
     hide SliverReorderableList, ReorderableDelayedDragStartListener;
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' hide TextInput;
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
 import 'package:budget/pages/addButton.dart';
+import 'package:budget/widgets/textInput.dart';
+import 'package:budget/widgets/noResults.dart';
 
 class SelectCategory extends StatefulWidget {
   const SelectCategory({
@@ -47,6 +49,7 @@ class SelectCategory extends StatefulWidget {
     this.forceSelectAllToFalse = false,
     this.listPadding = const EdgeInsetsDirectional.symmetric(horizontal: 20),
     this.selectedIncome,
+    this.showSearch = false,
   });
   final Function(TransactionCategory)? setSelectedCategory;
   final Function(List<String>?)? setSelectedCategories;
@@ -72,6 +75,7 @@ class SelectCategory extends StatefulWidget {
   final bool forceSelectAllToFalse;
   final EdgeInsetsDirectional listPadding;
   final bool? selectedIncome;
+  final bool showSearch;
 
   @override
   _SelectCategoryState createState() => _SelectCategoryState();
@@ -81,6 +85,15 @@ class _SelectCategoryState extends State<SelectCategory> {
   List<String> selectedCategories = [];
   bool updatedInitial = false;
   late ScrollController _scrollController;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -129,7 +142,8 @@ class _SelectCategoryState extends State<SelectCategory> {
     bool dragEnabled = widget.selectedIncome == null &&
         widget.categoryFks == null &&
         widget.hideCategoryFks == null &&
-        widget.allowRearrange == true;
+        widget.allowRearrange == true &&
+        _searchQuery.trim().isEmpty;
 
     if (updatedInitial == false &&
         (widget.selectedCategory != null ||
@@ -295,6 +309,9 @@ class _SelectCategoryState extends State<SelectCategory> {
             } else if (widget.hideCategoryFks != null &&
                 widget.hideCategoryFks!.contains(category.categoryPk)) {
               continue;
+            } else if (_searchQuery.trim().isNotEmpty &&
+                !category.name.toLowerCase().contains(_searchQuery.toLowerCase().trim())) {
+              continue;
             }
             categoryIcons.add(
               AnimatedScale(
@@ -361,84 +378,130 @@ class _SelectCategoryState extends State<SelectCategory> {
                 bottom: 8.0, start: 10, end: 10),
             child: Column(
               children: [
-                AnimatedSizeSwitcher(
-                  sizeDuration: const Duration(milliseconds: 250),
-                  switcherDuration: const Duration(milliseconds: 150),
-                  child: ReorderableGridView.count(
-                    key: ValueKey(snapshot.data!.length),
-                    dragEnabled: dragEnabled,
-                    dragWidgetBuilder: (index, child) {
-                      return Opacity(opacity: 0.5, child: child);
-                    },
-                    placeholderBuilder: (dropIndex, dropInddex, dragWidget) {
-                      return Opacity(
-                        opacity: 0.2,
-                        child: dragWidget,
-                      );
-                    },
-                    childAspectRatio: 0.96,
-                    padding: const EdgeInsetsDirectional.only(top: 5),
-                    controller: _scrollController,
-                    crossAxisSpacing: 0,
-                    mainAxisSpacing: 5,
-                    crossAxisCount: getWidthBottomSheet(context) <= 400
-                        ? 4
-                        : ((getWidthBottomSheet(context)) ~/ size ~/ 2.1)
-                            .toInt(),
-                    shrinkWrap: true,
-                    header: widget.header ?? [],
-                    footer: [
-                      if (widget.addButton != false)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(
-                              start: 7.5, end: 7.5),
-                          child: Column(
-                            children: [
-                              LayoutBuilder(
-                                builder: (context, BoxConstraints constraints) {
-                                  return AddButton(
-                                    onTap: () {},
-                                    height: constraints.maxWidth < 70
-                                        ? constraints.maxWidth
-                                        : 70,
-                                    width: constraints.maxWidth < 70
-                                        ? constraints.maxWidth
-                                        : 70,
-                                    openPage: AddCategoryPage(
-                                      routesToPopAfterDelete:
-                                          RoutesToPopAfterDelete.None,
-                                      mainCategoryPkWhenSubCategory:
-                                          widget.mainCategoryPks?[0],
-                                      initiallyIsExpense:
-                                          widget.selectedIncome != true,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                    onReorder: (intPrevious, intNew) async {
-                      TransactionCategory oldCategory =
-                          snapshot.data![intPrevious];
-
-                      if (intNew > intPrevious) {
-                        await database.moveCategory(
-                            oldCategory.categoryPk, intNew, oldCategory.order);
-                      } else {
-                        await database.moveCategory(
-                            oldCategory.categoryPk, intNew, oldCategory.order);
-                      }
-                      return true;
-                    },
-                    onDragStart: (_) {
-                      database.fixOrderCategories();
-                      HapticFeedback.heavyImpact();
-                    },
-                    children: categoryIcons,
+                if (widget.showSearch)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      bottom: 8.0,
+                      start: 4.0,
+                      end: 4.0,
+                    ),
+                    child: TextInput(
+                      controller: _searchController,
+                      labelText: "search-categories-placeholder".tr(),
+                      icon: _searchQuery.trim().isNotEmpty
+                          ? (appStateSettings["outlinedIcons"]
+                              ? Icons.close_outlined
+                              : Icons.close_rounded)
+                          : (appStateSettings["outlinedIcons"]
+                              ? Icons.search_outlined
+                              : Icons.search_rounded),
+                      iconOnTap: _searchQuery.trim().isNotEmpty
+                          ? () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = "";
+                              });
+                            }
+                          : null,
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      onSubmitted: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      autoFocus: false,
+                    ),
                   ),
-                ),
+                if (categoryIcons.isEmpty && _searchQuery.trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: NoResults(
+                      message: "no-results".tr(),
+                    ),
+                  )
+                else
+                  AnimatedSizeSwitcher(
+                    sizeDuration: const Duration(milliseconds: 250),
+                    switcherDuration: const Duration(milliseconds: 150),
+                    child: ReorderableGridView.count(
+                      key: ValueKey(snapshot.data!.length),
+                      dragEnabled: dragEnabled,
+                      dragWidgetBuilder: (index, child) {
+                        return Opacity(opacity: 0.5, child: child);
+                      },
+                      placeholderBuilder: (dropIndex, dropInddex, dragWidget) {
+                        return Opacity(
+                          opacity: 0.2,
+                          child: dragWidget,
+                        );
+                      },
+                      childAspectRatio: 0.96,
+                      padding: const EdgeInsetsDirectional.only(top: 5),
+                      controller: _scrollController,
+                      crossAxisSpacing: 0,
+                      mainAxisSpacing: 5,
+                      crossAxisCount: getWidthBottomSheet(context) <= 400
+                          ? 4
+                          : ((getWidthBottomSheet(context)) ~/ size ~/ 2.1)
+                              .toInt(),
+                      shrinkWrap: true,
+                      header: widget.header ?? [],
+                      footer: [
+                        if (widget.addButton != false && _searchQuery.trim().isEmpty)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                                start: 7.5, end: 7.5),
+                            child: Column(
+                              children: [
+                                LayoutBuilder(
+                                  builder: (context, BoxConstraints constraints) {
+                                    return AddButton(
+                                      onTap: () {},
+                                      height: constraints.maxWidth < 70
+                                          ? constraints.maxWidth
+                                          : 70,
+                                      width: constraints.maxWidth < 70
+                                          ? constraints.maxWidth
+                                          : 70,
+                                      openPage: AddCategoryPage(
+                                        routesToPopAfterDelete:
+                                            RoutesToPopAfterDelete.None,
+                                        mainCategoryPkWhenSubCategory:
+                                            widget.mainCategoryPks?[0],
+                                        initiallyIsExpense:
+                                            widget.selectedIncome != true,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                      onReorder: (intPrevious, intNew) async {
+                        TransactionCategory oldCategory =
+                            snapshot.data![intPrevious];
+
+                        if (intNew > intPrevious) {
+                          await database.moveCategory(
+                              oldCategory.categoryPk, intNew, oldCategory.order);
+                        } else {
+                          await database.moveCategory(
+                              oldCategory.categoryPk, intNew, oldCategory.order);
+                        }
+                        return true;
+                      },
+                      onDragStart: (_) {
+                        database.fixOrderCategories();
+                        HapticFeedback.heavyImpact();
+                      },
+                      children: categoryIcons,
+                    ),
+                  ),
                 // Center(
                 //   child: Wrap(
                 //     alignment: WrapAlignment.center,

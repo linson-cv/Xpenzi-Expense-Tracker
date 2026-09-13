@@ -14,6 +14,7 @@ import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/struct/backgroundNotificationHandler.dart';
+import 'package:budget/struct/errorLog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_listener_service/notification_event.dart';
@@ -87,11 +88,11 @@ Future<void> populateDefaultScannerTemplatesIfEmpty() async {
         ScannerTemplate(
           scannerTemplatePk: "preset_recurring_autopay",
           templateName: "Subscription / Auto-Debit",
-          contains: "scheduled",
-          amountTransactionBefore: "debit of",
-          amountTransactionAfter: " is",
-          titleTransactionBefore: "for ",
-          titleTransactionAfter: " is scheduled",
+          contains: "AutoPay debit",
+          amountTransactionBefore: "for Rs.",
+          amountTransactionAfter: " ",
+          titleTransactionBefore: "AutoPay debit for ",
+          titleTransactionAfter: " towards",
           defaultCategoryFk: "0",
           walletFk: "-1",
           dateCreated: DateTime.now(),
@@ -374,6 +375,13 @@ double? getTransactionAmountFromEmail(String messageString,
 
 Future queueTransactionFromMessage(String messageString,
     {bool willPushRoute = true, DateTime? dateTime}) async {
+  // Step 0. Payment Reminder & Scheduled Pre-Debit Filter
+  // Immediately discard payment reminders, scheduled bills, due-date notices, and pre-debit notifications
+  if (isPaymentReminderOrPendingNotice(messageString)) {
+    print("[NotificationEngine] Discarded notification: Detected payment reminder or upcoming bill notice without confirmed debit.");
+    return false;
+  }
+
   String? title;
   double? amountDouble;
   List<ScannerTemplate> scannerTemplates =
@@ -573,8 +581,14 @@ Future queueTransactionFromMessage(String messageString,
           transactionPk: null,
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
       print("Error directly auto-recording transaction: $e");
+      recordAppError(
+        "Notification Auto-Record Error",
+        e,
+        stackTrace: stack,
+        extraInfo: "Title: $title | Amount: $amountDouble",
+      );
     }
   }
 }

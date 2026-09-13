@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:budget/database/tables.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
+import 'package:budget/struct/errorLog.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -129,8 +130,14 @@ Return ONLY valid raw JSON without markdown code fences or quotes around the JSO
         walletName: jsonResult["wallet"] as String?,
       );
     }
-  } catch (e) {
+  } catch (e, stack) {
     debugPrint("Gemini AI Parsing Error: $e");
+    recordAppError(
+      "Gemini AI Parsing",
+      e,
+      stackTrace: stack,
+      extraInfo: "Model: $model",
+    );
   }
   return null;
 }
