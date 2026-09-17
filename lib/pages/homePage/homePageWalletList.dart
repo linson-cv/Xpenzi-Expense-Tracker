@@ -222,6 +222,7 @@ class HomePageWalletList extends StatelessWidget {
                                             w.wallet.walletPk,
                                         walletWithDetails: w,
                                         closedColor: Colors.transparent,
+                                        showAccountIcon: false,
                                       ),
                                     if (groupWallets.length > 1) ...[
                                       const SizedBox(height: 2),

@@ -25,90 +25,174 @@ import 'package:provider/provider.dart';
 StreamSubscription<ServiceNotificationEvent>? notificationListenerSubscription;
 List<String> recentCapturedNotifications = [];
 
-Future<void> populateDefaultScannerTemplatesIfEmpty() async {
+List<ScannerTemplate> getAllDefaultScannerTemplates() {
+  final now = DateTime.now();
+  return [
+    ScannerTemplate(
+      scannerTemplatePk: "preset_credit_card_debit",
+      templateName: "Credit Card Debited / Spent",
+      contains: "Credit Card",
+      amountTransactionBefore: "debited for Rs.",
+      amountTransactionAfter: " on",
+      titleTransactionBefore: "at ",
+      titleTransactionAfter: " on",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_card_spent",
+      templateName: "Card Spending Alert",
+      contains: "spent",
+      amountTransactionBefore: "INR ",
+      amountTransactionAfter: " at",
+      titleTransactionBefore: "at ",
+      titleTransactionAfter: " on",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_bank_debit",
+      templateName: "Bank Account Debit",
+      contains: "debited",
+      amountTransactionBefore: "debited",
+      amountTransactionAfter: " on",
+      titleTransactionBefore: "to ",
+      titleTransactionAfter: " on",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_bank_credit",
+      templateName: "Bank Account Credit / Deposit",
+      contains: "credited",
+      amountTransactionBefore: "credited",
+      amountTransactionAfter: " to",
+      titleTransactionBefore: "by ",
+      titleTransactionAfter: " on",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_upi_debit",
+      templateName: "Bank / UPI Debit",
+      contains: "debited",
+      amountTransactionBefore: "Rs.",
+      amountTransactionAfter: " ",
+      titleTransactionBefore: "to ",
+      titleTransactionAfter: " on",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_upi_credit",
+      templateName: "Bank / UPI Credit",
+      contains: "credited",
+      amountTransactionBefore: "Rs.",
+      amountTransactionAfter: " ",
+      titleTransactionBefore: "from ",
+      titleTransactionAfter: " on",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_phonepe_paid",
+      templateName: "PhonePe UPI Paid",
+      contains: "paid to",
+      amountTransactionBefore: "₹",
+      amountTransactionAfter: " paid",
+      titleTransactionBefore: "paid to ",
+      titleTransactionAfter: " is",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_instant_payment",
+      templateName: "Payment App / Instant Pay",
+      contains: "paid to",
+      amountTransactionBefore: "paid",
+      amountTransactionAfter: " to",
+      titleTransactionBefore: "paid to ",
+      titleTransactionAfter: " using",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_recurring_autopay",
+      templateName: "Subscription / Auto-Debit",
+      contains: "AutoPay debit",
+      amountTransactionBefore: "for Rs.",
+      amountTransactionAfter: " ",
+      titleTransactionBefore: "AutoPay debit for ",
+      titleTransactionAfter: " towards",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+    ScannerTemplate(
+      scannerTemplatePk: "preset_sib_upi_debit",
+      templateName: "Regular Bank UPI Debit",
+      contains: "A/c *",
+      amountTransactionBefore: "debited by ",
+      amountTransactionAfter: " on",
+      titleTransactionBefore: "transfer to ",
+      titleTransactionAfter: " Ref",
+      defaultCategoryFk: "0",
+      walletFk: "-1",
+      dateCreated: now,
+      dateTimeModified: now,
+      ignore: false,
+    ),
+  ];
+}
+
+Future<int> populateDefaultScannerTemplatesIfEmpty({bool forceAll = false}) async {
   try {
     List<ScannerTemplate> existing = await database.getAllScannerTemplates();
-    if (existing.isEmpty) {
-      List<ScannerTemplate> defaults = [
-        ScannerTemplate(
-          scannerTemplatePk: "preset_credit_card_debit",
-          templateName: "Card Purchase / Debit Alert",
-          contains: "Card",
-          amountTransactionBefore: "debited",
-          amountTransactionAfter: " at",
-          titleTransactionBefore: "at ",
-          titleTransactionAfter: " on",
-          defaultCategoryFk: "0",
-          walletFk: "-1",
-          dateCreated: DateTime.now(),
-          dateTimeModified: DateTime.now(),
-          ignore: false,
-        ),
-        ScannerTemplate(
-          scannerTemplatePk: "preset_bank_debit",
-          templateName: "Bank Account Debit",
-          contains: "debited",
-          amountTransactionBefore: "debited",
-          amountTransactionAfter: " on",
-          titleTransactionBefore: "to ",
-          titleTransactionAfter: " on",
-          defaultCategoryFk: "0",
-          walletFk: "-1",
-          dateCreated: DateTime.now(),
-          dateTimeModified: DateTime.now(),
-          ignore: false,
-        ),
-        ScannerTemplate(
-          scannerTemplatePk: "preset_bank_credit",
-          templateName: "Bank Account Credit / Deposit",
-          contains: "credited",
-          amountTransactionBefore: "credited",
-          amountTransactionAfter: " to",
-          titleTransactionBefore: "by ",
-          titleTransactionAfter: " on",
-          defaultCategoryFk: "0",
-          walletFk: "-1",
-          dateCreated: DateTime.now(),
-          dateTimeModified: DateTime.now(),
-          ignore: false,
-        ),
-        ScannerTemplate(
-          scannerTemplatePk: "preset_instant_payment",
-          templateName: "Payment App / Instant Pay",
-          contains: "paid to",
-          amountTransactionBefore: "paid",
-          amountTransactionAfter: " to",
-          titleTransactionBefore: "paid to ",
-          titleTransactionAfter: " using",
-          defaultCategoryFk: "0",
-          walletFk: "-1",
-          dateCreated: DateTime.now(),
-          dateTimeModified: DateTime.now(),
-          ignore: false,
-        ),
-        ScannerTemplate(
-          scannerTemplatePk: "preset_recurring_autopay",
-          templateName: "Subscription / Auto-Debit",
-          contains: "AutoPay debit",
-          amountTransactionBefore: "for Rs.",
-          amountTransactionAfter: " ",
-          titleTransactionBefore: "AutoPay debit for ",
-          titleTransactionAfter: " towards",
-          defaultCategoryFk: "0",
-          walletFk: "-1",
-          dateCreated: DateTime.now(),
-          dateTimeModified: DateTime.now(),
-          ignore: false,
-        ),
-      ];
+    List<ScannerTemplate> defaults = getAllDefaultScannerTemplates();
 
-      for (var tmpl in defaults) {
+    Set<String> existingPks = existing.map((e) => e.scannerTemplatePk).toSet();
+    int addedCount = 0;
+
+    for (var tmpl in defaults) {
+      if (forceAll || !existingPks.contains(tmpl.scannerTemplatePk)) {
         await database.createOrUpdateScannerTemplate(tmpl);
+        addedCount++;
       }
-      print("Auto-loaded default bank scanner templates");
     }
+
+    if (addedCount > 0) {
+      print("Auto-loaded $addedCount default bank scanner templates");
+    }
+    return addedCount;
   } catch (e) {
     print("Error populating default scanner templates: $e");
+    return 0;
   }
 }
 
@@ -166,6 +250,14 @@ Future<void> promptBatteryOptimizationPopup(BuildContext context) async {
     },
     onCancel: () {
       popRoute(context);
+      openSnackbar(
+        SnackbarMessage(
+          title: "Background Alerts May Be Delayed",
+          icon: Icons.battery_saver_outlined,
+          description:
+              "Battery optimization remains enabled. Transactions will still be detected while the app is active, but background capture when closed might be delayed by Android.",
+        ),
+      );
     },
   );
 }
@@ -194,66 +286,143 @@ Future<bool> safeIsNotificationPermissionGranted() async {
   }
 }
 
+class _AppResumeObserver with WidgetsBindingObserver {
+  final Future<void> Function() onResumed;
+  _AppResumeObserver(this.onResumed) {
+    WidgetsBinding.instance.addObserver(this);
+  }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      onResumed();
+    }
+  }
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+  }
+}
+
 Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
-  bool isGranted = await safeIsNotificationPermissionGranted();
-  if (isGranted) return true;
+  return await requestReadNotificationPermission(context: context);
+}
+
+Future<bool> requestReadNotificationPermission({
+  BuildContext? context,
+  bool showBatteryPopup = true,
+}) async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return false;
+
+  bool alreadyGranted = await safeIsNotificationPermissionGranted();
+  if (alreadyGranted) {
+    // 2. Enable offline processing in settings with all default settings and templates
+    await updateSettings("notificationScanning", true, updateGlobalState: true);
+    await updateSettings("autoInsertNotificationsDirectly", true, updateGlobalState: true);
+    await updateSettings("localNlpParsing", true, updateGlobalState: true);
+    await populateDefaultScannerTemplatesIfEmpty(forceAll: true);
+    await initNotificationScanning();
+    return true;
+  }
+
+  BuildContext? popupContext = context ?? navigatorKey.currentContext;
+  if (popupContext == null) return false;
 
   Completer<bool> completer = Completer<bool>();
+  _AppResumeObserver? resumeObserver;
 
+  void cleanup() {
+    resumeObserver?.dispose();
+    resumeObserver = null;
+  }
+
+  // 1. Read app notification popup that clearly states what it is used for
+  // Complies with Google Play Android notification & SMS policy
   openPopup(
-    context,
+    popupContext,
     title: "Enable Notification Access",
     icon: Icons.notifications_active_rounded,
     description:
-        "Xpenzi uses notification access to auto-detect bank transaction SMS & payment alerts on your device.\n\n• 100% Private & Local processing\n• Bank & payment alerts only\n• No personal chats or sensitive data read",
+        "Xpenzi uses notification access to auto-detect bank transaction SMS & payment alerts on your device.\n\n"
+        "• 100% Private: All parsing happens locally on this device\n"
+        "• Bank & payment alerts only\n"
+        "• No personal chats, sensitive messages, or credentials are read or stored\n"
+        "• No data is ever uploaded or sent to external servers",
     onSubmitLabel: "Open Android Settings",
     onCancelLabel: "Cancel",
     onSubmit: () async {
-      popRoute(context);
+      popRoute(popupContext);
+
+      // Listen for app resumption after user returns from Android Settings
+      resumeObserver = _AppResumeObserver(() async {
+        cleanup();
+        // Allow Android service binder to refresh permission state
+        await Future.delayed(const Duration(milliseconds: 350));
+        bool isGranted = await safeIsNotificationPermissionGranted();
+
+        if (isGranted) {
+          // 2. Enable offline processing with all default settings & templates
+          await updateSettings("notificationScanning", true, updateGlobalState: true);
+          await updateSettings("autoInsertNotificationsDirectly", true, updateGlobalState: true);
+          await updateSettings("localNlpParsing", true, updateGlobalState: true);
+          await populateDefaultScannerTemplatesIfEmpty(forceAll: true);
+          await initNotificationScanning();
+
+          // 3. Battery optimization popup; on accept open settings
+          if (showBatteryPopup) {
+            Future.delayed(const Duration(milliseconds: 400), () {
+              BuildContext ctx = navigatorKey.currentContext ?? popupContext;
+              promptBatteryOptimizationPopup(ctx);
+            });
+          }
+
+          if (!completer.isCompleted) completer.complete(true);
+        } else {
+          // User returned without granting: abort all policy & settings and notify
+          openSnackbar(
+            SnackbarMessage(
+              title: "Auto-Detection Not Enabled",
+              icon: Icons.notifications_off_outlined,
+              description:
+                  "Notification access was not granted. Automatic transaction detection is disabled. You can enable it anytime in Settings.",
+            ),
+          );
+          if (!completer.isCompleted) completer.complete(false);
+        }
+      });
+
+      // Launch native Android Notification Access Settings
       await safeRequestNotificationPermission();
-      bool status = await safeIsNotificationPermissionGranted();
-      if (status == true) {
-        Future.delayed(const Duration(milliseconds: 400), () {
-          BuildContext? ctx = navigatorKey.currentContext ?? context;
-          promptBatteryOptimizationPopup(ctx);
-        });
-      }
-      if (!completer.isCompleted) completer.complete(status);
     },
     onCancel: () {
-      popRoute(context);
+      popRoute(popupContext);
+      cleanup();
+      // If reject then abort all the policy and notify cleanly
+      openSnackbar(
+        SnackbarMessage(
+          title: "Setup Cancelled",
+          icon: Icons.info_outline_rounded,
+          description:
+              "Automatic transaction detection is disabled. All manual features continue to work normally.",
+        ),
+      );
       if (!completer.isCompleted) completer.complete(false);
     },
   ).then((_) {
-    // If dismissed via barrier or back gesture without tapping Cancel or Submit
-    if (!completer.isCompleted) completer.complete(false);
+    // If dismissed via barrier tap or system back gesture without tapping Cancel or Submit
+    if (resumeObserver == null && !completer.isCompleted) {
+      cleanup();
+      openSnackbar(
+        SnackbarMessage(
+          title: "Setup Cancelled",
+          icon: Icons.info_outline_rounded,
+          description:
+              "Automatic transaction detection is disabled. All manual features continue to work normally.",
+        ),
+      );
+      completer.complete(false);
+    }
   });
 
   return completer.future;
-}
-
-Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
-  bool status = await safeIsNotificationPermissionGranted();
-
-  if (status != true) {
-    BuildContext? popupContext = context ?? navigatorKey.currentContext;
-    if (popupContext != null) {
-      status = await promptNotificationPermissionPopup(popupContext);
-    } else {
-      await safeRequestNotificationPermission();
-      status = await safeIsNotificationPermissionGranted();
-    }
-  }
-
-  if (status == true) {
-    // Automatically enable all essential app-side intelligence settings
-    await updateSettings("notificationScanning", true, updateGlobalState: false);
-    await updateSettings("autoInsertNotificationsDirectly", true, updateGlobalState: false);
-    await populateDefaultScannerTemplatesIfEmpty();
-    initNotificationScanning();
-  }
-
-  return status;
 }
 
 /// Periodic reminder to enable Offline Intelligence (notification scanning).

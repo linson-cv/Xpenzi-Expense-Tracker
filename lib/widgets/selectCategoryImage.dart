@@ -662,7 +662,7 @@ class _CategoryIconPackGalleryPageState
       "borderRadius": BorderRadius.circular(24),
     },
     {
-      "name": "Diamond",
+      "name": "Square",
       "isPro": true,
       "radius": 8.0,
       "borderRadius": BorderRadius.circular(8),
@@ -723,6 +723,7 @@ class _CategoryIconPackGalleryPageState
                   text: "Customize the background shape of category icons",
                   fontSize: 13,
                   textColor: getColor(context, "textLight"),
+                  maxLines: 2,
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -731,7 +732,7 @@ class _CategoryIconPackGalleryPageState
                       Expanded(
                         child: _buildShapeCard(context, i, iconShapes[i]),
                       ),
-                      if (i < iconShapes.length - 1) const SizedBox(width: 6),
+                      if (i < iconShapes.length - 1) const SizedBox(width: 8),
                     ],
                   ],
                 ),
@@ -830,87 +831,129 @@ class _CategoryIconPackGalleryPageState
     );
   }
 
-  Widget _buildShapeCard(BuildContext context, int index, Map<String, dynamic> shape) {
+  Widget _buildShapeCard(
+      BuildContext context, int index, Map<String, dynamic> shape) {
     final bool isSelected = selectedShapeIndex == index;
     final bool isPro = shape["isPro"] == true;
     final BorderRadius borderRadius = shape["borderRadius"] as BorderRadius;
     final String shapeName = shape["name"] as String;
 
-    return Stack(
-      children: [
-        Tappable(
-          borderRadius: 16,
-          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
-          onTap: () {
-            if (isPro && appStateSettings["purchaseID"] == null) {
-              pushRoute(
-                context,
-                const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
-              );
-              return;
-            }
-            setState(() {
-              selectedShapeIndex = index;
-            });
-            updateSettings("categoryIconShape", index, updateGlobalState: true);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 2),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF93A5CF),
-                    borderRadius: borderRadius,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextFont(
-                  text: shapeName,
-                  fontSize: 10.5,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  textColor: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : getColor(context, "textLight"),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ],
-            ),
+    final currentPack =
+        iconPacks[selectedPackIndex.clamp(0, iconPacks.length - 1)];
+    final List<String> packIcons = currentPack["previewIcons"] as List<String>;
+    final List<Color> packBgColors = currentPack["iconBgColors"] as List<Color>;
+    final bool monochrome = currentPack["monochrome"] == true;
+    final Color? tintColor = currentPack["tint"] as Color?;
+
+    final String previewIcon = packIcons[index % packIcons.length];
+    final Color bgColor = packBgColors[index % packBgColors.length];
+
+    return Tappable(
+      borderRadius: 18,
+      color: isSelected
+          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+          : Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+      onTap: () {
+        if (isPro && appStateSettings["purchaseID"] == null) {
+          pushRoute(
+            context,
+            const PremiumPage(canDismiss: true, popRouteWithPurchase: true),
+          );
+          return;
+        }
+        setState(() {
+          selectedShapeIndex = index;
+        });
+        updateSettings("categoryIconShape", index, updateGlobalState: true);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+            width: isSelected ? 2.2 : 1.2,
           ),
         ),
-        if (isPro)
-          Positioned(
-            top: 4,
-            right: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Dedicated Pro Badge / Header Slot for clean alignment
+            SizedBox(
+              height: 18,
+              child: isPro
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB4C5E7),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const TextFont(
+                        text: "Pro",
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.bold,
+                        textColor: Color(0xFF1E2D4A),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            const SizedBox(height: 8),
+            // Live Category Icon Preview rendered inside this shape
+            Container(
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFFB4C5E7),
-                borderRadius: BorderRadius.circular(6),
+                color: bgColor,
+                borderRadius: borderRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const TextFont(
-                text: "Pro",
-                fontSize: 8.5,
-                fontWeight: FontWeight.bold,
-                textColor: Color(0xFF1E2D4A),
+              padding: const EdgeInsets.all(9),
+              child: monochrome
+                  ? ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        tintColor ?? Colors.white70,
+                        BlendMode.srcIn,
+                      ),
+                      child: Image.asset(previewIcon),
+                    )
+                  : Image.asset(previewIcon),
+            ),
+            const SizedBox(height: 10),
+            TextFont(
+              text: shapeName,
+              fontSize: 11.5,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              textColor: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : getColor(context, "textLight"),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
+            const SizedBox(height: 4),
+            // Subtle active dot indicator
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+                shape: BoxShape.circle,
               ),
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }

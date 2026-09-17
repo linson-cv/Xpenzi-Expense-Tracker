@@ -189,12 +189,14 @@ class WalletEntryRow extends StatelessWidget {
     this.isCurrencyRow = false,
     this.percent,
     this.closedColor,
+    this.showAccountIcon = true,
   });
   final WalletWithDetails walletWithDetails;
   final bool selected;
   final bool isCurrencyRow;
   final double? percent;
   final Color? closedColor;
+  final bool showAccountIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +281,7 @@ class WalletEntryRow extends StatelessWidget {
                               text: "",
                               maxLines: 1,
                               richTextSpan: [
-                                if (!isCurrencyRow)
+                                if (!isCurrencyRow && showAccountIcon)
                                   WidgetSpan(
                                     alignment: PlaceholderAlignment.middle,
                                     child: Padding(

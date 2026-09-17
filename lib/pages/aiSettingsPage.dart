@@ -4,7 +4,6 @@ import 'package:budget/pages/aiPromptPage.dart';
 import 'package:budget/struct/ai/aiManager.dart';
 import 'package:budget/struct/ai/aiProvider.dart';
 import 'package:budget/struct/settings.dart';
-import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
@@ -12,6 +11,7 @@ import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:flutter/material.dart';
@@ -122,6 +122,139 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
     }
   }
 
+  void _openProviderPicker() {
+    openBottomSheet(
+      context,
+      PopupFramework(
+        title: "Select AI Provider",
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ...AiProviderType.values.map((type) {
+              bool isSelected = _selectedProviderType == type;
+
+              String subtitle = "";
+              IconData iconData = Icons.auto_awesome_rounded;
+              switch (type) {
+                case AiProviderType.gemini:
+                  subtitle = "Free API key tier • Fast • Recommended";
+                  iconData = Icons.auto_awesome_rounded;
+                  break;
+                case AiProviderType.openAi:
+                  subtitle = "GPT-4o & GPT-4o-mini models";
+                  iconData = Icons.chat_bubble_outline_rounded;
+                  break;
+                case AiProviderType.claude:
+                  subtitle = "Claude 3.5 Sonnet & Claude 3.5 Haiku";
+                  iconData = Icons.psychology_rounded;
+                  break;
+                case AiProviderType.custom:
+                  subtitle = "OpenRouter, local Ollama, or OpenAI-compatible endpoint";
+                  iconData = Icons.dns_rounded;
+                  break;
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                child: Tappable(
+                  borderRadius: 14,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    popRoute(context);
+                    if (_selectedProviderType != type) {
+                      _onProviderChanged(type);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+                        width: isSelected ? 1.8 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                                : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            iconData,
+                            size: 19,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : getColor(context, "textLight"),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  TextFont(
+                                    text: type.displayName,
+                                    fontSize: 14.5,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                    textColor: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  if (type == AiProviderType.gemini) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const TextFont(
+                                        text: "Free Tier",
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        textColor: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              TextFont(
+                                text: subtitle,
+                                fontSize: 11.5,
+                                textColor: getColor(context, "textLight"),
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _openModelPicker() {
     BaseAiProvider provider = aiManager.getProvider(_selectedProviderType);
     String currentModelKey =
@@ -143,68 +276,108 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                           (currentModelKey.isEmpty ||
                               currentModelKey.toLowerCase() == "default"));
 
-              return ListTile(
-                title: Row(
-                  children: [
-                    TextFont(
-                      text: option.label,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    if (option.isDefault) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: TextFont(
-                          text: "Default",
-                          fontSize: 10,
-                          textColor: Theme.of(context).colorScheme.primary,
-                        ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                child: Tappable(
+                  borderRadius: 14,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    updateSettings(
+                      _selectedProviderType.modelSettingName,
+                      option.key,
+                      updateGlobalState: true,
+                    );
+                    popRoute(context);
+                    setState(() {});
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+                        width: isSelected ? 1.8 : 1,
                       ),
-                    ],
-                  ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  TextFont(
+                                    text: option.label,
+                                    fontSize: 14,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                    textColor: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  if (option.isDefault) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: TextFont(
+                                        text: "Default",
+                                        fontSize: 10,
+                                        textColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              TextFont(
+                                text: option.description,
+                                fontSize: 12,
+                                textColor: getColor(context, "textLight"),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+              );
+            }),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                title: const TextFont(text: "Custom Model Name..."),
                 subtitle: TextFont(
-                  text: option.description,
+                  text: "Specify any custom model identifier for this provider",
                   fontSize: 12,
                   textColor: getColor(context, "textLight"),
                 ),
-                trailing: isSelected
-                    ? Icon(Icons.check_circle_rounded,
-                        color: Theme.of(context).colorScheme.primary)
-                    : null,
+                leading: const Icon(Icons.edit_note_rounded),
                 onTap: () {
-                  HapticFeedback.lightImpact();
-                  updateSettings(
-                    _selectedProviderType.modelSettingName,
-                    option.key,
-                    updateGlobalState: true,
-                  );
                   popRoute(context);
-                  setState(() {});
+                  _openCustomModelDialog();
                 },
-              );
-            }),
-            ListTile(
-              title: const TextFont(text: "Custom Model Name..."),
-              subtitle: TextFont(
-                text: "Specify any custom model identifier for this provider",
-                fontSize: 12,
-                textColor: getColor(context, "textLight"),
               ),
-              leading: const Icon(Icons.edit_note_rounded),
-              onTap: () {
-                popRoute(context);
-                _openCustomModelDialog();
-              },
             ),
             const SizedBox(height: 12),
           ],
@@ -282,60 +455,123 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
         ),
 
         if (isAiEnabled) ...[
-          // Provider Selection Segment
+          // Provider Selection Dropdown Card
           SettingsGroupCard(
             title: "Select AI Provider",
             icon: Icons.hub_rounded,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
                   children: [
-                    TextFont(
-                      text:
-                          "Choose your preferred AI service. Your API token is kept strictly local on your device.",
-                      fontSize: 12.5,
-                      textColor: getColor(context, "textLight"),
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _selectedProviderType == AiProviderType.gemini
+                            ? Icons.auto_awesome_rounded
+                            : _selectedProviderType == AiProviderType.openAi
+                                ? Icons.chat_bubble_outline_rounded
+                                : _selectedProviderType == AiProviderType.claude
+                                    ? Icons.psychology_rounded
+                                    : Icons.dns_rounded,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: AiProviderType.values.map((type) {
-                          bool isSelected = _selectedProviderType == type;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: TextFont(
-                                text: type.displayName,
-                                fontSize: 12.5,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              TextFont(
+                                text: _selectedProviderType.displayName,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
                               ),
-                              selected: isSelected,
-                              selectedColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.2),
-                              avatar: Icon(
-                                type == AiProviderType.gemini
-                                    ? Icons.auto_awesome_rounded
-                                    : type == AiProviderType.openAi
-                                        ? Icons.chat_bubble_outline_rounded
-                                        : type == AiProviderType.claude
-                                            ? Icons.psychology_rounded
-                                            : Icons.dns_rounded,
-                                size: 16,
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : getColor(context, "textLight"),
-                              ),
-                              onSelected: (_) => _onProviderChanged(type),
+                              if (_selectedProviderType == AiProviderType.gemini) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const TextFont(
+                                    text: "Free Tier",
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    textColor: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          TextFont(
+                            text: _selectedProviderType == AiProviderType.gemini
+                                ? "Free tier available • Fast • Recommended"
+                                : _selectedProviderType == AiProviderType.openAi
+                                    ? "OpenAI GPT-4o & GPT-4o-mini"
+                                    : _selectedProviderType == AiProviderType.claude
+                                        ? "Anthropic Claude 3.5 Sonnet & Haiku"
+                                        : "OpenRouter, local Ollama, or custom endpoint",
+                            fontSize: 11.5,
+                            textColor: getColor(context, "textLight"),
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Tappable(
+                      borderRadius: 16,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.7),
+                      onTap: _openProviderPicker,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withValues(alpha: 0.2),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextFont(
+                              text: "Change",
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              textColor: Theme.of(context).colorScheme.primary,
                             ),
-                          );
-                        }).toList(),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -499,8 +735,9 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
               // Key Actions: Get Key, Paste, Show/Hide, Test
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     InkWell(
                       borderRadius: BorderRadius.circular(8),
@@ -525,7 +762,10 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                     const Spacer(),
                     if (_apiKeyController.text.isNotEmpty)
                       IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 19),
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.clear_rounded, size: 18),
                         tooltip: "Clear Key",
                         onPressed: () {
                           HapticFeedback.lightImpact();
@@ -542,11 +782,14 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                         },
                       ),
                     IconButton(
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      padding: EdgeInsets.zero,
                       icon: Icon(
                         _obscureApiKey
                             ? Icons.visibility_rounded
                             : Icons.visibility_off_rounded,
-                        size: 19,
+                        size: 18,
                       ),
                       tooltip: _obscureApiKey ? "Show Key" : "Hide Key",
                       onPressed: () {
@@ -554,7 +797,10 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.paste_rounded, size: 19),
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.paste_rounded, size: 18),
                       tooltip: "Paste Key",
                       onPressed: () async {
                         ClipboardData? data =
@@ -581,17 +827,38 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                         }
                       },
                     ),
-                    const SizedBox(width: 4),
-                    Button(
-                      label: _isTesting ? "Testing..." : "Test",
-                      icon: _isTesting ? Icons.hourglass_top_rounded : Icons.network_check_rounded,
-                      disabled: _isTesting,
-                      fontSize: 12,
-                      padding: const EdgeInsetsDirectional.symmetric(
-                          horizontal: 12, vertical: 6),
+                    const SizedBox(width: 6),
+                    Tappable(
+                      borderRadius: 10,
+                      color: Theme.of(context).colorScheme.primaryContainer,
                       onTap: () {
                         if (!_isTesting) _testConnection();
                       },
+                      child: Container(
+                        height: 34,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isTesting
+                                  ? Icons.hourglass_top_rounded
+                                  : Icons.network_check_rounded,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 6),
+                            TextFont(
+                              text: _isTesting ? "Testing..." : "Test",
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),

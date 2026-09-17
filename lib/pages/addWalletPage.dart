@@ -480,9 +480,29 @@ class _AddWalletPageState extends State<AddWalletPage> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
-                          avatar: Icon(type["icon"] as IconData, size: 16),
+                          avatar: Icon(
+                            type["icon"] as IconData,
+                            size: 16,
+                            color: selectedAccountType == type["name"]
+                                ? Theme.of(context).colorScheme.primary
+                                : getColor(context, "textLight"),
+                          ),
                           label: Text(type["name"] as String),
+                          labelStyle: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: selectedAccountType == type["name"]
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: selectedAccountType == type["name"]
+                                ? Theme.of(context).colorScheme.primary
+                                : getColor(context, "black"),
+                          ),
                           selected: selectedAccountType == type["name"],
+                          showCheckmark: false,
+                          selectedColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.15),
                           onSelected: (selected) {
                             if (selected) {
                               setState(() {

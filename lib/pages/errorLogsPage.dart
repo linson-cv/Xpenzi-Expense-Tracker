@@ -162,6 +162,7 @@ class _ErrorLogsPageState extends State<ErrorLogsPage> {
                   return ChoiceChip(
                     label: Text(tag),
                     selected: isSelected,
+                    showCheckmark: false,
                     onSelected: (selected) {
                       if (selected) {
                         setState(() {

@@ -26,6 +26,12 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.4
+    (Release: Xpenzi 1.3.4 — Streamlined Account UX, AI Provider Dropdown & Chip Styling Polish)
+    (A) Streamlined Account Grouping UX: Eliminated redundant duplicate account type icons inside grouped wallet rows on the home dashboard, creating a cleaner, more compact, and space-efficient view
+    (A) Dropdown AI Provider Selector: Replaced horizontal provider chips with a sleek interactive dropdown bottom-sheet showing all providers, descriptions, and active status at a glance
+    (A) Refined Selection Chip Aesthetics: Replaced awkward checkmark tick icons on account types, AI providers, and filter chips with smooth accent highlight containers and bold text styling
+    (A) Aligned Action Controls: Standardized compact vertical alignment across API key action controls and the Test connection button
     < 1.3.3
     (Release: Xpenzi 1.3.3 — Multi-Provider AI Architecture, Smart Category Suggestions & UI Hardening)
     (A) Multi-Provider AI Engine: Full support for Google Gemini, OpenAI (GPT-4o / GPT-4o-mini), Anthropic Claude, and Custom / OpenRouter endpoints with live credential validation, clear error feedback, and tactile haptic controls

@@ -42,6 +42,7 @@ import 'package:budget/pages/aiSettingsPage.dart';
 import 'package:budget/pages/offlineIntelligencePage.dart';
 import 'package:budget/pages/errorLogsPage.dart';
 import 'package:budget/pages/faqPage.dart';
+import 'package:budget/widgets/util/onAppResume.dart';
 
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
@@ -3791,76 +3792,147 @@ class AnimatedBudgetContainersSetting extends StatelessWidget {
   }
 }
 
-class PermissionsSettingsSubPage extends StatelessWidget {
+class PermissionsSettingsSubPage extends StatefulWidget {
   const PermissionsSettingsSubPage({super.key});
 
   @override
+  State<PermissionsSettingsSubPage> createState() =>
+      _PermissionsSettingsSubPageState();
+}
+
+class _PermissionsSettingsSubPageState
+    extends State<PermissionsSettingsSubPage> {
+  bool _isNotificationAccessGranted = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    bool granted = await safeIsNotificationPermissionGranted();
+    if (mounted) {
+      setState(() {
+        _isNotificationAccessGranted = granted;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageFramework(
-      title: "Device Permissions",
-      dragDownToDismiss: true,
-      listWidgets: [
-        SettingsGroupCard(
-          title: "Device Permissions",
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.security_outlined
-              : Icons.security_rounded,
-          children: [
-            SettingsContainer(
-              title: "Notifications",
-              description: "Enable or disable notifications for this app",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.notifications_outlined
-                  : Icons.notifications_rounded,
-              onTap: () {
-                AppSettings.openAppSettings(type: AppSettingsType.notification);
-              },
-            ),
-            SettingsContainer(
-              title: "Read App Notifications",
-              description: "Manage permission to auto-detect transaction SMS/alerts",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.mark_email_read_outlined
-                  : Icons.mark_email_read_rounded,
-              onTap: () async {
-                bool status = await safeIsNotificationPermissionGranted();
-                if (status) {
-                  openSnackbar(
-                    SnackbarMessage(
-                      title: "Permission Already Granted",
-                      description: "You can revoke or manage this in Android Device & App Notification settings.",
+    return OnAppResume(
+      onAppResume: () {
+        _checkPermissions();
+      },
+      child: PageFramework(
+        title: "Device Permissions",
+        dragDownToDismiss: true,
+        listWidgets: [
+          SettingsGroupCard(
+            title: "Device Permissions",
+            icon: appStateSettings["outlinedIcons"]
+                ? Icons.security_outlined
+                : Icons.security_rounded,
+            children: [
+              SettingsContainer(
+                title: "Notifications",
+                description: "Enable or disable notifications for this app",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.notifications_outlined
+                    : Icons.notifications_rounded,
+                onTap: () {
+                  AppSettings.openAppSettings(type: AppSettingsType.notification);
+                },
+              ),
+              SettingsContainer(
+                title: "Read App Notifications",
+                description: _isLoading
+                    ? "Checking permission status..."
+                    : _isNotificationAccessGranted
+                        ? "Active • Auto-detecting transaction SMS & payment alerts"
+                        : "Not Enabled • Tap to set up auto-detection",
+                afterWidget: _isLoading
+                    ? null
+                    : Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _isNotificationAccessGranted
+                              ? getColor(context, "incomeAmount")
+                                  .withValues(alpha: 0.15)
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextFont(
+                          text: _isNotificationAccessGranted ? "Active" : "Off",
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          textColor: _isNotificationAccessGranted
+                              ? getColor(context, "incomeAmount")
+                              : getColor(context, "textLight"),
+                        ),
+                      ),
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.mark_email_read_outlined
+                    : Icons.mark_email_read_rounded,
+                onTap: () async {
+                  if (_isNotificationAccessGranted) {
+                    // Requirement 4: Already turned on popup - only open settings if user confirms they want to manage it
+                    openPopup(
+                      context,
+                      title: "Notification Access Active",
                       icon: Icons.check_circle_rounded,
-                    )
-                  );
-                  await safeRequestNotificationPermission();
-                } else {
-                  promptNotificationPermissionPopup(context);
-                }
-              },
-            ),
-            SettingsContainer(
-              title: "Battery Optimization",
-              description: "Allow unrestricted background running for notification capture",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.battery_saver_outlined
-                  : Icons.battery_saver_rounded,
-              onTap: () {
-                promptBatteryOptimizationPopup(context);
-              },
-            ),
-            SettingsContainer(
-              title: "Open App Settings",
-              description: "Open system settings to manage all permissions",
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.settings_applications_outlined
-                  : Icons.settings_applications_rounded,
-              onTap: () {
-                AppSettings.openAppSettings();
-              },
-            ),
-          ],
-        ),
-      ],
+                      description:
+                          "Notification access is already turned on and actively capturing payment alerts on this device.\n\nDo you want to open Android device settings to manage or turn off this permission?",
+                      onSubmitLabel: "Manage Settings",
+                      onCancelLabel: "Keep Active",
+                      onSubmit: () async {
+                        popRoute(context);
+                        await safeRequestNotificationPermission();
+                      },
+                      onCancel: () {
+                        popRoute(context);
+                      },
+                    );
+                  } else {
+                    // Requirement 1-3: Standard flow to turn it on with disclosure, setting all templates, & battery popup
+                    bool status = await requestReadNotificationPermission(
+                        context: context);
+                    _checkPermissions();
+                  }
+                },
+              ),
+              SettingsContainer(
+                title: "Battery Optimization",
+                description:
+                    "Allow unrestricted background running for notification capture",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.battery_saver_outlined
+                    : Icons.battery_saver_rounded,
+                onTap: () {
+                  promptBatteryOptimizationPopup(context);
+                },
+              ),
+              SettingsContainer(
+                title: "Open App Settings",
+                description: "Open system settings to manage all permissions",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.settings_applications_outlined
+                    : Icons.settings_applications_rounded,
+                onTap: () {
+                  AppSettings.openAppSettings();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

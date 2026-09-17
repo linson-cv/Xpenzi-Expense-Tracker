@@ -33,7 +33,8 @@ class OfflineIntelligencePage extends StatefulWidget {
   State<OfflineIntelligencePage> createState() => _OfflineIntelligencePageState();
 }
 
-class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
+class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
+    with WidgetsBindingObserver {
   bool isPermissionGranted = false;
   bool isCheckingPermission = true;
   StreamSubscription<ServiceNotificationEvent>? _uiNotificationSub;
@@ -41,6 +42,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkPermission();
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
       _uiNotificationSub = NotificationListenerService.notificationsStream.listen((event) {
@@ -52,7 +54,15 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermission();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _uiNotificationSub?.cancel();
     super.dispose();
   }
@@ -79,109 +89,12 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
 
   Future<void> _loadDefaultTemplates() async {
     HapticFeedback.mediumImpact();
-    // Default presets for common bank alerts & UPI notifications
-    List<ScannerTemplate> defaults = [
-      ScannerTemplate(
-        scannerTemplatePk: "preset_credit_card_debit",
-        templateName: "Credit Card Debited / Spent",
-        contains: "Credit Card",
-        amountTransactionBefore: "debited for Rs.",
-        amountTransactionAfter: " on",
-        titleTransactionBefore: "at ",
-        titleTransactionAfter: " on",
-        defaultCategoryFk: "0",
-        walletFk: "-1",
-        dateCreated: DateTime.now(),
-        dateTimeModified: DateTime.now(),
-        ignore: false,
-      ),
-      ScannerTemplate(
-        scannerTemplatePk: "preset_upi_debit",
-        templateName: "Bank / UPI Debit",
-        contains: "debited",
-        amountTransactionBefore: "Rs.",
-        amountTransactionAfter: " ",
-        titleTransactionBefore: "to ",
-        titleTransactionAfter: " on",
-        defaultCategoryFk: "0",
-        walletFk: "-1",
-        dateCreated: DateTime.now(),
-        dateTimeModified: DateTime.now(),
-        ignore: false,
-      ),
-      ScannerTemplate(
-        scannerTemplatePk: "preset_upi_credit",
-        templateName: "Bank / UPI Credit",
-        contains: "credited",
-        amountTransactionBefore: "Rs.",
-        amountTransactionAfter: " ",
-        titleTransactionBefore: "from ",
-        titleTransactionAfter: " on",
-        defaultCategoryFk: "0",
-        walletFk: "-1",
-        dateCreated: DateTime.now(),
-        dateTimeModified: DateTime.now(),
-        ignore: false,
-      ),
-      ScannerTemplate(
-        scannerTemplatePk: "preset_card_spent",
-        templateName: "Card Spending Alert",
-        contains: "spent",
-        amountTransactionBefore: "INR ",
-        amountTransactionAfter: " at",
-        titleTransactionBefore: "at ",
-        titleTransactionAfter: " on",
-        defaultCategoryFk: "0",
-        walletFk: "-1",
-        dateCreated: DateTime.now(),
-        dateTimeModified: DateTime.now(),
-        ignore: false,
-      ),
-      ScannerTemplate(
-        scannerTemplatePk: "preset_phonepe_paid",
-        templateName: "PhonePe UPI Paid",
-        contains: "paid to",
-        amountTransactionBefore: "₹",
-        amountTransactionAfter: " paid",
-        titleTransactionBefore: "paid to ",
-        titleTransactionAfter: " is",
-        defaultCategoryFk: "0",
-        walletFk: "-1",
-        dateCreated: DateTime.now(),
-        dateTimeModified: DateTime.now(),
-        ignore: false,
-      ),
-      ScannerTemplate(
-        scannerTemplatePk: "preset_sib_upi_debit",
-        templateName: "Regular Bank UPI Debit",
-        contains: "A/c *",
-        amountTransactionBefore: "debited by ",
-        amountTransactionAfter: " on",
-        titleTransactionBefore: "transfer to ",
-        titleTransactionAfter: " Ref",
-        defaultCategoryFk: "0",
-        walletFk: "-1",
-        dateCreated: DateTime.now(),
-        dateTimeModified: DateTime.now(),
-        ignore: false,
-      ),
-    ];
-
-    int added = 0;
-    for (var tmpl in defaults) {
-      try {
-        await database.createOrUpdateScannerTemplate(tmpl);
-        added++;
-      } catch (e) {
-        print("Error inserting default template: $e");
-      }
-    }
-
+    int added = await populateDefaultScannerTemplatesIfEmpty(forceAll: true);
     if (mounted) {
       openSnackbar(
         SnackbarMessage(
           title: "Default Presets Installed",
-          description: "Installed $added ready-to-use notification templates",
+          description: "Loaded all $added ready-to-use bank & payment templates",
           icon: Icons.check_circle_rounded,
         ),
       );
@@ -552,15 +465,6 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                 if (val == true) {
                   bool status = await requestReadNotificationPermission(
                       context: context);
-                  if (status) {
-                    await updateSettings("notificationScanning", true,
-                        updateGlobalState: true);
-                    await populateDefaultScannerTemplatesIfEmpty();
-                    initNotificationScanning();
-                    Future.delayed(const Duration(milliseconds: 400), () {
-                      if (mounted) promptBatteryOptimizationPopup(context);
-                    });
-                  }
                   if (mounted) {
                     setState(() {
                       isPermissionGranted = status;

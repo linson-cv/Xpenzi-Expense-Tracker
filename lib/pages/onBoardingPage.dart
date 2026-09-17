@@ -23,7 +23,7 @@ import 'package:budget/widgets/textInput.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
 import 'package:budget/pages/offlineIntelligencePage.dart';
-import 'package:notification_listener_service/notification_listener_service.dart';
+import 'package:budget/struct/notificationEngine.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -167,39 +167,12 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
         appStateSettings["notificationScanning"] != true &&
         !widget.popNavigationWhenDone) {
       try {
-        bool isGranted =
-            await NotificationListenerService.isPermissionGranted();
+        bool isGranted = await safeIsNotificationPermissionGranted();
         if (!isGranted && context.mounted) {
-          dynamic userChoseAutoDetect = await openPopup(
-            context,
-            icon: Icons.notifications_active_rounded,
-            title: "Auto-Detect Bank SMS & Alerts?",
-            description:
-                "Xpenzi can automatically capture and parse bank SMS, UPI payments, and card alerts into transactions on this device.\n\n🔒 100% Private: All parsing happens on your phone. No data is sent to external servers.",
-            onSubmitLabel: "Enable Auto-Detect",
-            onCancelLabel: "Skip for Now",
-            onSubmit: () {
-              popRoute(context, true);
-            },
-            onCancel: () {
-              popRoute(context, false);
-            },
-          );
-
-          if (userChoseAutoDetect == true && context.mounted) {
-            try {
-              bool status =
-                  await requestReadNotificationPermission(context: context);
-              if (status) {
-                await updateSettings("notificationScanning", true,
-                    updateGlobalState: false);
-                initNotificationScanning();
-                shouldOpenOfflineIntelligence = true;
-              }
-            } catch (e, stack) {
-              recordAppError("OnboardingNotificationPerm", e,
-                  stackTrace: stack);
-            }
+          bool status =
+              await requestReadNotificationPermission(context: context);
+          if (status) {
+            shouldOpenOfflineIntelligence = true;
           } else {
             await updateSettings("skippedOfflineIntelligenceOnboarding", true,
                 updateGlobalState: false);
