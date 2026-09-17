@@ -71,6 +71,8 @@ import 'package:provider/provider.dart';
 // import 'package:feature_discovery/feature_discovery.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<InitialPageSwitcherState> initialPageSwitcherKey =
+    GlobalKey<InitialPageSwitcherState>();
 
 // Handles onboarding too!
 class InitialPageRouteNavigator extends StatelessWidget {
@@ -82,41 +84,61 @@ class InitialPageRouteNavigator extends StatelessWidget {
       key: navigatorKey,
       onGenerateRoute: (settings) => PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            AnimatedSwitcher(
-          duration: const Duration(milliseconds: 1200),
-          switchInCurve: Curves.easeInOutCubic,
-          switchOutCurve: Curves.easeInOutCubic,
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            final inAnimation =
-                Tween<Offset>(begin: const Offset(-1.0, 0.0), end: const Offset(0.0, 0.0))
-                    .animate(animation);
-            final outAnimation =
-                Tween<Offset>(begin: const Offset(1.0, 0.0), end: const Offset(0.0, 0.0))
-                    .animate(animation);
-
-            if (child.key == const ValueKey("Onboarding")) {
-              return ClipRect(
-                child: SlideTransition(
-                  position: inAnimation,
-                  child: child,
-                ),
-              );
-            } else {
-              return ClipRect(
-                child: SlideTransition(position: outAnimation, child: child),
-              );
-            }
-          },
-          child: appStateSettings["hasOnboarded"] != true
-              ? const OnBoardingPage(key: ValueKey("Onboarding"))
-              : PageNavigationFrameworkSafeArea(
-                  child: PageNavigationFramework(
-                    key: pageNavigationFrameworkKey,
-                    widthSideNavigationBar: getWidthNavigationSidebar(context),
-                  ),
-                ),
-        ),
+            InitialPageSwitcher(key: initialPageSwitcherKey),
       ),
+    );
+  }
+}
+
+class InitialPageSwitcher extends StatefulWidget {
+  const InitialPageSwitcher({super.key});
+
+  @override
+  State<InitialPageSwitcher> createState() => InitialPageSwitcherState();
+}
+
+class InitialPageSwitcherState extends State<InitialPageSwitcher> {
+  void refresh() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 1200),
+      switchInCurve: Curves.easeInOutCubic,
+      switchOutCurve: Curves.easeInOutCubic,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final inAnimation =
+            Tween<Offset>(begin: const Offset(-1.0, 0.0), end: const Offset(0.0, 0.0))
+                .animate(animation);
+        final outAnimation =
+            Tween<Offset>(begin: const Offset(1.0, 0.0), end: const Offset(0.0, 0.0))
+                .animate(animation);
+
+        if (child.key == const ValueKey("Onboarding")) {
+          return ClipRect(
+            child: SlideTransition(
+              position: inAnimation,
+              child: child,
+            ),
+          );
+        } else {
+          return ClipRect(
+            child: SlideTransition(position: outAnimation, child: child),
+          );
+        }
+      },
+      child: appStateSettings["hasOnboarded"] != true
+          ? const OnBoardingPage(key: ValueKey("Onboarding"))
+          : PageNavigationFrameworkSafeArea(
+              child: PageNavigationFramework(
+                key: pageNavigationFrameworkKey,
+                widthSideNavigationBar: getWidthNavigationSidebar(context),
+              ),
+            ),
     );
   }
 }

@@ -74,7 +74,6 @@ import 'package:budget/main.dart';
 import 'package:flutter/services.dart' hide TextInput;
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:app_settings/app_settings.dart';
@@ -1207,15 +1206,15 @@ class SettingsPageContent extends StatelessWidget {
           ),
 
           AnimatedExpanded(
-            expand: _match("Intelligence & Automation", "Offline intelligence, Gemini AI, email automation", [
-              "ai", "automation", "mail", "email", "gemini", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence", "bank sms", "auto detect", "gemini model", "custom prompt", "receipt scanner"
+            expand: _match("Intelligence & Automation", "Offline intelligence, AI models, email automation", [
+              "ai", "automation", "mail", "email", "gemini", "openai", "claude", "openrouter", "chatgpt", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence", "bank sms", "auto detect", "gemini model", "custom prompt", "receipt scanner"
             ]),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SettingsContainerOpenPage(
                 openPage: const IntelligentAutomationSettingsSubPage(),
                 title: "Intelligence & Automation",
-                description: "Offline intelligence, Gemini AI, email automation",
+                description: "Offline intelligence, AI models, email automation",
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.auto_awesome_outlined
                     : Icons.auto_awesome_rounded,
@@ -1853,17 +1852,17 @@ class IntelligentAutomationSettingsSubPage extends StatelessWidget {
           ],
         ),
 
-        // Section 2: Gemini AI Intelligence
+        // Section 2: AI Intelligence & Cloud Models
         SettingsGroupCard(
-          title: "Xpenzi AI Intelligence",
+          title: "AI & Cloud Intelligence",
           icon: appStateSettings["outlinedIcons"]
               ? Icons.auto_awesome_outlined
               : Icons.auto_awesome_rounded,
           children: [
             SettingsContainerOpenPage(
               openPage: const AiSettingsPage(),
-              title: "Xpenzi Intelligence",
-              description: "Google Gemini AI model, category suggestions, and custom prompt rules",
+              title: "AI Models & Setup",
+              description: "Connect Gemini, OpenAI, Claude, or OpenRouter for smart categorization and fallback",
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.psychology_outlined
                   : Icons.psychology_rounded,
@@ -3824,7 +3823,7 @@ class PermissionsSettingsSubPage extends StatelessWidget {
                   ? Icons.mark_email_read_outlined
                   : Icons.mark_email_read_rounded,
               onTap: () async {
-                bool status = await NotificationListenerService.isPermissionGranted();
+                bool status = await safeIsNotificationPermissionGranted();
                 if (status) {
                   openSnackbar(
                     SnackbarMessage(
@@ -3833,9 +3832,7 @@ class PermissionsSettingsSubPage extends StatelessWidget {
                       icon: Icons.check_circle_rounded,
                     )
                   );
-                  try {
-                    NotificationListenerService.requestPermission();
-                  } catch (_) {}
+                  await safeRequestNotificationPermission();
                 } else {
                   promptNotificationPermissionPopup(context);
                 }

@@ -133,22 +133,34 @@ class HomePageWalletList extends StatelessWidget {
                             }
 
                             IconData typeIcon;
+                            final bool outlined =
+                                appStateSettings["outlinedIcons"] ?? false;
                             switch (type) {
                               case "Credit Card":
-                                typeIcon = Icons.credit_card_rounded;
+                                typeIcon = outlined
+                                    ? Icons.credit_card_outlined
+                                    : Icons.credit_card_rounded;
                                 break;
                               case "Meal Card":
-                                typeIcon = Icons.restaurant_rounded;
+                                typeIcon = outlined
+                                    ? Icons.restaurant_outlined
+                                    : Icons.restaurant_rounded;
                                 break;
                               case "Cash":
-                                typeIcon = Icons.payments_rounded;
+                                typeIcon = outlined
+                                    ? Icons.payments_outlined
+                                    : Icons.payments_rounded;
                                 break;
                               case "Savings":
-                                typeIcon = Icons.savings_rounded;
+                                typeIcon = outlined
+                                    ? Icons.savings_outlined
+                                    : Icons.savings_rounded;
                                 break;
                               case "Bank Account":
                               default:
-                                typeIcon = Icons.account_balance_rounded;
+                                typeIcon = outlined
+                                    ? Icons.account_balance_wallet_outlined
+                                    : Icons.account_balance_wallet_rounded;
                                 break;
                             }
 

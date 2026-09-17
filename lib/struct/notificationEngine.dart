@@ -170,8 +170,32 @@ Future<void> promptBatteryOptimizationPopup(BuildContext context) async {
   );
 }
 
+/// Safely requests notification access without failing or leaking unhandled zone errors.
+/// Some Android OEM versions return `null` from the native platform channel instead of a boolean,
+/// causing a cast error `type 'Null' is not a subtype of type 'FutureOr<bool>'`.
+Future<bool> safeRequestNotificationPermission() async {
+  try {
+    return await NotificationListenerService.requestPermission().catchError((error) {
+      print("Notification permission request handled platform channel result: $error");
+      return false;
+    });
+  } catch (e) {
+    print("Notification permission request sync exception handled: $e");
+    return false;
+  }
+}
+
+/// Safely checks if notification access is granted.
+Future<bool> safeIsNotificationPermissionGranted() async {
+  try {
+    return await NotificationListenerService.isPermissionGranted().catchError((_) => false);
+  } catch (_) {
+    return false;
+  }
+}
+
 Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
-  bool isGranted = await NotificationListenerService.isPermissionGranted();
+  bool isGranted = await safeIsNotificationPermissionGranted();
   if (isGranted) return true;
 
   Completer<bool> completer = Completer<bool>();
@@ -186,16 +210,8 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
     onCancelLabel: "Cancel",
     onSubmit: () async {
       popRoute(context);
-      try {
-        await NotificationListenerService.requestPermission();
-      } catch (e) {
-        // notification_listener_service plugin platform channel might return null instead of bool on some Android versions
-        print("Notification permission request dispatched: $e");
-      }
-      bool status = false;
-      try {
-        status = await NotificationListenerService.isPermissionGranted();
-      } catch (_) {}
+      await safeRequestNotificationPermission();
+      bool status = await safeIsNotificationPermissionGranted();
       if (status == true) {
         Future.delayed(const Duration(milliseconds: 400), () {
           BuildContext? ctx = navigatorKey.currentContext ?? context;
@@ -217,24 +233,15 @@ Future<bool> promptNotificationPermissionPopup(BuildContext context) async {
 }
 
 Future<bool> requestReadNotificationPermission({BuildContext? context}) async {
-  bool status = false;
-  try {
-    status = await NotificationListenerService.isPermissionGranted();
-  } catch (_) {}
+  bool status = await safeIsNotificationPermissionGranted();
 
   if (status != true) {
     BuildContext? popupContext = context ?? navigatorKey.currentContext;
     if (popupContext != null) {
       status = await promptNotificationPermissionPopup(popupContext);
     } else {
-      try {
-        await NotificationListenerService.requestPermission();
-      } catch (e) {
-        print("Notification permission request dispatched: $e");
-      }
-      try {
-        status = await NotificationListenerService.isPermissionGranted();
-      } catch (_) {}
+      await safeRequestNotificationPermission();
+      status = await safeIsNotificationPermissionGranted();
     }
   }
 
@@ -468,17 +475,22 @@ Future queueTransactionFromMessage(String messageString,
     }
   }
 
-  // Step 3. Fallback to Gemini AI Parsing if template and local NLP returned no result
+  String? aiCategoryName;
+
+  // Step 3. Fallback to AI Parsing if template and local NLP returned no result
   if ((amountDouble == null || title == null) &&
       appStateSettings["geminiEnabled"] == true &&
-      (appStateSettings["geminiApiKey"] ?? "").toString().trim().isNotEmpty) {
+      appStateSettings["aiNotificationFallback"] != false &&
+      aiManager.isConfigured()) {
     BuildContext? ctx = navigatorKey.currentContext;
     if (ctx != null) {
-      GeminiParsedTransaction? parsed =
+      ParsedAiTransaction? parsed =
           await parseTransactionWithGemini(messageString, ctx);
       if (parsed != null && parsed.title != null && parsed.amount != null) {
         title = parsed.title;
         amountDouble = parsed.amount;
+        isIncome = parsed.income;
+        aiCategoryName = parsed.categoryName;
       }
     }
   }
@@ -522,6 +534,17 @@ Future queueTransactionFromMessage(String messageString,
   if (templateFound != null) {
     category ??= await database
         .getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
+  }
+  if (category == null && aiCategoryName != null) {
+    try {
+      var all = await database.getAllCategories();
+      for (var c in all) {
+        if (c.name.trim().toLowerCase() == aiCategoryName.trim().toLowerCase()) {
+          category = c;
+          break;
+        }
+      }
+    } catch (_) {}
   }
 
   TransactionWallet? wallet = (templateFound == null || templateFound.walletFk == "-1")

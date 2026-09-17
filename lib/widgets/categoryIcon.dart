@@ -180,7 +180,13 @@ class CategoryIcon extends StatelessWidget {
                                 ),
                               ),
                             )
-                      : Container()),
+                      : category == null
+                          ? Icon(
+                              Icons.category_outlined,
+                              size: size * 0.7,
+                              color: getColor(context, "textLight"),
+                            )
+                          : Container()),
                 ),
               ),
             ),

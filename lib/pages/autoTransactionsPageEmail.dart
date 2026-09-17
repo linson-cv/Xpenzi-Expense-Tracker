@@ -7,7 +7,6 @@ import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/notificationEngine.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
-import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openContainerNavigation.dart';
@@ -62,7 +61,7 @@ class _AutoTransactionsPageEmailState extends State<AutoTransactionsPageEmail> {
   Widget build(BuildContext context) {
     return PageFramework(
       dragDownToDismiss: true,
-      title: "Advanced Automation",
+      title: "Email Receipt Scanner",
       actions: [
         RefreshButton(onTap: () async {
           loadingIndeterminateKey.currentState?.setVisibility(true);
@@ -653,10 +652,29 @@ class ScannerTemplateEntry extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
                 children: [
-                  CategoryIcon(
-                    categoryPk: scannerTemplate.defaultCategoryFk,
-                    size: 28,
-                  ),
+                  scannerTemplate.defaultCategoryFk != "0" &&
+                          scannerTemplate.defaultCategoryFk.isNotEmpty
+                      ? CategoryIcon(
+                          categoryPk: scannerTemplate.defaultCategoryFk,
+                          size: 28,
+                        )
+                      : Container(
+                          height: 48,
+                          width: 48,
+                          margin: const EdgeInsetsDirectional.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer
+                                .withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.sms_outlined,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 22,
+                          ),
+                        ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -690,14 +708,16 @@ class ScannerTemplateEntry extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ButtonIcon(
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.delete_outline_rounded
-                        : Icons.delete_rounded,
-                    size: 20,
-                    padding: const EdgeInsetsDirectional.all(6),
-                    onTap: () async {
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      appStateSettings["outlinedIcons"]
+                          ? Icons.delete_outline_rounded
+                          : Icons.delete_rounded,
+                      size: 20,
+                      color: getColor(context, "textLight"),
+                    ),
+                    onPressed: () async {
                       DeletePopupAction? action = await openDeletePopup(
                         context,
                         title: "Delete template?",

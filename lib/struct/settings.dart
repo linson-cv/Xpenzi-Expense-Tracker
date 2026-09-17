@@ -170,6 +170,7 @@ Future<bool> updateSettings(
     if (isChanged || forceGlobalStateUpdate) {
       print("Rebuilt Main Request from: $setting : $value");
       appStateKey.currentState?.refreshAppState();
+      initialPageSwitcherKey.currentState?.refresh();
     }
   } else {
     if (setStateAllPageFrameworks) {

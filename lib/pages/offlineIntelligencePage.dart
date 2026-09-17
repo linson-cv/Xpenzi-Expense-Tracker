@@ -3,7 +3,10 @@ import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addEmailTemplate.dart';
+import 'package:budget/pages/aiSettingsPage.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
+import 'package:budget/struct/ai/aiManager.dart';
+import 'package:budget/struct/ai/aiProvider.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
@@ -480,8 +483,8 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: isScanningActive
-                              ? Colors.green.withOpacity(0.15)
-                              : Colors.orange.withOpacity(0.15),
+                              ? Colors.green.withValues(alpha: 0.15)
+                              : Colors.orange.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -635,6 +638,15 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                 promptBatteryOptimizationPopup(context);
               },
             ),
+            const Divider(height: 1),
+            SettingsContainerOpenPage(
+              title: "AI Fallback Intelligence",
+              description: aiManager.isConfigured()
+                  ? "${aiManager.activeProvider.providerType.displayName} configured for fallback parsing"
+                  : "Parse unformatted alerts using your chosen AI provider",
+              icon: Icons.auto_awesome_rounded,
+              openPage: const AiSettingsPage(),
+            ),
           ],
         ),
 
@@ -731,46 +743,49 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                     textColor: getColor(context, "textLight"),
                   ),
                   const SizedBox(height: 12),
-                  Row(
+                  Column(
                     children: [
-                      Expanded(
-                        child: Button(
-                          label: "Re-bind OS Listener",
-                          icon: Icons.sync_rounded,
-                          onTap: () async {
-                            initNotificationScanning();
-                            await _checkPermission();
-                            if (mounted) {
-                              openSnackbar(
-                                SnackbarMessage(
-                                  title: "OS Listener Re-bound",
-                                  description: isScanningActive
-                                      ? "Real-time notification stream is active and listening"
-                                      : "Notification access permission required",
-                                  icon: Icons.check_circle_rounded,
-                                ),
-                              );
-                              setState(() {});
-                            }
-                          },
-                        ),
+                      Button(
+                        label: "Re-bind OS Listener",
+                        icon: Icons.sync_rounded,
+                        padding: const EdgeInsetsDirectional.symmetric(
+                            horizontal: 16, vertical: 12),
+                        onTap: () async {
+                          initNotificationScanning();
+                          await _checkPermission();
+                          if (mounted) {
+                            openSnackbar(
+                              SnackbarMessage(
+                                title: "OS Listener Re-bound",
+                                description: isScanningActive
+                                    ? "Real-time notification stream is active and listening"
+                                    : "Notification access permission required",
+                                icon: Icons.check_circle_rounded,
+                              ),
+                            );
+                            setState(() {});
+                          }
+                        },
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Button(
-                          label: "Test SMS Parser",
-                          icon: Icons.science_rounded,
-                          color: Theme.of(context).colorScheme.secondaryContainer,
-                          textColor: Theme.of(context).colorScheme.onSecondaryContainer,
-                          onTap: () {
-                            TextEditingController testCtrl = TextEditingController();
-                            String? testResult;
-                            bool isError = false;
+                      const SizedBox(height: 10),
+                      Button(
+                        label: "Test SMS Parser",
+                        icon: Icons.science_rounded,
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        textColor: Theme.of(context)
+                            .colorScheme
+                            .onSecondaryContainer,
+                        padding: const EdgeInsetsDirectional.symmetric(
+                            horizontal: 16, vertical: 12),
+                        onTap: () {
+                          TextEditingController testCtrl = TextEditingController();
+                          String? testResult;
+                          bool isError = false;
 
-                            openBottomSheet(
-                              context,
-                              StatefulBuilder(
-                                builder: (context, setModalState) {
+                          openBottomSheet(
+                            context,
+                            StatefulBuilder(
+                              builder: (context, setModalState) {
                                   return Padding(
                                     padding: EdgeInsets.only(
                                       left: 20,
@@ -880,16 +895,15 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage> {
                             );
                           },
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
 
-        // Captured Notifications Raw Log Inspector
+          // Captured Notifications Raw Log Inspector
         SettingsGroupCard(
           title: "Captured Notification Logs",
           icon: Icons.history_rounded,

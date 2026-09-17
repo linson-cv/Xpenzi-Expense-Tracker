@@ -5,6 +5,7 @@ import 'package:budget/pages/addBudgetPage.dart';
 import 'package:budget/pages/addObjectivePage.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/errorLog.dart';
 import 'package:budget/struct/languageMap.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
@@ -16,8 +17,6 @@ import 'package:budget/widgets/moreIcons.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
-import 'package:budget/widgets/openSnackbar.dart';
-import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/textInput.dart';
@@ -167,40 +166,59 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid &&
         appStateSettings["notificationScanning"] != true &&
         !widget.popNavigationWhenDone) {
-      bool isGranted = await NotificationListenerService.isPermissionGranted();
-      if (!isGranted && context.mounted) {
-        await openPopup(
-          context,
-          icon: Icons.notifications_active_rounded,
-          title: "Auto-Detect Bank SMS & Alerts?",
-          description:
-              "Xpenzi can automatically capture and parse bank SMS, UPI payments, and card alerts into transactions on this device.\n\n🔒 100% Private: All parsing happens on your phone. No data is sent to external servers.",
-          onSubmitLabel: "Enable Auto-Detect",
-          onCancelLabel: "Skip for Now",
-          onSubmit: () async {
-            popRoute(context);
-            bool status = await requestReadNotificationPermission(context: context);
-            if (status) {
-              await updateSettings("notificationScanning", true,
-                  updateGlobalState: false);
-              initNotificationScanning();
-              shouldOpenOfflineIntelligence = true;
+      try {
+        bool isGranted =
+            await NotificationListenerService.isPermissionGranted();
+        if (!isGranted && context.mounted) {
+          dynamic userChoseAutoDetect = await openPopup(
+            context,
+            icon: Icons.notifications_active_rounded,
+            title: "Auto-Detect Bank SMS & Alerts?",
+            description:
+                "Xpenzi can automatically capture and parse bank SMS, UPI payments, and card alerts into transactions on this device.\n\n🔒 100% Private: All parsing happens on your phone. No data is sent to external servers.",
+            onSubmitLabel: "Enable Auto-Detect",
+            onCancelLabel: "Skip for Now",
+            onSubmit: () {
+              popRoute(context, true);
+            },
+            onCancel: () {
+              popRoute(context, false);
+            },
+          );
+
+          if (userChoseAutoDetect == true && context.mounted) {
+            try {
+              bool status =
+                  await requestReadNotificationPermission(context: context);
+              if (status) {
+                await updateSettings("notificationScanning", true,
+                    updateGlobalState: false);
+                initNotificationScanning();
+                shouldOpenOfflineIntelligence = true;
+              }
+            } catch (e, stack) {
+              recordAppError("OnboardingNotificationPerm", e,
+                  stackTrace: stack);
             }
-          },
-          onCancel: () {
-            popRoute(context);
-            updateSettings("skippedOfflineIntelligenceOnboarding", true,
+          } else {
+            await updateSettings("skippedOfflineIntelligenceOnboarding", true,
                 updateGlobalState: false);
-          },
-        );
+          }
+        }
+      } catch (e, stack) {
+        recordAppError("OnboardingNotificationCheck", e, stackTrace: stack);
       }
     }
 
     if (widget.popNavigationWhenDone) {
       popRoute(context);
     } else {
+      navigatorKey.currentState?.popUntil((route) => route.isFirst);
       await updateSettings("hasOnboarded", true,
-          pagesNeedingRefresh: [0], updateGlobalState: true, forceGlobalStateUpdate: true);
+          pagesNeedingRefresh: [0],
+          updateGlobalState: true,
+          forceGlobalStateUpdate: true);
+      initialPageSwitcherKey.currentState?.refresh();
       if (shouldOpenOfflineIntelligence && context.mounted) {
         pushRoute(context, const OfflineIntelligencePage());
       }
@@ -210,7 +228,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
   Future<void> continueWithoutSignInWithForcedName(BuildContext context) async {
     String currentName = (appStateSettings["username"] ?? "").toString().trim();
     if (currentName.isEmpty) {
-      await openBottomSheet(
+      dynamic result = await openBottomSheet(
         context,
         popupWithKeyboard: true,
         PopupFramework(
@@ -233,19 +251,13 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
           ),
         ),
       );
+      if (result is String && result.trim().isNotEmpty) {
+        await updateSettings("username", result.trim(),
+            updateGlobalState: false);
+      }
     }
 
-    String finalName = (appStateSettings["username"] ?? "").toString().trim();
-    if (finalName.isEmpty) {
-      openSnackbar(
-        SnackbarMessage(
-          title: "Please enter your name to continue",
-          icon: Icons.person_rounded,
-        ),
-      );
-      return;
-    }
-
+    // Do not block user from continuing into the app if they skip setting a nickname
     await nextNavigation();
   }
 
@@ -733,7 +745,8 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
               : SettingsContainerOutlined(
                   onTap: () async {
                     loadingIndeterminateKey.currentState?.setVisibility(true);
-                    openLoadingPopupTryCatch(
+                    bool signedInSuccessfully = false;
+                    await openLoadingPopupTryCatch(
                       () async {
                         // Can maybe use this function, but on web first login does not sync...
                         // Let's just use the functionality below this
@@ -747,12 +760,6 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                         if (signedIn == false || googleUser == null) {
                           loadingIndeterminateKey.currentState
                               ?.setVisibility(false);
-                          openSnackbar(
-                            SnackbarMessage(
-                              title: "Error signing in with Google",
-                              icon: MoreIcons.google,
-                            ),
-                          );
                           return;
                         }
                         if (appStateSettings["username"] == "" &&
@@ -774,22 +781,23 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                           print("Error running cloud functions: $e");
                         }
 
-                        nextNavigation();
+                        signedInSuccessfully = true;
+                        await nextNavigation();
                         loadingIndeterminateKey.currentState
                             ?.setVisibility(false);
                       },
                       onError: (e) {
                         print("Error signing in: $e");
+                        recordAppError("GoogleSignInOnboarding", e);
                         loadingIndeterminateKey.currentState
                             ?.setVisibility(false);
-                        openSnackbar(
-                          SnackbarMessage(
-                            title: "Error signing in with Google",
-                            icon: MoreIcons.google,
-                          ),
-                        );
                       },
                     );
+
+                    // If sign-in failed or was cancelled, ask user to enter name manually and move on
+                    if (!signedInSuccessfully && context.mounted) {
+                      await continueWithoutSignInWithForcedName(context);
+                    }
                   },
                   title: "sign-in-with-google".tr(),
                   icon: MoreIcons.google,

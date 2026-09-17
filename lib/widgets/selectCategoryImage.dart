@@ -725,20 +725,15 @@ class _CategoryIconPackGalleryPageState
                   textColor: getColor(context, "textLight"),
                 ),
                 const SizedBox(height: 16),
-                SingleChildScrollView(
-                  clipBehavior: Clip.none,
-                  scrollDirection: Axis.horizontal,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      children: [
-                        for (int i = 0; i < iconShapes.length; i++) ...[
-                          _buildShapeCard(context, i, iconShapes[i]),
-                          if (i < iconShapes.length - 1) const SizedBox(width: 12),
-                        ],
-                      ],
-                    ),
-                  ),
+                Row(
+                  children: [
+                    for (int i = 0; i < iconShapes.length; i++) ...[
+                      Expanded(
+                        child: _buildShapeCard(context, i, iconShapes[i]),
+                      ),
+                      if (i < iconShapes.length - 1) const SizedBox(width: 6),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -842,10 +837,9 @@ class _CategoryIconPackGalleryPageState
     final String shapeName = shape["name"] as String;
 
     return Stack(
-      clipBehavior: Clip.none,
       children: [
         Tappable(
-          borderRadius: 18,
+          borderRadius: 16,
           color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
           onTap: () {
             if (isPro && appStateSettings["purchaseID"] == null) {
@@ -861,32 +855,32 @@ class _CategoryIconPackGalleryPageState
             updateSettings("categoryIconShape", index, updateGlobalState: true);
           },
           child: Container(
-            width: 82,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
-                width: isSelected ? 2.2 : 1.2,
+                width: isSelected ? 2 : 1,
               ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 2),
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: const Color(0xFF93A5CF),
                     borderRadius: borderRadius,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 TextFont(
                   text: shapeName,
-                  fontSize: 11,
+                  fontSize: 10.5,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   textColor: isSelected
@@ -900,17 +894,17 @@ class _CategoryIconPackGalleryPageState
         ),
         if (isPro)
           Positioned(
-            top: -6,
+            top: 4,
             right: 4,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
                 color: const Color(0xFFB4C5E7),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: const TextFont(
                 text: "Pro",
-                fontSize: 9.5,
+                fontSize: 8.5,
                 fontWeight: FontWeight.bold,
                 textColor: Color(0xFF1E2D4A),
               ),

@@ -26,6 +26,13 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.3
+    (Release: Xpenzi 1.3.3 — Multi-Provider AI Architecture, Smart Category Suggestions & UI Hardening)
+    (A) Multi-Provider AI Engine: Full support for Google Gemini, OpenAI (GPT-4o / GPT-4o-mini), Anthropic Claude, and Custom / OpenRouter endpoints with live credential validation, clear error feedback, and tactile haptic controls
+    (A) Smart Category Auto-Suggestion: Real-time debounced category predictions when entering merchant titles, smoothly preserving your typed text and assigning categories on tap
+    (A) Notification Permission Channel Fix: Guarded native Android method channel against null-subtype cast exceptions during notification listener permission requests
+    (A) Theme & Style Shape Overflow Fix: Refined category icon shape card sizing and tucked Pro badges within card bounds, eliminating horizontal layout overflows on compact screens
+    (A) Navigation & Title Consistency: Cleaned up settings sections, unified Email Receipt Scanner titles, and removed obsolete FAB gestures for a focused, uncluttered experience
     < 1.3.2
     (Release: Xpenzi 1.3.2 — Onboarding Stability, Popup Fixes & Offline Intelligence Reminder)
     (A) Onboarding Name Entry Fix: Resolved app freeze when setting username manually during onboarding by deferring global state rebuild until navigation completes

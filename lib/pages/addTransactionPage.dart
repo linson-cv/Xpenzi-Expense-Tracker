@@ -12,6 +12,7 @@ import 'package:budget/pages/settingsPage.dart';
 import 'package:budget/pages/sharedBudgetSettings.dart';
 import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/ai/aiManager.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/upcomingTransactionsFunctions.dart';
@@ -4941,6 +4942,55 @@ class _TitleInputState extends State<TitleInput> {
   }
 
   List<TransactionAssociatedTitleWithCategory> foundAssociatedTitles = [];
+  Timer? _aiDebounceTimer;
+
+  @override
+  void dispose() {
+    _aiDebounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _queryAiCategory(String text) {
+    _aiDebounceTimer?.cancel();
+    _aiDebounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      if (!mounted) return;
+      if (text != _titleInputController.text.trim()) return;
+      try {
+        var rec = await aiManager.recommendCategory(text, context);
+        if (rec != null && rec["category"] != null && mounted) {
+          var allCats = await database.getAllCategories();
+          TransactionCategory? matched;
+          for (var c in allCats) {
+            if (c.name.trim().toLowerCase() ==
+                rec["category"]!.trim().toLowerCase()) {
+              matched = c;
+              break;
+            }
+          }
+          if (matched != null && mounted && foundAssociatedTitles.isEmpty) {
+            final TransactionCategory categoryToUse = matched;
+            setState(() {
+              foundAssociatedTitles = [
+                TransactionAssociatedTitleWithCategory(
+                  type: TitleType.CategoryName,
+                  title: TransactionAssociatedTitle(
+                    associatedTitlePk: "-1",
+                    categoryFk: categoryToUse.categoryPk,
+                    isExactMatch: false,
+                    title: text,
+                    dateCreated: DateTime.now(),
+                    order: 0,
+                  ),
+                  category: categoryToUse,
+                ),
+              ];
+            });
+            if (widget.resizePopupWhenChanged) fixResizingPopup();
+          }
+        }
+      } catch (_) {}
+    });
+  }
 
   void fixResizingPopup() {
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -5007,6 +5057,12 @@ class _TitleInputState extends State<TitleInput> {
                   }
 
                   foundAssociatedTitles = newFoundAssociatedTitles;
+                  if (newFoundAssociatedTitles.isEmpty &&
+                      text.trim().length >= 3 &&
+                      appStateSettings["aiRecommendCategory"] == true &&
+                      aiManager.isConfigured()) {
+                    _queryAiCategory(text.trim());
+                  }
                   setState(() {});
                 },
                 onSubmitted: widget.onSubmitted,
@@ -5062,10 +5118,13 @@ class _TitleInputState extends State<TitleInput> {
                                           foundAssociatedTitle.category);
                                     }
 
-                                    if (foundAssociatedTitle.type !=
+                                    if ((foundAssociatedTitle.type !=
                                             TitleType.CategoryName &&
                                         foundAssociatedTitle.type !=
-                                            TitleType.SubCategoryName) {
+                                            TitleType.SubCategoryName) ||
+                                        foundAssociatedTitle
+                                                .title.associatedTitlePk ==
+                                            "-1") {
                                       widget.setSelectedTitle(
                                           foundAssociatedTitle.title.title);
                                       setTextInput(_titleInputController,
@@ -5114,71 +5173,114 @@ class _TitleInputState extends State<TitleInput> {
                                           ? EdgeInsetsDirectional.zero
                                           : const EdgeInsetsDirectional.only(
                                               bottom: 12, top: 11, start: 5),
-                                      child: TextFont(
-                                        text: "",
-                                        richTextSpan: generateSpans(
-                                          context: context,
-                                          fontSize: 16,
-                                          mainText:
-                                              foundAssociatedTitle.title.title,
-                                          boldedText: foundAssociatedTitle
-                                              .partialTitleString,
-                                        ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextFont(
+                                            text: "",
+                                            richTextSpan: generateSpans(
+                                              context: context,
+                                              fontSize: 16,
+                                              mainText: foundAssociatedTitle
+                                                  .title.title,
+                                              boldedText: foundAssociatedTitle
+                                                  .partialTitleString,
+                                            ),
+                                          ),
+                                          if (foundAssociatedTitle
+                                                  .title.associatedTitlePk ==
+                                              "-1")
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 2),
+                                              child: TextFont(
+                                                text:
+                                                    "Smart suggestion • ${foundAssociatedTitle.category.name}",
+                                                fontSize: 11.5,
+                                                textColor: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     )),
                                     Opacity(
                                       opacity: 0.65,
-                                      child: foundAssociatedTitle.type ==
-                                                  TitleType.CategoryName ||
-                                              foundAssociatedTitle.type ==
-                                                  TitleType.SubCategoryName
+                                      child: foundAssociatedTitle
+                                                  .title.associatedTitlePk ==
+                                              "-1"
                                           ? Padding(
                                               padding:
                                                   const EdgeInsetsDirectional
                                                       .symmetric(
                                                       horizontal: 7.5),
                                               child: Icon(
-                                                appStateSettings[
-                                                        "outlinedIcons"]
-                                                    ? Icons.category_outlined
-                                                    : Icons.category_rounded,
-                                                size: 20,
+                                                Icons.auto_awesome_rounded,
+                                                size: 18,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
                                               ),
                                             )
-                                          : IconButtonScaled(
-                                              iconData: appStateSettings[
-                                                      "outlinedIcons"]
-                                                  ? Icons.clear_outlined
-                                                  : Icons.clear_rounded,
-                                              iconSize: 18,
-                                              scale: 1.1,
-                                              onTap: () async {
-                                                if (widget.onDeleteButton !=
-                                                    null) {
-                                                  widget.onDeleteButton!();
-                                                }
-                                                if (widget
-                                                    .resizePopupWhenChanged) {
-                                                  fixResizingPopup();
-                                                }
+                                          : foundAssociatedTitle.type ==
+                                                      TitleType.CategoryName ||
+                                                  foundAssociatedTitle.type ==
+                                                      TitleType.SubCategoryName
+                                              ? Padding(
+                                                  padding:
+                                                      const EdgeInsetsDirectional
+                                                          .symmetric(
+                                                          horizontal: 7.5),
+                                                  child: Icon(
+                                                    appStateSettings[
+                                                            "outlinedIcons"]
+                                                        ? Icons
+                                                            .category_outlined
+                                                        : Icons
+                                                            .category_rounded,
+                                                    size: 20,
+                                                  ),
+                                                )
+                                              : IconButtonScaled(
+                                                  iconData: appStateSettings[
+                                                          "outlinedIcons"]
+                                                      ? Icons.clear_outlined
+                                                      : Icons.clear_rounded,
+                                                  iconSize: 18,
+                                                  scale: 1.1,
+                                                  onTap: () async {
+                                                    if (widget.onDeleteButton !=
+                                                        null) {
+                                                      widget.onDeleteButton!();
+                                                    }
+                                                    if (widget
+                                                        .resizePopupWhenChanged) {
+                                                      fixResizingPopup();
+                                                    }
 
-                                                DeletePopupAction? action =
-                                                    await deleteAssociatedTitlePopup(
-                                                  context,
-                                                  title: foundAssociatedTitle
-                                                      .title,
-                                                  routesToPopAfterDelete:
-                                                      RoutesToPopAfterDelete
-                                                          .None,
-                                                );
-                                                if (action ==
-                                                    DeletePopupAction.Delete) {
-                                                  foundAssociatedTitles.remove(
-                                                      foundAssociatedTitle);
-                                                  setState(() {});
-                                                }
-                                              },
-                                            ),
+                                                    DeletePopupAction? action =
+                                                        await deleteAssociatedTitlePopup(
+                                                      context,
+                                                      title: foundAssociatedTitle
+                                                          .title,
+                                                      routesToPopAfterDelete:
+                                                          RoutesToPopAfterDelete
+                                                              .None,
+                                                    );
+                                                    if (action ==
+                                                        DeletePopupAction
+                                                            .Delete) {
+                                                      foundAssociatedTitles
+                                                          .remove(
+                                                              foundAssociatedTitle);
+                                                      setState(() {});
+                                                    }
+                                                  },
+                                                ),
                                     ),
                                     const SizedBox(width: 5),
                                   ],

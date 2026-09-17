@@ -52,17 +52,21 @@ class AboutPageState extends State<AboutPage> {
           ),
           const SizedBox(height: 12),
           Tappable(
+            color: Colors.transparent,
             borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 15,
             onLongPress: () {
               if (allowDebugFlags) {
                 pushRoute(context, const DebugPage());
               }
             },
-            child: TextFont(
-              text: globalAppName,
-              fontWeight: FontWeight.bold,
-              fontSize: 26,
-              textAlign: TextAlign.center,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: TextFont(
+                text: globalAppName,
+                fontWeight: FontWeight.bold,
+                fontSize: 26,
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           const SizedBox(height: 4),

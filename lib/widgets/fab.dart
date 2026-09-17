@@ -91,21 +91,6 @@ class FAB extends StatelessWidget {
             ? Theme.of(context).colorScheme.secondary
             : Theme.of(context).colorScheme.onSecondary;
 
-    // Experiment with more vibrant FAB colors
-    // Color? containerColor = color != null
-    //     ? color
-    //     : isOutlined
-    //         ? Theme.of(context).colorScheme.onSecondary
-    //         : blend(Theme.of(context).colorScheme.secondary,
-    //             Theme.of(context).colorScheme.primary,
-    //             amount: 0.35);
-    // Color? iconColor = color != null
-    //     ? colorIcon
-    //     : isOutlined
-    //         ? Theme.of(context).colorScheme.secondary
-    //         : blend(Theme.of(context).colorScheme.onSecondary,
-    //             Theme.of(context).colorScheme.onPrimary,
-    //             amount: 0.35);
     return OpenContainerNavigation(
       closedElevation: 10,
       borderRadius: borderRadius,
@@ -116,17 +101,17 @@ class FAB extends StatelessWidget {
           child: Tappable(
             color: containerColor,
             onTap: () {
-              if (onTap != null) {
-                onTap!();
-              } else {
-                openContainer();
-              }
-            },
-            onLongPress: onLongPress,
-            child: OutlinedContainer(
-              enabled: isOutlined,
-              borderRadius: borderRadius,
-              child: Builder(builder: (context) {
+                if (onTap != null) {
+                  onTap!();
+                } else {
+                  openContainer();
+                }
+              },
+              onLongPress: onLongPress,
+              child: OutlinedContainer(
+                enabled: isOutlined,
+                borderRadius: borderRadius,
+                child: Builder(builder: (context) {
                 Widget fabIcon = SizedBox(
                   height: fabSize,
                   width: fabSize,

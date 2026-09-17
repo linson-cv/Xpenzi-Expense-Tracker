@@ -116,6 +116,7 @@ class _InitializeAppState extends State<InitializeApp> {
     if (mounted) {
       setState(() {});
     }
+    initialPageSwitcherKey.currentState?.refresh();
   }
 
   @override
@@ -145,7 +146,7 @@ class _InitializeAppState extends State<InitializeApp> {
                 Expanded(
                     child: Stack(
                   children: [
-                    const InitialPageRouteNavigator(),
+                    InitialPageRouteNavigator(),
                     GlobalSnackbar(key: snackbarKey),
                   ],
                 )),
