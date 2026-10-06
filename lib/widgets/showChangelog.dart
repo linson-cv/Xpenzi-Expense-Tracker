@@ -26,6 +26,13 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.5
+    (Release: Xpenzi 1.3.5 — Robust Offline Intelligence, Auto-Review Sync & Crash Hardening)
+    (A) Promotional & Rewards Notification Filter: Multi-layer detection of welcome rewards, credit card offers, marketing pushes, and loan solicitations, preventing fake transactions from being recorded
+    (A) Crash Hardening & Null-Safety: Protected notification stream listeners and snackbar dispatch against null-unwraps, and insulated wallet/category matching with safe database fallbacks
+    (A) Cross-Isolate Auto-Review Sync: Persisted background-detected transactions across isolate boundaries, reliably displaying the Review Banner on the home dashboard and summary alert on resume
+    (A) Deep-Link Notification Action: Tapping auto-recorded status bar notifications now opens the transaction directly in the editor for instant verification and adjustments
+    (A) Accurate Merchant & Category Heuristics: Filtered noise payee words and added comprehensive offline mappings for food, transit, shopping, utilities, and healthcare
     < 1.3.4
     (Release: Xpenzi 1.3.4 — Streamlined Account UX, AI Provider Dropdown & Chip Styling Polish)
     (A) Streamlined Account Grouping UX: Eliminated redundant duplicate account type icons inside grouped wallet rows on the home dashboard, creating a cleaner, more compact, and space-efficient view

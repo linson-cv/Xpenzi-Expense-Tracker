@@ -54,6 +54,34 @@ bool isPaymentReminderOrPendingNotice(String text) {
   return false;
 }
 
+/// Helper to detect promotional, marketing, rewards, loans, and coupon messages
+/// that are NOT actual completed financial transactions.
+bool isPromotionalOrMarketingNotification(String text) {
+  String lower = text.toLowerCase();
+
+  // 1. Unconditional promotional indicators: these phrases NEVER appear in real financial debit/credit statements
+  final RegExp unconditionalPromoKeywords = RegExp(
+    r'\b(welcome rewards|welcome offer|apply now|get flex|rewards with flex|eligible for|pre-approved|instant loan|personal loan|apply for credit|claim reward|claim your|earn\s+[\$\₹\£\€]?\s*[0-9]+|earn\s+.*welcome|congratulations|unlock rewards|exclusive offer|limited period offer|flat\s*₹|flat\s*rs|use code|discount|cashback up to|win up to|save up to|zero fee credit card|zero-fee|zero fee)\b',
+    caseSensitive: false,
+  );
+
+  if (unconditionalPromoKeywords.hasMatch(lower)) {
+    return true;
+  }
+
+  // 2. Strict phrases that prove real money transfer has occurred
+  final RegExp completedDebitConfirmation = RegExp(
+    r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|withdrawn from|deposited in|deposited to|credited to your|credited with|salary credited)\b',
+    caseSensitive: false,
+  );
+
+  if (completedDebitConfirmation.hasMatch(lower)) {
+    return false;
+  }
+
+  return false;
+}
+
 Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     String input, BuildContext? context) async {
   if (input.trim().isEmpty) return null;
@@ -66,7 +94,14 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     return null;
   }
 
-  // 2. Promotional and Marketing Message Filter
+  // 1b. Promotional, Marketing, and Rewards Filter
+  // Prevents promotional reward banners (e.g., GPay "Earn ₹1,000 welcome rewards with Flex") from being recorded
+  if (isPromotionalOrMarketingNotification(text)) {
+    print("[LocalNLP] Ignored message: Detected promotional or marketing rewards offer.");
+    return null;
+  }
+
+  // 2. Additional Promotional and Marketing Message Filter
   // Ignore shopping spam, discount alerts, coupon codes, and marketing pushes
   RegExp promotionalKeywords = RegExp(
     r'\b(off\b|discount|deal|offer|sale\b|cashback up to|win|won|gift|coupon|promo|voucher|exclusive|free\b|save up to|flat ₹|flat rs|use code|code:|ends soon|hurry|order now|explore)\b',
@@ -171,7 +206,14 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     // Clean trailing punctuation or noise
     extractedTitle = extractedTitle.replaceAll(RegExp(r'[\/\,\.]+$'), '').trim();
     if (extractedTitle.length > 2 && extractedTitle.length < 50) {
-      title = extractedTitle;
+      final List<String> noiseWords = [
+        "your a/c", "your account", "account", "a/c", "bank", "card",
+        "credit card", "debit card", "vpa", "upi", "pay", "payment",
+        "user", "transfer", "info"
+      ];
+      if (!noiseWords.contains(extractedTitle.toLowerCase())) {
+        title = extractedTitle;
+      }
     }
   }
 
@@ -180,7 +222,10 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     RegExp altTitleRegex = RegExp(r'notification title:\s*([^\n\r]+)', caseSensitive: false);
     var altMatch = altTitleRegex.firstMatch(input);
     if (altMatch != null && altMatch.group(1) != null) {
-      title = altMatch.group(1)!.trim();
+      String cand = altMatch.group(1)!.trim();
+      if (cand.isNotEmpty && cand.toLowerCase() != "transaction") {
+        title = cand;
+      }
     }
   }
 
@@ -198,21 +243,38 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       }
     }
 
-    // Match keywords like swiggy/zomato -> Food, uber/ola -> Transport
+    // Keyword heuristic matching for common merchants
     if (matchedCategory == null) {
       if (titleLower.contains("swiggy") ||
           titleLower.contains("zomato") ||
           titleLower.contains("starbucks") ||
           titleLower.contains("restaurant") ||
-          titleLower.contains("diner")) {
+          titleLower.contains("diner") ||
+          titleLower.contains("mcdonald") ||
+          titleLower.contains("burger") ||
+          titleLower.contains("pizza") ||
+          titleLower.contains("cafe") ||
+          titleLower.contains("coffee") ||
+          titleLower.contains("kfc") ||
+          titleLower.contains("subway") ||
+          titleLower.contains("bistro") ||
+          titleLower.contains("food")) {
         matchedCategory = allCategories
-            .where((c) => c.name.toLowerCase().contains("food"))
+            .where((c) =>
+                c.name.toLowerCase().contains("food") ||
+                c.name.toLowerCase().contains("dining"))
             .firstOrNull;
       } else if (titleLower.contains("uber") ||
           titleLower.contains("ola") ||
           titleLower.contains("rapido") ||
           titleLower.contains("fuel") ||
-          titleLower.contains("petrol")) {
+          titleLower.contains("petrol") ||
+          titleLower.contains("diesel") ||
+          titleLower.contains("metro") ||
+          titleLower.contains("irctc") ||
+          titleLower.contains("railway") ||
+          titleLower.contains("flight") ||
+          titleLower.contains("transit")) {
         matchedCategory = allCategories
             .where((c) =>
                 c.name.toLowerCase().contains("transport") ||
@@ -220,9 +282,56 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
             .firstOrNull;
       } else if (titleLower.contains("amazon") ||
           titleLower.contains("flipkart") ||
-          titleLower.contains("myntra")) {
+          titleLower.contains("myntra") ||
+          titleLower.contains("ajio") ||
+          titleLower.contains("blinkit") ||
+          titleLower.contains("zepto") ||
+          titleLower.contains("instamart") ||
+          titleLower.contains("grofer") ||
+          titleLower.contains("bigbasket") ||
+          titleLower.contains("mart") ||
+          titleLower.contains("store") ||
+          titleLower.contains("supermarket") ||
+          titleLower.contains("grocery")) {
         matchedCategory = allCategories
-            .where((c) => c.name.toLowerCase().contains("shopping"))
+            .where((c) =>
+                c.name.toLowerCase().contains("grocer") ||
+                c.name.toLowerCase().contains("shopping"))
+            .firstOrNull;
+      } else if (titleLower.contains("netflix") ||
+          titleLower.contains("spotify") ||
+          titleLower.contains("hotstar") ||
+          titleLower.contains("prime") ||
+          titleLower.contains("cinema") ||
+          titleLower.contains("movie") ||
+          titleLower.contains("pvr") ||
+          titleLower.contains("inox")) {
+        matchedCategory = allCategories
+            .where((c) => c.name.toLowerCase().contains("entertainment"))
+            .firstOrNull;
+      } else if (titleLower.contains("hospital") ||
+          titleLower.contains("pharmacy") ||
+          titleLower.contains("apollo") ||
+          titleLower.contains("chemist") ||
+          titleLower.contains("medical") ||
+          titleLower.contains("clinic")) {
+        matchedCategory = allCategories
+            .where((c) =>
+                c.name.toLowerCase().contains("health") ||
+                c.name.toLowerCase().contains("medical"))
+            .firstOrNull;
+      } else if (titleLower.contains("bill") ||
+          titleLower.contains("electricity") ||
+          titleLower.contains("water") ||
+          titleLower.contains("broadband") ||
+          titleLower.contains("wifi") ||
+          titleLower.contains("airtel") ||
+          titleLower.contains("jio") ||
+          titleLower.contains("recharge")) {
+        matchedCategory = allCategories
+            .where((c) =>
+                c.name.toLowerCase().contains("bill") ||
+                c.name.toLowerCase().contains("utilities"))
             .firstOrNull;
       }
     }
@@ -230,10 +339,20 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   // 5. Account / Wallet Matching
   TransactionWallet? matchedWallet;
+  List<TransactionWallet> wallets = [];
   if (context != null) {
     try {
-      List<TransactionWallet> wallets =
-          Provider.of<AllWallets>(context, listen: false).list;
+      wallets = Provider.of<AllWallets>(context, listen: false).list;
+    } catch (_) {}
+  }
+  if (wallets.isEmpty) {
+    try {
+      wallets = await database.getAllWallets();
+    } catch (_) {}
+  }
+
+  if (wallets.isNotEmpty) {
+    try {
       String textLower = text.toLowerCase();
 
       // First check if any wallet name is explicitly mentioned in the text
@@ -245,7 +364,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       }
 
       // If no exact wallet name matched, distinguish between Credit Card and Regular Bank
-      if (matchedWallet == null && wallets.isNotEmpty) {
+      if (matchedWallet == null) {
         bool isCreditCard = textLower.contains("credit card") ||
             (textLower.contains("card") && (textLower.contains("debited") || textLower.contains("spent"))) ||
             textLower.contains("spent on card") ||

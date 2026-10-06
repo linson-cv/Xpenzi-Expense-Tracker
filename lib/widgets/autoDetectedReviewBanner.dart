@@ -14,8 +14,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-class AutoDetectedReviewBanner extends StatelessWidget {
+class AutoDetectedReviewBanner extends StatefulWidget {
   const AutoDetectedReviewBanner({super.key});
+
+  @override
+  State<AutoDetectedReviewBanner> createState() => _AutoDetectedReviewBannerState();
+}
+
+class _AutoDetectedReviewBannerState extends State<AutoDetectedReviewBanner> {
+  @override
+  void initState() {
+    super.initState();
+    syncPendingReviewTransactionsFromPrefs();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +97,13 @@ class AutoDetectedReviewBanner extends StatelessWidget {
                             Row(
                               children: [
                                 TextFont(
-                                  text: count > 1
-                                      ? "Auto-Detected ($count pending)"
-                                      : "Auto-Detected SMS",
+                                  text: firstItem.transactionPk != null
+                                      ? (count > 1
+                                          ? "Auto-Recorded ($count to review)"
+                                          : "Auto-Recorded (Review)")
+                                      : (count > 1
+                                          ? "Auto-Detected ($count pending)"
+                                          : "Auto-Detected SMS"),
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   textColor: Theme.of(context).colorScheme.primary,
@@ -118,7 +133,9 @@ class AutoDetectedReviewBanner extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Button(
-                          label: "Review & Add",
+                          label: firstItem.transactionPk != null
+                              ? "Review Transaction"
+                              : "Review & Add",
                           icon: Icons.check_rounded,
                           fontSize: 13,
                           padding: const EdgeInsetsDirectional.symmetric(vertical: 10, horizontal: 12),
@@ -126,7 +143,23 @@ class AutoDetectedReviewBanner extends StatelessWidget {
                             HapticFeedback.selectionClick();
                             dismissPendingReviewTransaction(0);
 
-                            // Find matched category if any
+                            if (firstItem.transactionPk != null) {
+                              try {
+                                Transaction tx = await database.getTransactionFromPk(firstItem.transactionPk!);
+                                pushRoute(
+                                  context,
+                                  AddTransactionPage(
+                                    transaction: tx,
+                                    routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                                  ),
+                                );
+                                return;
+                              } catch (e) {
+                                print("Error opening auto-recorded transaction: $e");
+                              }
+                            }
+
+                            // Fallback / pending addition flow:
                             TransactionCategory? category;
                             try {
                               TransactionAssociatedTitleWithCategory? foundTitle =
@@ -161,7 +194,7 @@ class AutoDetectedReviewBanner extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           child: TextFont(
-                            text: "Dismiss",
+                            text: firstItem.transactionPk != null ? "Dismiss" : "Dismiss",
                             fontSize: 13,
                             textColor: getColor(context, "textLight"),
                           ),

@@ -223,9 +223,20 @@ Future initNotificationScanning() async {
     if (appStateSettings["persistentBackgroundListener"] == true) {
       await startBackgroundListenerService();
     } else {
-      // Otherwise listen within the active app session
+      await notificationListenerSubscription?.cancel();
       notificationListenerSubscription =
-          NotificationListenerService.notificationsStream.listen(onNotification);
+          NotificationListenerService.notificationsStream.listen(
+        (event) {
+          try {
+            onNotification(event);
+          } catch (e, stack) {
+            print("[NotificationEngine] Error processing notification: $e\n$stack");
+          }
+        },
+        onError: (err) {
+          print("[NotificationEngine] notificationsStream error: $err");
+        },
+      );
     }
   }
 }
@@ -472,35 +483,40 @@ bool openOfflineIntelligenceReminderCheck(BuildContext context) {
 final Map<String, DateTime> _recentlyProcessedNotificationKeys = {};
 
 onNotification(ServiceNotificationEvent event) async {
-  // 1. Ignore notification removal/dismissal events to prevent duplicate processing
-  if (event.hasRemoved == true) {
-    return;
-  }
-
-  // 2. App-specific package name filtering (if configured)
-  String? pkg = event.packageName?.trim().toLowerCase();
-  String? allowedPackagesString = appStateSettings["notificationAllowedPackages"]?.toString().trim();
-  if (allowedPackagesString != null && allowedPackagesString.isNotEmpty) {
-    List<String> allowedList = allowedPackagesString
-        .split(",")
-        .map((e) => e.trim().toLowerCase())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (allowedList.isNotEmpty && pkg != null && !allowedList.any((allowed) => pkg.contains(allowed))) {
-      // Ignore notification from unselected packages
+  try {
+    // 1. Ignore notification removal/dismissal events to prevent duplicate processing
+    if (event.hasRemoved == true) {
       return;
     }
-  }
 
-  String messageString = getNotificationMessage(event);
-  print("[NotificationEngine] Captured event from $pkg: ${event.title} - ${event.content}");
+    // 2. App-specific package name filtering (if configured)
+    String? pkg = event.packageName?.trim().toLowerCase();
+    String? allowedPackagesString = appStateSettings["notificationAllowedPackages"]?.toString().trim();
+    if (allowedPackagesString != null && allowedPackagesString.isNotEmpty) {
+      List<String> allowedList = allowedPackagesString
+          .split(",")
+          .map((e) => e.trim().toLowerCase())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (allowedList.isNotEmpty && pkg != null && !allowedList.any((allowed) => pkg.contains(allowed))) {
+        // Ignore notification from unselected packages
+        return;
+      }
+    }
 
-  recentCapturedNotifications.insert(0, messageString);
-  int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "50") ?? 50;
-  if (recentCapturedNotifications.length > maxCount) {
-    recentCapturedNotifications.removeRange(maxCount, recentCapturedNotifications.length);
+    String messageString = getNotificationMessage(event);
+    print("[NotificationEngine] Captured event from $pkg: ${event.title} - ${event.content}");
+
+    recentCapturedNotifications.insert(0, messageString);
+    int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "50") ?? 50;
+    if (recentCapturedNotifications.length > maxCount) {
+      recentCapturedNotifications.removeRange(maxCount, recentCapturedNotifications.length);
+    }
+    await queueTransactionFromMessage(messageString, dateTime: DateTime.now());
+  } catch (e, stack) {
+    print("[NotificationEngine] Error in onNotification: $e\n$stack");
+    recordAppError("NotificationListenerError", e, stackTrace: stack);
   }
-  queueTransactionFromMessage(messageString, dateTime: DateTime.now());
 }
 
 Future<void> _showBackgroundInsertedNotification({
@@ -600,12 +616,20 @@ double? getTransactionAmountFromEmail(String messageString,
 
 Future queueTransactionFromMessage(String messageString,
     {bool willPushRoute = true, DateTime? dateTime}) async {
-  // Step 0. Payment Reminder & Scheduled Pre-Debit Filter
-  // Immediately discard payment reminders, scheduled bills, due-date notices, and pre-debit notifications
-  if (isPaymentReminderOrPendingNotice(messageString)) {
-    print("[NotificationEngine] Discarded notification: Detected payment reminder or upcoming bill notice without confirmed debit.");
-    return false;
-  }
+  try {
+    // Step 0. Payment Reminder & Scheduled Pre-Debit Filter
+    // Immediately discard payment reminders, scheduled bills, due-date notices, and pre-debit notifications
+    if (isPaymentReminderOrPendingNotice(messageString)) {
+      print("[NotificationEngine] Discarded notification: Detected payment reminder or upcoming bill notice without confirmed debit.");
+      return false;
+    }
+
+    // Step 0b. Promotional, Marketing, and Rewards Filter
+    // Discard promo pushes, rewards, coupons, and credit card solicitations
+    if (isPromotionalOrMarketingNotification(messageString)) {
+      print("[NotificationEngine] Discarded notification: Detected promotional or marketing message without confirmed transaction.");
+      return false;
+    }
 
   String? title;
   double? amountDouble;
@@ -765,13 +789,25 @@ Future queueTransactionFromMessage(String messageString,
   } else {
     // Direct Silent Auto-Insert
     try {
-      // Fallback category if none was matched: find first category or create default
+      // Fallback category if none was matched: prefer General/Other category over arbitrary first category
       if (category == null) {
-        List<TransactionCategory> allCats = await database.getAllCategories();
-        category = allCats.where((c) => c.categoryPk != "0").firstOrNull ?? allCats.firstOrNull;
+        try {
+          List<TransactionCategory> allCats = await database.getAllCategories();
+          category = allCats.where((c) {
+            String n = c.name.toLowerCase();
+            return n.contains("other") || n.contains("general") || n.contains("uncategorized") || n.contains("misc");
+          }).firstOrNull ?? allCats.where((c) => c.categoryPk != "0").firstOrNull ?? allCats.firstOrNull;
+        } catch (_) {}
       }
       String categoryPk = category?.categoryPk ?? "1";
-      String walletPk = wallet?.walletPk ?? appStateSettings["selectedWalletPk"] ?? "0";
+
+      if (wallet == null) {
+        try {
+          List<TransactionWallet> allW = await database.getAllWallets();
+          wallet = allW.where((w) => w.walletPk == appStateSettings["selectedWalletPk"]).firstOrNull ?? allW.firstOrNull;
+        } catch (_) {}
+      }
+      String walletPk = wallet?.walletPk ?? "0";
 
       // Expenses should have positive amount in database when income: false,
       // and income transactions have income: true with positive amount
@@ -797,11 +833,32 @@ Future queueTransactionFromMessage(String messageString,
         insert: true,
       );
 
+      String? transactionPk;
+      if (rowId != null) {
+        try {
+          final tx = await database.getTransactionFromRowId(rowId);
+          transactionPk = tx.transactionPk;
+        } catch (_) {}
+      }
+
       if (title.isNotEmpty && category != null) {
         await addAssociatedTitles(title, category);
       }
 
-      registerAutoAddedTransaction(title, amountDouble);
+      registerAutoAddedTransaction(
+        title,
+        amountDouble,
+        isIncome: isIncome,
+        transactionPk: transactionPk,
+      );
+
+      // Register for Home Page review banner so the user sees the review message
+      registerAutoDetectedTransactionForReview(
+        title,
+        amountDouble,
+        isIncome: isIncome,
+        transactionPk: transactionPk,
+      );
 
       // Check if the app is currently in the foreground
       BuildContext? currentCtx = navigatorKey.currentContext;
@@ -809,8 +866,24 @@ Future queueTransactionFromMessage(String messageString,
         openSnackbar(
           SnackbarMessage(
             title: isIncome ? "Auto-Recorded Income" : "Auto-Recorded Transaction",
-            description: "$title · ${amountDouble.abs().toStringAsFixed(2)}",
+            description: "$title · ${amountDouble.abs().toStringAsFixed(2)} · Tap to review",
             icon: isIncome ? Icons.arrow_downward_rounded : Icons.auto_awesome_rounded,
+            onTap: () {
+              if (transactionPk != null) {
+                database.getTransactionFromPk(transactionPk).then((tx) {
+                  BuildContext? ctx = navigatorKey.currentContext;
+                  if (ctx != null) {
+                    pushRoute(
+                      ctx,
+                      AddTransactionPage(
+                        transaction: tx,
+                        routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                      ),
+                    );
+                  }
+                });
+              }
+            },
           ),
         );
       } else {
@@ -819,7 +892,7 @@ Future queueTransactionFromMessage(String messageString,
           title: title,
           amount: amountDouble,
           isIncome: isIncome,
-          transactionPk: null,
+          transactionPk: transactionPk,
         );
       }
     } catch (e, stack) {
@@ -831,6 +904,12 @@ Future queueTransactionFromMessage(String messageString,
         extraInfo: "Title: $title | Amount: $amountDouble",
       );
     }
+  }
+    return true;
+  } catch (e, stack) {
+    print("[NotificationEngine] Error in queueTransactionFromMessage: $e\n$stack");
+    recordAppError("QueueTransactionError", e, stackTrace: stack);
+    return false;
   }
 }
 

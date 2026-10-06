@@ -28,6 +28,7 @@ import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/pages/walletDetailsPage.dart';
 import 'package:budget/pages/creditDebtTransactionsPage.dart';
+import 'package:budget/struct/autoTransactionTracker.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/defaultPreferences.dart';
@@ -498,6 +499,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       entireAppLoaded = true;
 
       print("Entire app loaded");
+      checkAndShowAutoAddedTransactionsSummary();
 
       database.watchAllForAutoSync().listen((event) {
         // Must be logged in to perform an automatic sync - googleUser != null

@@ -189,6 +189,12 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
         return;
       }
 
+      // Step 0b. Promotional and marketing filter
+      if (isPromotionalOrMarketingNotification(messageString)) {
+        print("[BackgroundService] Discarded notification: Detected promotional or marketing message without confirmed transaction.");
+        return;
+      }
+
       if (_bgDatabase == null) {
         await _initBackgroundResources();
         if (_bgDatabase == null) return;
@@ -282,7 +288,17 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       if (category == null) {
         try {
           List<TransactionCategory> allCats = await _bgDatabase!.getAllCategories();
-          category = allCats.where((c) => c.categoryPk != "0").firstOrNull ?? allCats.firstOrNull;
+          category = allCats.where((c) {
+            String n = c.name.toLowerCase();
+            return n.contains("other") || n.contains("general") || n.contains("uncategorized") || n.contains("misc");
+          }).firstOrNull ?? allCats.where((c) => c.categoryPk != "0").firstOrNull ?? allCats.firstOrNull;
+        } catch (_) {}
+      }
+
+      if (wallet == null) {
+        try {
+          List<TransactionWallet> allW = await _bgDatabase!.getAllWallets();
+          wallet = allW.firstOrNull;
         } catch (_) {}
       }
 
@@ -293,7 +309,7 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       final String transactionNote = "Auto-detected from background notification • $dateStr";
 
       try {
-        await _bgDatabase!.createOrUpdateTransaction(
+        final int? rowId = await _bgDatabase!.createOrUpdateTransaction(
           Transaction(
             transactionPk: "-1",
             name: title,
@@ -311,16 +327,57 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
           insert: true,
         );
 
-        print("[BackgroundService] Auto-inserted transaction: $title - $absoluteAmount (income: $isIncome)");
+        String? transactionPk;
+        if (rowId != null) {
+          try {
+            final tx = await _bgDatabase!.getTransactionFromRowId(rowId);
+            transactionPk = tx.transactionPk;
+          } catch (_) {}
+        }
 
-        // Notify user via local status bar notification
+        print("[BackgroundService] Auto-inserted transaction: $title - $absoluteAmount (income: $isIncome, pk: $transactionPk)");
+
+        // 1. Sync to SharedPreferences for UI summary snackbar on app resume
+        try {
+          List<String> recordedList = _bgPrefs?.getStringList("recent_auto_added_transactions") ?? [];
+          final item = jsonEncode({
+            'title': title,
+            'amount': isIncome ? -absoluteAmount : absoluteAmount,
+            'isIncome': isIncome,
+            'timestamp': eventTime.toIso8601String(),
+            'transactionPk': transactionPk,
+          });
+          recordedList.add(item);
+          await _bgPrefs?.setStringList("recent_auto_added_transactions", recordedList);
+        } catch (e) {
+          print("[BackgroundService] Error saving auto-added transaction to prefs: $e");
+        }
+
+        // 2. Sync to SharedPreferences for UI review banner on Home Page
+        try {
+          List<String> pendingList = _bgPrefs?.getStringList("pending_review_transactions_json") ?? [];
+          final item = jsonEncode({
+            'title': title,
+            'amount': isIncome ? -absoluteAmount : absoluteAmount,
+            'isIncome': isIncome,
+            'timestamp': eventTime.toIso8601String(),
+            'transactionPk': transactionPk,
+          });
+          pendingList.add(item);
+          await _bgPrefs?.setStringList("pending_review_transactions_json", pendingList);
+        } catch (e) {
+          print("[BackgroundService] Error saving pending review to prefs: $e");
+        }
+
+        // 3. Notify user via local status bar notification with openTransaction payload
         await _showAutoInsertedNotification(
           title: title,
           amount: absoluteAmount,
           isIncome: isIncome,
+          transactionPk: transactionPk,
         );
 
-        // Update Foreground Task notification banner to show latest recorded info
+        // 4. Update Foreground Task notification banner to show latest recorded info
         FlutterForegroundTask.updateService(
           notificationTitle: "Xpenzi Auto-Detection Active",
           notificationText: "Last recorded: $title · ${absoluteAmount.toStringAsFixed(2)}",
@@ -337,6 +394,7 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
     required String title,
     required double amount,
     required bool isIncome,
+    required String? transactionPk,
   }) async {
     try {
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
@@ -348,18 +406,28 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
         showWhen: true,
       );
 
-      const NotificationDetails notificationDetails = NotificationDetails(
+      const DarwinNotificationDetails darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      final NotificationDetails notificationDetails = NotificationDetails(
         android: androidDetails,
+        iOS: darwinDetails,
       );
 
       int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+      final String payload = transactionPk != null
+          ? "openTransaction?transactionPk=$transactionPk"
+          : "transactions";
 
       await _bgLocalNotifications?.show(
         notificationId,
         isIncome ? "Auto-Recorded Income" : "Auto-Recorded Transaction",
         "$title · ${amount.toStringAsFixed(2)}",
         notificationDetails,
-        payload: "transactions",
+        payload: payload,
       );
     } catch (e) {
       print("[BackgroundService] Error showing alert notification: $e");
