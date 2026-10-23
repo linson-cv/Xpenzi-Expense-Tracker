@@ -26,6 +26,13 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.7
+    (Release: Xpenzi 1.3.7 — Intelligent Wallet Resolution & Loyalty Noise Filtering)
+    (A) Intelligent Multi-Tier Wallet Resolution: Added 4-stage smart account matching using exact name matches, brand token discrimination with word boundary checks, and dedicated Meal Card (Pluxee, Sodexo, Zaggle) vs. Credit Card detection
+    (A) Account Type Alignment: Automatically differentiates between Credit Cards and Savings/Current accounts under the same bank brand (e.g. HDFC Credit Card vs. HDFC Savings) based on notification context
+    (A) Default Account Fallback: Reliably routes untagged transactions to your configured default wallet instead of arbitrary account assignment
+    (A) Loyalty & Reward Points Filtering: Blocked reward point updates, loyalty account alerts (myG Loyalty, SuperCoins, NeuCoins, Payback, airmiles), and points debit/credit summaries from triggering false transactions
+    (A) Background Notification Handler Stability: Ensured email receipt helper methods and isolate communication dependencies are properly linked for reliable background parsing
     < 1.3.6
     (Release: Xpenzi 1.3.6 — Ask AI Financial Assistant & App-Wide Modernization)
     (A) Ask AI Natural Language Assistant: Query spending patterns, vendor totals, and category breakdowns with conversational answers powered by your configured AI provider or smart local offline engine
