@@ -26,6 +26,13 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.8
+    (Release: Xpenzi 1.3.8 — Universal NLP Engine, Smart Account Detection, Review Banner & Samsung Haptics)
+    (A) Universal Structural NLP & Background Forwarding: Upgraded notification listener isolate handoff to forward full event payloads across isolates and replaced pattern-specific checks with a universal currency, balance-stripping, OTP-filtering, and clause-bounded merchant parser
+    (A) Smart Account Type Auto-Detection & Multi-Signal Scoring: Live auto-selection of Account Type (Bank Account, Credit Card, Meal Card, Cash, Savings) when naming an account, plus multi-signal notification matching (card last-4 digits, brand tokens, and account type) with fallback to your chosen default account
+    (A) Enhanced Auto-Detected Review Banner: Added Keep, swipe-to-keep ("Saved Without Review"), Delete, and Keep All actions with persistent dismissal across app restarts
+    (A) Hardware Haptics for Samsung & Android 14–17: Added native VibratorManager haptics channel so tactile feedback works even when Samsung system Touch Interactions are disabled
+    (A) UI & Predictive Back Polish: Refined AI Model Picker layout, compact collapsible Captured Notification Logs with readable app badges, and Android 14–17 Predictive Back support
     < 1.3.7
     (Release: Xpenzi 1.3.7 — Intelligent Wallet Resolution & Loyalty Noise Filtering)
     (A) Intelligent Multi-Tier Wallet Resolution: Added 4-stage smart account matching using exact name matches, brand token discrimination with word boundary checks, and dedicated Meal Card (Pluxee, Sodexo, Zaggle) vs. Credit Card detection

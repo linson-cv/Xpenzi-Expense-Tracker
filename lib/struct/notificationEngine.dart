@@ -43,6 +43,25 @@ void _registerMainIsolatePingPort() {
         try {
           message.send(true);
         } catch (_) {}
+      } else if (message is Map) {
+        final dynamic replyPort = message['replyPort'];
+        if (replyPort is SendPort) {
+          try {
+            replyPort.send(true);
+          } catch (_) {}
+        }
+        try {
+          final forwardedEvent = ServiceNotificationEvent(
+            packageName: message['packageName']?.toString(),
+            title: message['title']?.toString(),
+            content: message['content']?.toString(),
+            hasRemoved: message['hasRemoved'] == true,
+            onGoing: message['onGoing'] == true,
+          );
+          onNotification(forwardedEvent);
+        } catch (e) {
+          print("[NotificationEngine] Error handling forwarded notification: $e");
+        }
       }
     });
   } catch (e) {
@@ -521,6 +540,7 @@ bool openOfflineIntelligenceReminderCheck(BuildContext context) {
 }
 
 final Map<String, DateTime> _recentlyProcessedNotificationKeys = {};
+final Map<String, DateTime> _recentRawEventSignatures = {};
 
 onNotification(ServiceNotificationEvent event) async {
   try {
@@ -528,6 +548,17 @@ onNotification(ServiceNotificationEvent event) async {
     if (event.hasRemoved == true || event.onGoing == true) {
       return;
     }
+
+    // 1b. Deduplicate raw event within 4 seconds (in case both main stream and background isolate forward it)
+    final DateTime now = DateTime.now();
+    _recentRawEventSignatures.removeWhere(
+        (_, timestamp) => now.difference(timestamp).inSeconds.abs() > 4);
+    final String rawSig =
+        "${event.packageName ?? ''}|${event.title ?? ''}|${event.content ?? ''}";
+    if (_recentRawEventSignatures.containsKey(rawSig)) {
+      return;
+    }
+    _recentRawEventSignatures[rawSig] = now;
 
     // 2. App-specific package name filtering (if configured) and default non-financial app block
     String? pkg = event.packageName?.trim().toLowerCase();
@@ -831,7 +862,12 @@ Future queueTransactionFromMessage(String messageString,
       await database.getAllScannerTemplates();
   ScannerTemplate? templateFound;
 
+  // Step 1. Custom User-Defined Templates (explicitly created by the user)
   for (ScannerTemplate scannerTemplate in scannerTemplates) {
+    if (scannerTemplate.ignore == true ||
+        scannerTemplate.scannerTemplatePk.startsWith("preset_")) {
+      continue;
+    }
     if (scannerTemplate.contains.isNotEmpty &&
         messageString.contains(scannerTemplate.contains)) {
       String? candidateTitle = getTransactionTitleFromEmail(
@@ -853,8 +889,9 @@ Future queueTransactionFromMessage(String messageString,
 
   bool isIncome = false;
   TransactionWallet? nlpWallet;
+  TransactionCategory? nlpCategory;
 
-  // Step 2. Local Natural Language Processing (Regex NLP Engine)
+  // Step 2. Universal Local Natural Language Processing (Regex NLP Engine)
   if (templateFound == null || amountDouble == null || title == null) {
     BuildContext? ctx = navigatorKey.currentContext;
     LocalNlpParsedTransaction? nlpParsed =
@@ -864,6 +901,34 @@ Future queueTransactionFromMessage(String messageString,
       amountDouble ??= nlpParsed.amount;
       isIncome = nlpParsed.income;
       nlpWallet = nlpParsed.wallet;
+      nlpCategory = nlpParsed.category;
+    }
+  }
+
+  // Step 2b. Fallback to Built-in Preset Templates if NLP did not extract both title & amount
+  if (amountDouble == null || title == null) {
+    for (ScannerTemplate scannerTemplate in scannerTemplates) {
+      if (scannerTemplate.ignore == true ||
+          !scannerTemplate.scannerTemplatePk.startsWith("preset_")) {
+        continue;
+      }
+      if (scannerTemplate.contains.isNotEmpty &&
+          messageString.contains(scannerTemplate.contains)) {
+        String? candidateTitle = getTransactionTitleFromEmail(
+            messageString,
+            scannerTemplate.titleTransactionBefore,
+            scannerTemplate.titleTransactionAfter);
+        double? candidateAmount = getTransactionAmountFromEmail(
+            messageString,
+            scannerTemplate.amountTransactionBefore,
+            scannerTemplate.amountTransactionAfter);
+        if (candidateTitle != null && candidateAmount != null) {
+          templateFound = scannerTemplate;
+          title ??= candidateTitle;
+          amountDouble ??= candidateAmount;
+          break;
+        }
+      }
     }
   }
 
@@ -960,7 +1025,7 @@ Future queueTransactionFromMessage(String messageString,
   TransactionAssociatedTitleWithCategory? foundTitle =
       (await database.getSimilarAssociatedTitles(title: title, limit: 1))
           .firstOrNull;
-  category = foundTitle?.category;
+  category = foundTitle?.category ?? nlpCategory;
   if (templateFound != null) {
     category ??= await database
         .getCategoryInstanceOrNull(templateFound.defaultCategoryFk);

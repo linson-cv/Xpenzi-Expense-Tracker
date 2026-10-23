@@ -177,11 +177,13 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
     }
   }
 
-  /// Checks if the main UI isolate is alive and actively listening to notifications.
-  /// If the main isolate is alive (app open or minimized in RAM), it handles the notification
-  /// directly on its own database connection. If the user swiped the app away from Recents,
-  /// this returns false and the background isolate seamlessly takes over auto-adding transactions.
-  Future<bool> _isMainIsolateActive() async {
+  /// Forwards the notification event to the main UI isolate if it is alive in memory.
+  /// Because Android's EventChannel only keeps a single active EventSink, the background isolate's
+  /// subscription can receive events even while the main isolate is alive. Forwarding the full event
+  /// guarantees the main isolate processes it (and if the main isolate is dead, this returns false
+  /// within 250ms so the background isolate processes and inserts it directly).
+  Future<bool> _forwardToMainIsolateIfActive(
+      ServiceNotificationEvent event) async {
     ReceivePort? replyPort;
     try {
       final SendPort? mainPingPort =
@@ -189,7 +191,14 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       if (mainPingPort == null) return false;
 
       replyPort = ReceivePort();
-      mainPingPort.send(replyPort.sendPort);
+      mainPingPort.send({
+        'replyPort': replyPort.sendPort,
+        'packageName': event.packageName,
+        'title': event.title,
+        'content': event.content,
+        'hasRemoved': event.hasRemoved,
+        'onGoing': event.onGoing,
+      });
 
       final dynamic response = await replyPort.first
           .timeout(const Duration(milliseconds: 250), onTimeout: () => false);
@@ -240,8 +249,8 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
     try {
       if (event.hasRemoved == true || event.onGoing == true) return;
 
-      // If the main UI isolate is alive in memory, let it handle the notification exclusively
-      if (await _isMainIsolateActive()) {
+      // If the main UI isolate is alive in memory, forward the event to it and let it handle DB insertion
+      if (await _forwardToMainIsolateIfActive(event)) {
         await _closeBackgroundDatabase();
         return;
       }
@@ -305,10 +314,16 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       double? amountDouble;
       ScannerTemplate? templateFound;
 
+      List<ScannerTemplate> templates = [];
       try {
-        List<ScannerTemplate> templates =
+        templates =
             _cachedTemplates ?? await _bgDatabase!.getAllScannerTemplates();
+        // Step 1: Custom User-Defined Templates first
         for (ScannerTemplate tmpl in templates) {
+          if (tmpl.ignore == true ||
+              tmpl.scannerTemplatePk.startsWith("preset_")) {
+            continue;
+          }
           if (tmpl.contains.isNotEmpty && messageString.contains(tmpl.contains)) {
             String? candidateTitle = getTransactionTitleFromEmail(
               messageString,
@@ -335,15 +350,61 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       bool isIncome = false;
       TransactionWallet? nlpWallet;
 
-      // Local Regex NLP
+      // Step 2: Universal Local Regex NLP
+      TransactionCategory? nlpCategory;
       if (templateFound == null || amountDouble == null || title == null) {
+        String? selectedWalletPk;
+        try {
+          final String? userSettingsRaw = _bgPrefs?.getString("userSettings");
+          if (userSettingsRaw != null && userSettingsRaw.isNotEmpty) {
+            final Map<String, dynamic> parsedSettings =
+                jsonDecode(userSettingsRaw);
+            selectedWalletPk =
+                parsedSettings["selectedWalletPk"]?.toString();
+          }
+        } catch (_) {}
         LocalNlpParsedTransaction? nlpParsed =
-            await parseTransactionFromNotificationText(messageString, null);
+            await parseTransactionFromNotificationText(
+          messageString,
+          null,
+          cachedCategories: _cachedCategories,
+          cachedWallets: _cachedWallets,
+          fallbackSelectedWalletPk: selectedWalletPk,
+        );
         if (nlpParsed != null) {
           title ??= nlpParsed.title;
           amountDouble ??= nlpParsed.amount;
           isIncome = nlpParsed.income;
           nlpWallet = nlpParsed.wallet;
+          nlpCategory = nlpParsed.category;
+        }
+      }
+
+      // Step 2b: Fallback to Built-in Preset Templates if NLP did not extract both title & amount
+      if (amountDouble == null || title == null) {
+        for (ScannerTemplate tmpl in templates) {
+          if (tmpl.ignore == true ||
+              !tmpl.scannerTemplatePk.startsWith("preset_")) {
+            continue;
+          }
+          if (tmpl.contains.isNotEmpty && messageString.contains(tmpl.contains)) {
+            String? candidateTitle = getTransactionTitleFromEmail(
+              messageString,
+              tmpl.titleTransactionBefore,
+              tmpl.titleTransactionAfter,
+            );
+            double? candidateAmount = getTransactionAmountFromEmail(
+              messageString,
+              tmpl.amountTransactionBefore,
+              tmpl.amountTransactionAfter,
+            );
+            if (candidateTitle != null && candidateAmount != null) {
+              templateFound = tmpl;
+              title ??= candidateTitle;
+              amountDouble ??= candidateAmount;
+              break;
+            }
+          }
         }
       }
 
@@ -408,11 +469,13 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
 
       _dedupCache[dedupKey] = eventTime;
 
-      TransactionCategory? category;
+      TransactionCategory? category = nlpCategory;
       try {
-        TransactionAssociatedTitleWithCategory? foundTitle =
-            (await _bgDatabase!.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
-        category = foundTitle?.category;
+        if (category == null) {
+          TransactionAssociatedTitleWithCategory? foundTitle =
+              (await _bgDatabase!.getSimilarAssociatedTitles(title: title, limit: 1)).firstOrNull;
+          category = foundTitle?.category;
+        }
         if (templateFound != null) {
           category ??= await _bgDatabase!.getCategoryInstanceOrNull(templateFound.defaultCategoryFk);
         }

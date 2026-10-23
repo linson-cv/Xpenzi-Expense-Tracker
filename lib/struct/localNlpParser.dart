@@ -22,7 +22,7 @@ class LocalNlpParsedTransaction {
 }
 
 final RegExp _completedDebitConfirmationRegex = RegExp(
-  r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|withdrawn from)\b',
+  r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|spent from|spent at|spent on|withdrawn from)\b',
   caseSensitive: false,
 );
 
@@ -72,7 +72,7 @@ final RegExp _loyaltyOrPointsRegex = RegExp(
 );
 
 final RegExp _completedTransferConfirmationRegex = RegExp(
-  r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|debited\b|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|withdrawn from|deposited in|deposited to|credited to your|credited with|salary credited)\b',
+  r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|debited\b|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|spent from|spent at|spent on|withdrawn from|deposited in|deposited to|credited to your|credited with|salary credited)\b',
   caseSensitive: false,
 );
 
@@ -211,49 +211,58 @@ bool isChatOrMediaNotification(String text) {
 /// Word boundaries (\b) prevent substrings inside words (e.g., "SAR" in "SARJAPURA" or "rs" in "hours"/"others")
 /// from ever matching as currencies.
 const String _strictCurrencySymbols =
-    r'[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴\₦\₵\₸\₲\֏\؋\৳\៛\₭\₮\₨\₽\₾]';
+    r'(?:(?:CA|AU|US|NZ|HK|NT|S)\$|[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴\₦\₵\₸\₲\֏\؋\৳\៛\₭\₮\₨\₽\₾])';
 const String _strictCurrencyCodes =
-    r'\b(?:usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs\.?(?=\s|[0-9])|brl|mxn|sgd|hkd|nzd|sek|nok|dkk|pln|aed|sar|zar|myr|idr|php|thb|vnd|ngn|kes|egp|ils|clp|czk|huf|ron|bgn|kwd|bhd|omr|qar)\b';
+    r'\b(?:usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs|re|brl|mxn|sgd|hkd|nzd|sek|nok|dkk|pln|aed|sar|zar|myr|rm|idr|rp|php|thb|vnd|ngn|kes|egp|ils|clp|czk|huf|ron|bgn|kwd|bhd|omr|qar|lkr|pkr|bdt|npr)(?:(?=\d)|\b)\.?';
 const String globalCurrencies =
     '(?:$_strictCurrencySymbols|$_strictCurrencyCodes)';
 
 final RegExp _currencyWithAmountRegex = RegExp(
-  '(?:$globalCurrencies\\s*[0-9]+|[0-9]+(?:[.,][0-9]{1,2})?\\s*$globalCurrencies)',
+  '(?:$globalCurrencies\\s*:?\\s*[0-9]+|[0-9]+(?:[.,][0-9]{1,2})?\\s*$globalCurrencies)',
   caseSensitive: false,
 );
 
+final RegExp _otpOrVerificationRegex = RegExp(
+  r'\b(otp\b|one[\s-]*time\s*password|verification\s*code|security\s*code|auth(?:entication)?\s*code|do\s+not\s+share\s+(?:this|your)\s+(?:otp|code|pin)|is\s+your\s+(?:otp|code|pin))\b',
+  caseSensitive: false,
+);
+
+/// Universal transaction verbs and financial ledger identifiers across all banks, cards, wallets, and UPI apps.
 final RegExp _strictFinancialKeywordsRegex = RegExp(
-  r'\b(debited|credited|withdrawn|deposited|refunded|autopay|mandate|a/c|acct|vpa|upi\s*ref|ref\s*no|utr|imps|neft|rtgs|nach|pos\b|atm\b|card\s+ending|spent\s+on|spent\s+at|paid\s+to|sent\s+to|received\s+from|pagado|abonado|prelevement|virement|abgebucht|gutgeschrieben|addebitato|accreditato)\b',
+  r'\b(debited|debit|credited|credit|withdrawn|deposited|refunded|refund|spent|paid|sent|received|charged|deducted|transferred|trf|purchased|purchase|autopay|mandate|a/c|acct|vpa|upi|utr|imps|neft|rtgs|nach|pos\b|atm\b|card|wallet|avl\s*bal|avbl\s*bal|avail\s*bal|pagado|abonado|prelevement|virement|abgebucht|gutgeschrieben|addebitato|accreditato)\b',
   caseSensitive: false,
 );
 
 final RegExp _bankAccountContextRegex = RegExp(
-  r'\b(a/c|acct|account|card\s+ending|upi|vpa|imps|neft|rtgs|utr|ref\s*no)\b',
+  r'\b(a/c|acct|account|card|wallet|avl\s*bal|avbl\s*bal|avail\s*bal|balance|upi|vpa|imps|neft|rtgs|utr|ref\s*no|refno|txn)\b',
   caseSensitive: false,
 );
 
 final RegExp _explicitDebitCreditRegex = RegExp(
-  r'\b(debited|credited|withdrawn)\b',
+  r'\b(debited|credited|withdrawn|deposited|spent|paid|sent|received|charged|deducted|transferred|refunded)\b',
   caseSensitive: false,
 );
 
 /// Verifies whether a notification message contains genuine financial transaction context.
 bool hasConfirmedFinancialTransactionContext(String text) {
   if (isChatOrMediaNotification(text)) return false;
+  if (_otpOrVerificationRegex.hasMatch(text)) return false;
   if (isPaymentReminderOrPendingNotice(text)) return false;
   if (isPromotionalOrMarketingNotification(text)) return false;
 
-  // Must have either an explicit currency symbol/code with a number OR an explicit bank/UPI ledger phrase
+  // Must have at least one universal transaction verb or financial ledger keyword
   if (!_strictFinancialKeywordsRegex.hasMatch(text)) {
     return false;
   }
 
-  // If no explicit currency symbol/code is attached to a number, require both an account/UPI identifier AND debited/credited
+  // Require an explicit action verb (debited, credited, spent, paid, withdrawn, etc.)
+  if (!_explicitDebitCreditRegex.hasMatch(text)) {
+    return false;
+  }
+
+  // If no explicit currency symbol/code is attached to a number, require bank/account/card/UPI context
   if (!_currencyWithAmountRegex.hasMatch(text)) {
-    final bool hasBankAccountContext = _bankAccountContextRegex.hasMatch(text);
-    final bool hasExplicitDebitCredit =
-        _explicitDebitCreditRegex.hasMatch(text);
-    if (!hasBankAccountContext || !hasExplicitDebitCredit) {
+    if (!_bankAccountContextRegex.hasMatch(text)) {
       return false;
     }
   }
@@ -262,7 +271,12 @@ bool hasConfirmedFinancialTransactionContext(String text) {
 }
 
 Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
-    String input, BuildContext? context) async {
+  String input,
+  BuildContext? context, {
+  List<TransactionCategory>? cachedCategories,
+  List<TransactionWallet>? cachedWallets,
+  String? fallbackSelectedWalletPk,
+}) async {
   if (input.trim().isEmpty) return null;
 
   // Extract package name, notification title, and notification content if structured
@@ -344,11 +358,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   );
   if (promotionalKeywords.hasMatch(text)) {
     // Only proceed if it is definitively an actual completed payment transaction alert
-    bool isDefinitiveTransaction = text.toLowerCase().contains("debited") ||
-        text.toLowerCase().contains("credited") ||
-        text.toLowerCase().contains("paid to") ||
-        text.toLowerCase().contains("spent on");
-    if (!isDefinitiveTransaction) return null;
+    if (!_completedTransferConfirmationRegex.hasMatch(text)) return null;
   }
 
   // Strict Financial Transaction Context Verification
@@ -359,9 +369,19 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   // 2. Amount Extraction
   double? amount;
 
-  // Pattern A: Explicit currency symbol/code or strict debit/credit verb followed by amount
+  // Strip balance/limit clauses before extracting the transaction amount so available balances
+  // (e.g., "Avl bal Rs.2474.15", "Clear bal: ₹1,200") are never mistaken for the transaction amount.
+  final String textForAmount = text.replaceAll(
+    RegExp(
+      '(?:\\b(?:avl|avbl|avail|available|clear|closing|total|rem|remaining| ledger)\\s*(?:bal(?:ance)?|limit)|\\bbal(?:ance)?\\s*(?:is|:))\\s*:?\\s*(?:$globalCurrencies)?\\s*[0-9,]+(?:\\.[0-9]{1,2})?',
+      caseSensitive: false,
+    ),
+    ' ',
+  );
+
+  // Pattern A: Explicit currency symbol/code or strict transaction verb followed by amount
   RegExp amountRegex = RegExp(
-    '(?:$globalCurrencies|\\b(?:debited|credited)\\s+(?:by|for|of|with))\\s*:?\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)',
+    '(?:$globalCurrencies|\\b(?:debited|credited|spent|paid|withdrawn|deposited|charged|deducted|transferred|received|refunded)\\s+(?:by|for|of|with))\\s*:?\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)',
     caseSensitive: false,
   );
 
@@ -387,7 +407,8 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
     return double.tryParse(s);
   }
 
-  var amountMatch = amountRegex.firstMatch(text);
+  var amountMatch =
+      amountRegex.firstMatch(textForAmount) ?? amountRegex.firstMatch(text);
   if (amountMatch != null && amountMatch.group(1) != null) {
     amount = parseAmountString(amountMatch.group(1)!);
   }
@@ -398,7 +419,8 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       '$globalCurrencies\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)',
       caseSensitive: false,
     );
-    var fallbackMatch = fallbackAmountRegex.firstMatch(text);
+    var fallbackMatch = fallbackAmountRegex.firstMatch(textForAmount) ??
+        fallbackAmountRegex.firstMatch(text);
     if (fallbackMatch != null && fallbackMatch.group(1) != null) {
       amount = parseAmountString(fallbackMatch.group(1)!);
     }
@@ -410,19 +432,21 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       '([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)\\s*$globalCurrencies',
       caseSensitive: false,
     );
-    var match = numberBeforeCurrencyRegex.firstMatch(text);
+    var match = numberBeforeCurrencyRegex.firstMatch(textForAmount) ??
+        numberBeforeCurrencyRegex.firstMatch(text);
     if (match != null && match.group(1) != null) {
       amount = parseAmountString(match.group(1)!);
     }
   }
 
-  // Fallback C: Direct debited/credited followed by number when bank account context is verified
+  // Fallback C: Direct transaction verb followed by number when account context is verified
   if (amount == null) {
     RegExp debitCreditRegex = RegExp(
-      r'\b(?:debited|credited)\s+(?:by|of|for|with)?\s*:?\s*([0-9]+(?:[.,][0-9]{1,2})?)',
+      r'\b(?:debited|credited|spent|paid|withdrawn|deposited|charged|deducted)\s+(?:by|of|for|with)?\s*:?\s*([0-9]+(?:[.,][0-9]{1,2})?)',
       caseSensitive: false,
     );
-    var match = debitCreditRegex.firstMatch(text);
+    var match = debitCreditRegex.firstMatch(textForAmount) ??
+        debitCreditRegex.firstMatch(text);
     if (match != null && match.group(1) != null) {
       amount = parseAmountString(match.group(1)!);
     }
@@ -520,32 +544,43 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       extractedPayeeFromDualPattern.isNotEmpty) {
     title = extractedPayeeFromDualPattern;
   } else {
-    // Check for specialized bank SMS patterns
-    // Pattern 0: Bank debit where recipient is credited: "; <RECIPIENT> credited" (e.g. ICICI UPI alert)
+    // Universal stop boundary for merchant/payee clauses across all bank/card/UPI formats
+    const String clauseBoundary =
+        r'(?=\s+\b(?:on|dated|at\s+\d{1,2}:\d{2}|ref|refno|utr|txn|txnid|using|via|through|from\s+a/c|a/c|acct|card|bal|balance|avl|avbl|avail|clear\s+bal|limit|curr|date|val|not\s+you|if\s+not|call|sms|helpline)\b|\s*[\.;,\(\[\n]|$)';
+
+    // Pattern 0: Bank debit where recipient is credited: "; <RECIPIENT> credited"
     RegExp recipientCreditedRegex = RegExp(
-      r';\s*([A-Za-z0-9\s&\.\-\@]+?)\s+credited\b',
+      r';\s*([A-Za-z0-9\s&\-\@]+?)\s+credited\b',
       caseSensitive: false,
     );
     // Pattern A: "by <MERCHANT>, INFO: ..." or "by <MERCHANT>"
     RegExp byMerchantRegex = RegExp(
-        r'\bby\s+([A-Za-z0-9\s&\.\-\@]+?)(?=,\s*INFO|\s+INFO|//|\.|$)',
-        caseSensitive: false);
-    // Pattern B: "trf to <PAYEE> Refno" or "transfer to <PAYEE>"
+      r'\bby\s+([A-Za-z0-9\s&\-\@]+?)(?=,\s*INFO|\s+INFO|//' +
+          clauseBoundary.substring(3),
+      caseSensitive: false,
+    );
+    // Pattern B: "trf to / transfer to / paid to / sent to <PAYEE>"
     RegExp trfToRegex = RegExp(
-        r'\b(?:trf to|transfer to|transferred to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:Refno|Ref|on|via|using|If not)|\.|$)',
-        caseSensitive: false);
-    // Pattern C: "AutoPay for <MERCHANT> SIP" or "AutoPay for <MERCHANT>"
+      r'\b(?:trf\s+to|transfer(?:red)?\s+to|paid\s+to|sent\s+to)\s+:?\s*([A-Za-z0-9\s&\.\-\@]+?)' +
+          clauseBoundary,
+      caseSensitive: false,
+    );
+    // Pattern C: "AutoPay for <MERCHANT>"
     RegExp autoPayRegex = RegExp(
-        r'\b(?:AutoPay for|mandate for|autopay to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:debit|credit|scheduled|is scheduled)|\.|$)',
-        caseSensitive: false);
-    // Pattern D: Standard "at/to/vpa/for/towards <PAYEE>"
+      r'\b(?:AutoPay\s+for|mandate\s+for|autopay\s+to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:debit|credit|scheduled|is\s+scheduled)|' +
+          clauseBoundary.substring(3),
+      caseSensitive: false,
+    );
+    // Pattern D: Universal "at / to / towards / for / vpa / info / favour of <PAYEE>"
+    // Negative lookahead (?!\d{1,2}[:/-]\d{1,2}) skips timestamps/dates like "at 18:18:42"
     RegExp payeeRegex = RegExp(
-      r'(?:at|to|vpa|info|for|towards)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:on|ref|using|via|a/c|card|bal|avbl|date|val)|\.|$)',
+      r'\b(?:at|to|vpa|info|for|towards|in\s+favour\s+of)\b\s*:?\s*(?!\d{1,2}[:/\-]\d{1,2}\b)(?!rs\b|inr\b|usd\b|eur\b|gbp\b|aed\b|sar\b|[\$\€\£\¥\₹])([A-Za-z0-9\s&\.\-\@]+?)' +
+          clauseBoundary,
       caseSensitive: false,
     );
     // Pattern E: Incoming transfer "from <SENDER>"
     RegExp fromSenderRegex = RegExp(
-      r'\b(?:from)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:on|ref|using|via|a/c|card|bal|avbl|date|val)|\.|$)',
+      r'\b(?:from)\b\s*:?\s*([A-Za-z0-9\s&\.\-\@]+?)' + clauseBoundary,
       caseSensitive: false,
     );
 
@@ -614,8 +649,15 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   // 4. Category Matching
   TransactionCategory? matchedCategory;
   try {
-    List<TransactionCategory> allCategories = await database.getAllCategories();
+    List<TransactionCategory> allCategories =
+        cachedCategories ?? await database.getAllCategories();
     String titleLower = title.toLowerCase();
+    String textLowerForCat = text.toLowerCase();
+    bool isMealCardNotice = textLowerForCat.contains("pluxee") ||
+        textLowerForCat.contains("sodexo") ||
+        textLowerForCat.contains("meal card") ||
+        textLowerForCat.contains("food wallet") ||
+        textLowerForCat.contains("zaggle");
 
     for (var cat in allCategories) {
       String catLower = cat.name.toLowerCase();
@@ -627,7 +669,8 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
     // Keyword heuristic matching for common merchants
     if (matchedCategory == null) {
-      if (titleLower.contains("swiggy") ||
+      if (isMealCardNotice ||
+          titleLower.contains("swiggy") ||
           titleLower.contains("zomato") ||
           titleLower.contains("starbucks") ||
           titleLower.contains("restaurant") ||
@@ -635,6 +678,13 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
           titleLower.contains("mcdonald") ||
           titleLower.contains("burger") ||
           titleLower.contains("pizza") ||
+          titleLower.contains("burrito") ||
+          titleLower.contains("juice") ||
+          titleLower.contains("bakery") ||
+          titleLower.contains("canteen") ||
+          titleLower.contains("kitchen") ||
+          titleLower.contains("biryani") ||
+          titleLower.contains("shawarma") ||
           titleLower.contains("cafe") ||
           titleLower.contains("coffee") ||
           titleLower.contains("kfc") ||
@@ -721,8 +771,8 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   // 5. Account / Wallet Matching
   TransactionWallet? matchedWallet;
-  List<TransactionWallet> wallets = [];
-  if (context != null) {
+  List<TransactionWallet> wallets = cachedWallets ?? [];
+  if (wallets.isEmpty && context != null) {
     try {
       wallets = Provider.of<AllWallets>(context, listen: false).list;
     } catch (_) {}
@@ -736,97 +786,113 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   if (wallets.isNotEmpty) {
     try {
       String textLower = text.toLowerCase();
-      final String? defaultWalletPk =
-          appStateSettings["selectedWalletPk"]?.toString();
+      String? defaultWalletPk = fallbackSelectedWalletPk;
+      if (defaultWalletPk == null) {
+        try {
+          defaultWalletPk = appStateSettings["selectedWalletPk"]?.toString();
+        } catch (_) {}
+      }
       final TransactionWallet? userDefaultWallet = defaultWalletPk != null
           ? wallets.where((w) => w.walletPk == defaultWalletPk).firstOrNull
           : null;
 
-      // 1. Check if any wallet name is explicitly mentioned in the text
-      for (var w in wallets) {
-        if (w.name.trim().isNotEmpty &&
-            textLower.contains(w.name.trim().toLowerCase())) {
-          matchedWallet = w;
-          break;
-        }
-      }
+      // Universal Multi-Signal Wallet / Account Scoring
+      final String fullSearchText = "${input.toLowerCase()} $textLower";
+      final String inferredMsgAccountType =
+          inferAccountTypeFromName(fullSearchText, defaultType: "");
 
-      // 2. If no full wallet name matched, check significant brand/bank keywords in wallet names
-      // (e.g., wallet named "HDFC Savings" or "ICICI Coral" when SMS says "HDFC Bank" or "ICICI Bank")
-      bool isMealCard = textLower.contains("pluxee") ||
-          textLower.contains("sodexo") ||
-          textLower.contains("meal card") ||
-          textLower.contains("food wallet") ||
-          textLower.contains("zaggle");
-      bool isCreditCard = !isMealCard &&
-          (textLower.contains("credit card") ||
-              (textLower.contains("card") &&
-                  !textLower.contains("debit card") &&
-                  (textLower.contains("debited") ||
-                      textLower.contains("spent"))) ||
-              textLower.contains("spent on card") ||
-              textLower.contains("card ending"));
+      // Extract any 3-4 digit masked account/card endings in the message (e.g., "xx1710", "*322", "ending 4321")
+      final Set<String> messageDigits = RegExp(
+        r'(?:[xX\*]{1,6}|\bending\s+|\bno\.?\s*|\ba/c\s*|\bacct\s*)(\d{3,4})\b',
+      )
+          .allMatches(text)
+          .map((m) => m.group(1)!)
+          .toSet();
 
-      if (matchedWallet == null) {
-        const Set<String> genericWords = {
-          "bank",
-          "account",
-          "card",
-          "credit",
-          "debit",
-          "savings",
-          "saving",
-          "current",
-          "salary",
-          "wallet",
-          "cash",
-          "primary",
-          "main",
-          "personal",
-          "my",
-          "the",
-          "and",
-        };
-        for (var w in wallets) {
-          final tokens = w.name
-              .toLowerCase()
-              .split(RegExp(r'[^a-z0-9]+'))
-              .where((t) => t.length >= 3 && !genericWords.contains(t));
-          if (tokens.any((token) =>
-              RegExp(r'\b' + RegExp.escape(token) + r'\b')
-                  .hasMatch(textLower))) {
-            // If user has both a Credit Card and Bank Account from the same bank (e.g. HDFC),
-            // match the one whose Account Type aligns with the notification
-            final String wType = getWalletAccountType(w);
-            if (isCreditCard && wType != "Credit Card") continue;
-            if (!isCreditCard && !isMealCard && wType == "Credit Card") continue;
-            matchedWallet = w;
-            break;
+      const Set<String> genericWords = {
+        "bank",
+        "account",
+        "card",
+        "credit",
+        "debit",
+        "savings",
+        "saving",
+        "current",
+        "salary",
+        "wallet",
+        "cash",
+        "meal",
+        "food",
+        "primary",
+        "main",
+        "personal",
+        "my",
+        "the",
+        "and",
+      };
+
+      int bestScore = 0;
+      TransactionWallet? bestScoredWallet;
+
+      for (final w in wallets) {
+        int score = 0;
+        final String wNameLower = w.name.trim().toLowerCase();
+        final String wType = getWalletAccountType(w);
+
+        // Signal 1: Last 3-4 digits of card/account number match digits in wallet name
+        if (messageDigits.isNotEmpty) {
+          for (final digits in messageDigits) {
+            if (wNameLower.contains(digits)) {
+              score += 120;
+            }
           }
         }
-      }
 
-      // 3. If still no match, match by detected Account Type, preferring user's default account
-      if (matchedWallet == null) {
-        if (isMealCard) {
-          matchedWallet = (userDefaultWallet != null &&
-                      getWalletAccountType(userDefaultWallet) == "Meal Card")
-                  ? userDefaultWallet
-                  : wallets
-                      .where((w) => getWalletAccountType(w) == "Meal Card")
-                      .firstOrNull;
-        } else if (isCreditCard) {
-          matchedWallet = (userDefaultWallet != null &&
-                      getWalletAccountType(userDefaultWallet) == "Credit Card")
-                  ? userDefaultWallet
-                  : wallets
-                      .where((w) => getWalletAccountType(w) == "Credit Card")
-                      .firstOrNull;
+        // Signal 2: Exact full wallet name appears in the notification
+        if (wNameLower.length >= 3 && fullSearchText.contains(wNameLower)) {
+          score += 100;
+        }
+
+        // Signal 3: Distinctive brand/institution token from wallet name appears in the notification
+        final Iterable<String> tokens = wNameLower
+            .split(RegExp(r'[^a-z0-9]+'))
+            .where((t) => t.length >= 3 && !genericWords.contains(t));
+        for (final token in tokens) {
+          if (RegExp(r'\b' + RegExp.escape(token) + r'\b')
+              .hasMatch(fullSearchText)) {
+            score += 60;
+          }
+        }
+
+        // Signal 4: Account Type alignment between notification context and wallet's Account Type
+        if (inferredMsgAccountType.isNotEmpty) {
+          if (wType == inferredMsgAccountType) {
+            score += 40;
+          } else if ((inferredMsgAccountType == "Meal Card" &&
+                  wType != "Meal Card") ||
+              (inferredMsgAccountType == "Credit Card" &&
+                  wType != "Credit Card") ||
+              (inferredMsgAccountType == "Bank Account" &&
+                  (wType == "Credit Card" || wType == "Meal Card"))) {
+            score -= 35;
+          }
+        }
+
+        // Signal 5: Tie-breaker preference for user's chosen default account
+        if (userDefaultWallet != null &&
+            w.walletPk == userDefaultWallet.walletPk &&
+            score > 0) {
+          score += 5;
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestScoredWallet = w;
         }
       }
 
-      // 4. Fallback: always default to the user's chosen default account (selectedWalletPk)
-      matchedWallet ??= userDefaultWallet ?? wallets.firstOrNull;
+      // Use the highest-scoring matched wallet, or fall back to the user's chosen default account
+      matchedWallet = bestScoredWallet ?? userDefaultWallet ?? wallets.firstOrNull;
     } catch (_) {}
   }
 
