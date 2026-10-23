@@ -101,9 +101,9 @@ Future<T?> openPopup<T extends Object?>(
               amount: 0.25,
             )
           : Theme.of(context).colorScheme.onSecondaryContainer;
-      return WillPopScope(
+      return PopScope(
         //Stop back button
-        onWillPop: () async => barrierDismissible,
+        canPop: barrierDismissible,
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: getWidthBottomSheet(context)),
@@ -386,9 +386,9 @@ Future<T?> openPopupCustom<T extends Object?>(
     },
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (_, __, ___) {
-      return WillPopScope(
+      return PopScope(
         //Stop back button
-        onWillPop: () async => barrierDismissible,
+        canPop: barrierDismissible,
         child: Center(
           child: Container(
             margin: EdgeInsetsDirectional.only(
@@ -462,9 +462,9 @@ Future<T?> openLoadingPopup<T extends Object?>(BuildContext context) {
     },
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (_, __, ___) {
-      return WillPopScope(
+      return PopScope(
         //Stop back button
-        onWillPop: () async => false,
+        canPop: false,
         child: Center(
           child: Container(
             padding:

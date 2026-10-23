@@ -43,6 +43,7 @@ Future<String?> initializeNotifications() async {
   return response;
 }
 
+@pragma('vm:entry-point')
 onSelectNotification(NotificationResponse notificationResponse) async {
   String? payloadData = notificationResponse.payload;
   notificationPayload = payloadData;
@@ -92,7 +93,7 @@ Future<bool> runNotificationPayLoads(context) async {
     String transactionPk =
         notificationPayloadUri.queryParameters["transactionPk"] ?? "";
     Transaction? transaction =
-        await database.getTransactionFromPk(transactionPk);
+        await database.getTransactionFromPk(transactionPk); notificationPayload = "";
     pushRoute(
       context,
       AddTransactionPage(

@@ -6,7 +6,9 @@ import 'package:budget/struct/autoTransactionTracker.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
+import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/openPopup.dart';
+import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -53,157 +55,251 @@ class _AutoDetectedReviewBannerState extends State<AutoDetectedReviewBanner> {
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isAmoled
-                  ? const Color(0xFF0F0F0F)
-                  : dynamicPastel(
-                      context,
-                      Theme.of(context).colorScheme.primaryContainer,
-                      amount: 0.2,
-                    ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
-                width: 1.2,
-              ),
+          child: Dismissible(
+            key: ValueKey(
+              "${firstItem.uniqueKey}_$count",
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          firstItem.isIncome
-                              ? Icons.arrow_downward_rounded
-                              : Icons.auto_awesome_rounded,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+            direction: DismissDirection.horizontal,
+            onDismissed: (_) {
+              HapticFeedback.lightImpact();
+              dismissPendingReviewTransaction(0);
+              openSnackbar(
+                SnackbarMessage(
+                  title: "Saved Without Review",
+                  description: "${firstItem.title} ($formattedAmount) kept in transactions",
+                  icon: Icons.check_circle_outline_rounded,
+                  timeout: const Duration(seconds: 3),
+                ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: isAmoled
+                    ? const Color(0xFF0F0F0F)
+                    : dynamicPastel(
+                        context,
+                        Theme.of(context).colorScheme.primaryContainer,
+                        amount: 0.2,
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                TextFont(
-                                  text: firstItem.transactionPk != null
-                                      ? (count > 1
-                                          ? "Auto-Recorded ($count to review)"
-                                          : "Auto-Recorded (Review)")
-                                      : (count > 1
-                                          ? "Auto-Detected ($count pending)"
-                                          : "Auto-Detected SMS"),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  textColor: Theme.of(context).colorScheme.primary,
-                                ),
-                                const Spacer(),
-                                TextFont(
-                                  text: DateFormat('HH:mm').format(firstItem.timestamp.toLocal()),
-                                  fontSize: 11,
-                                  textColor: getColor(context, "textLight"),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            TextFont(
-                              text: "${firstItem.title} · $formattedAmount",
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              maxLines: 1,
-                            ),
-                          ],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+                  width: 1.2,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            firstItem.isIncome
+                                ? Icons.arrow_downward_rounded
+                                : Icons.auto_awesome_rounded,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Button(
-                          label: firstItem.transactionPk != null
-                              ? "Review Transaction"
-                              : "Review & Add",
-                          icon: Icons.check_rounded,
-                          fontSize: 13,
-                          padding: const EdgeInsetsDirectional.symmetric(vertical: 10, horizontal: 12),
-                          onTap: () async {
-                            HapticFeedback.selectionClick();
-                            dismissPendingReviewTransaction(0);
-
-                            if (firstItem.transactionPk != null) {
-                              try {
-                                Transaction tx = await database.getTransactionFromPk(firstItem.transactionPk!);
-                                pushRoute(
-                                  context,
-                                  AddTransactionPage(
-                                    transaction: tx,
-                                    routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: TextFont(
+                                      text: firstItem.transactionPk != null
+                                          ? (count > 1
+                                              ? "Auto-Recorded ($count to review)"
+                                              : "Auto-Recorded (Review)")
+                                          : (count > 1
+                                              ? "Auto-Detected ($count pending)"
+                                              : "Auto-Detected SMS"),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      textColor: Theme.of(context).colorScheme.primary,
+                                      maxLines: 1,
+                                    ),
                                   ),
-                                );
-                                return;
-                              } catch (e) {
-                                print("Error opening auto-recorded transaction: $e");
+                                  const SizedBox(width: 6),
+                                  if (count > 1) ...[
+                                    Tappable(
+                                      color: Colors.transparent,
+                                      borderRadius: 8,
+                                      onTap: () {
+                                        HapticFeedback.lightImpact();
+                                        clearAllPendingReviewTransactions();
+                                        openSnackbar(
+                                          SnackbarMessage(
+                                            title: "Saved All Without Review",
+                                            description: "$count auto-recorded transactions kept",
+                                            icon: Icons.done_all_rounded,
+                                            timeout: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        child: TextFont(
+                                          text: "Keep all",
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w600,
+                                          textColor: Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  TextFont(
+                                    text: DateFormat('HH:mm').format(firstItem.timestamp.toLocal()),
+                                    fontSize: 11,
+                                    textColor: getColor(context, "textLight"),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              TextFont(
+                                text: "${firstItem.title} · $formattedAmount",
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Button(
+                            label: firstItem.transactionPk != null
+                                ? "Review"
+                                : "Review & Add",
+                            icon: Icons.edit_note_rounded,
+                            fontSize: 13,
+                            padding: const EdgeInsetsDirectional.symmetric(vertical: 10, horizontal: 10),
+                            onTap: () async {
+                              HapticFeedback.selectionClick();
+                              dismissPendingReviewTransaction(0);
+
+                              if (firstItem.transactionPk != null) {
+                                try {
+                                  Transaction tx = await database.getTransactionFromPk(firstItem.transactionPk!);
+                                  pushRoute(
+                                    context,
+                                    AddTransactionPage(
+                                      transaction: tx,
+                                      routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                                    ),
+                                  );
+                                  return;
+                                } catch (e) {
+                                  print("Error opening auto-recorded transaction: $e");
+                                }
                               }
-                            }
 
-                            // Fallback / pending addition flow:
-                            TransactionCategory? category;
-                            try {
-                              TransactionAssociatedTitleWithCategory? foundTitle =
-                                  (await database.getSimilarAssociatedTitles(
-                                          title: firstItem.title, limit: 1))
-                                      .firstOrNull;
-                              category = foundTitle?.category;
-                            } catch (_) {}
+                              // Fallback / pending addition flow:
+                              TransactionCategory? category;
+                              try {
+                                TransactionAssociatedTitleWithCategory? foundTitle =
+                                    (await database.getSimilarAssociatedTitles(
+                                            title: firstItem.title, limit: 1))
+                                        .firstOrNull;
+                                category = foundTitle?.category;
+                              } catch (_) {}
 
-                            pushRoute(
-                              context,
-                              AddTransactionPage(
-                                routesToPopAfterDelete: RoutesToPopAfterDelete.None,
-                                selectedAmount: firstItem.amount,
-                                selectedTitle: firstItem.title,
-                                selectedNotes: firstItem.note,
-                                selectedCategory: category,
-                                startInitialAddTransactionSequence: false,
-                                selectedDate: firstItem.timestamp,
+                              pushRoute(
+                                context,
+                                AddTransactionPage(
+                                  routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                                  selectedAmount: firstItem.amount,
+                                  selectedTitle: firstItem.title,
+                                  selectedNotes: firstItem.note,
+                                  selectedCategory: category,
+                                  startInitialAddTransactionSequence: false,
+                                  selectedDate: firstItem.timestamp,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Tappable(
+                          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+                          borderRadius: 14,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            dismissPendingReviewTransaction(0);
+                            openSnackbar(
+                              SnackbarMessage(
+                                title: "Saved Without Review",
+                                description: "${firstItem.title} ($formattedAmount) kept in transactions",
+                                icon: Icons.check_circle_outline_rounded,
+                                timeout: const Duration(seconds: 3),
                               ),
                             );
                           },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Tappable(
-                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
-                        borderRadius: 14,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          dismissPendingReviewTransaction(0);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          child: TextFont(
-                            text: firstItem.transactionPk != null ? "Dismiss" : "Dismiss",
-                            fontSize: 13,
-                            textColor: getColor(context, "textLight"),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_rounded,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                TextFont(
+                                  text: "Keep",
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  textColor: getColor(context, "black"),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 6),
+                        Tappable(
+                          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.45),
+                          borderRadius: 14,
+                          onTap: () async {
+                            HapticFeedback.mediumImpact();
+                            await deletePendingReviewTransaction(0);
+                            openSnackbar(
+                              SnackbarMessage(
+                                title: "Transaction Deleted",
+                                description: "Removed ${firstItem.title} ($formattedAmount)",
+                                icon: Icons.delete_outline_rounded,
+                                timeout: const Duration(seconds: 3),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                            child: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

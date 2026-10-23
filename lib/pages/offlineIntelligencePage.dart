@@ -37,7 +37,35 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
     with WidgetsBindingObserver {
   bool isPermissionGranted = false;
   bool isCheckingPermission = true;
+  bool _showAllCapturedLogs = false;
   StreamSubscription<ServiceNotificationEvent>? _uiNotificationSub;
+
+  ({String appName, String title, String content}) _parseNotificationLogSummary(
+      String rawLog) {
+    String pkg = "";
+    String title = "";
+    String content = "";
+    for (final line in rawLog.split('\n')) {
+      final trimmed = line.trim();
+      final lower = trimmed.toLowerCase();
+      if (lower.startsWith("package name:")) {
+        pkg = trimmed.substring("package name:".length).trim();
+      } else if (lower.startsWith("notification title:")) {
+        title = trimmed.substring("notification title:".length).trim();
+      } else if (lower.startsWith("notification content:")) {
+        content = trimmed.substring("notification content:".length).trim();
+      }
+    }
+    final appName =
+        pkg.isNotEmpty ? getReadableAppNameFromPackage(pkg) : "Notification";
+    if (title.isEmpty || title == "null") {
+      title = appName;
+    }
+    if (content.isEmpty || content == "null") {
+      content = rawLog.replaceAll('\n', ' ').trim();
+    }
+    return (appName: appName, title: title, content: content);
+  }
 
   @override
   void initState() {
@@ -138,16 +166,30 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
       context,
       StatefulBuilder(
         builder: (context, setSheetState) {
+          List<String> splitKeys(String key) {
+            return key
+                .split(',')
+                .map((e) => e.trim().toLowerCase())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          }
+
           bool isSelected(String key) {
-            return selectedKeywords.any((k) => k == key.toLowerCase() || key.toLowerCase().contains(k));
+            final subKeys = splitKeys(key);
+            return subKeys.isNotEmpty &&
+                subKeys.any((sk) => selectedKeywords.contains(sk));
           }
 
           void toggleSelection(String key) {
-            String lower = key.toLowerCase().trim();
-            if (selectedKeywords.contains(lower)) {
-              selectedKeywords.remove(lower);
+            final subKeys = splitKeys(key);
+            if (isSelected(key)) {
+              selectedKeywords.removeWhere((k) => subKeys.contains(k));
             } else {
-              selectedKeywords.add(lower);
+              for (final sk in subKeys) {
+                if (!selectedKeywords.contains(sk)) {
+                  selectedKeywords.add(sk);
+                }
+              }
             }
             setSheetState(() {});
           }
@@ -870,89 +912,176 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
                     ),
                   ),
                 )
-              else
+              else ...[
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: recentCapturedNotifications.length,
+                  itemCount: _showAllCapturedLogs
+                      ? recentCapturedNotifications.length
+                      : (recentCapturedNotifications.length > 5
+                          ? 5
+                          : recentCapturedNotifications.length),
                   separatorBuilder: (context, index) =>
                       const Divider(height: 1, indent: 16, endIndent: 16),
                   itemBuilder: (context, index) {
                     final log = recentCapturedNotifications[index];
-                    return Tappable(
-                      onTap: () {
-                        openPopup(
-                          context,
-                          title: "Notification Log Details",
-                          description: log,
-                          onSubmit: () {
-                            Clipboard.setData(ClipboardData(text: log));
-                            popRoute(context);
-                            openSnackbar(
-                              SnackbarMessage(
-                                title: "Copied to clipboard",
-                                icon: Icons.copy_rounded,
-                              ),
-                            );
-                          },
-                          onSubmitLabel: "Copy Text",
-                          onCancel: () => popRoute(context),
-                          onCancelLabel: "Close",
-                        );
+                    final parsed = _parseNotificationLogSummary(log);
+                    return Dismissible(
+                      key: ValueKey("notif_log_${index}_${log.hashCode}"),
+                      direction: DismissDirection.horizontal,
+                      onDismissed: (_) {
+                        HapticFeedback.lightImpact();
+                        setState(() {
+                          if (index >= 0 &&
+                              index < recentCapturedNotifications.length) {
+                            recentCapturedNotifications.removeAt(index);
+                          }
+                        });
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer
-                                    .withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(10),
+                      child: Tappable(
+                        onTap: () {
+                          openPopup(
+                            context,
+                            title: "Notification Log Details",
+                            description: log,
+                            onSubmit: () {
+                              Clipboard.setData(ClipboardData(text: log));
+                              popRoute(context);
+                              openSnackbar(
+                                SnackbarMessage(
+                                  title: "Copied to clipboard",
+                                  icon: Icons.copy_rounded,
+                                ),
+                              );
+                            },
+                            onSubmitLabel: "Copy Text",
+                            onCancel: () => popRoute(context),
+                            onCancelLabel: "Close",
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer
+                                      .withValues(alpha: 0.4),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.sms_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 18,
+                                ),
                               ),
-                              child: Icon(
-                                Icons.sms_outlined,
-                                color: Theme.of(context).colorScheme.primary,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondaryContainer
+                                                .withValues(alpha: 0.7),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: TextFont(
+                                            text: parsed.appName,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            textColor: Theme.of(context)
+                                                .colorScheme
+                                                .onSecondaryContainer,
+                                          ),
+                                        ),
+                                        if (parsed.title != parsed.appName) ...[
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: TextFont(
+                                              text: parsed.title,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    TextFont(
+                                      text: parsed.content,
+                                      fontSize: 12,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      textColor: getColor(context, "textLight"),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(
+                                Icons.chevron_right_rounded,
                                 size: 18,
+                                color: Colors.grey,
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  TextFont(
-                                    text: log.split('\n').firstOrNull ?? "Notification",
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    maxLines: 1,
-                                  ),
-                                  const SizedBox(height: 3),
-                                  TextFont(
-                                    text: log.replaceAll('\n', ' '),
-                                    fontSize: 12,
-                                    maxLines: 2,
-                                    textColor: getColor(context, "textLight"),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18,
-                              color: Colors.grey,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
+                if (recentCapturedNotifications.length > 5) ...[
+                  const Divider(height: 1),
+                  Tappable(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _showAllCapturedLogs = !_showAllCapturedLogs;
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 11),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextFont(
+                            text: _showAllCapturedLogs
+                                ? "Show Less"
+                                : "Show All (${recentCapturedNotifications.length})",
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            textColor: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            _showAllCapturedLogs
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
               const SizedBox(height: 8),
             ],
           ),

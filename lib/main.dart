@@ -28,6 +28,7 @@ import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/restartApp.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:budget/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -40,14 +41,57 @@ import 'package:easy_localization/easy_localization.dart';
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
+class _HapticBinaryMessenger extends BinaryMessenger {
+  _HapticBinaryMessenger(this._delegate);
+  final BinaryMessenger _delegate;
+  static const JSONMethodCodec _jsonCodec = JSONMethodCodec();
+  static const StandardMethodCodec _stdCodec = StandardMethodCodec();
+
+  @override
+  Future<ByteData?>? send(String channel, ByteData? message) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && channel == 'flutter/platform' && message != null) {
+      try {
+        final MethodCall call = _jsonCodec.decodeMethodCall(message);
+        if (call.method == 'HapticFeedback.vibrate') {
+          _delegate.send('com.navlin.xpenzi/haptics', _stdCodec.encodeMethodCall(MethodCall('vibrate', call.arguments?.toString())));
+          return Future<ByteData?>.value(null);
+        }
+      } catch (_) {}
+    }
+    return _delegate.send(channel, message);
+  }
+
+  @override
+  Future<void> handlePlatformMessage(String channel, ByteData? data, PlatformMessageResponseCallback? callback) =>
+      _delegate.handlePlatformMessage(channel, data, callback);
+
+  @override
+  void setMessageHandler(String channel, MessageHandler? handler) =>
+      _delegate.setMessageHandler(channel, handler);
+}
+
+class _XpenziWidgetsFlutterBinding extends WidgetsFlutterBinding {
+  static WidgetsBinding ensureInitialized() {
+    if (BindingBase.debugBindingType() == null) {
+      _XpenziWidgetsFlutterBinding();
+    }
+    return WidgetsBinding.instance;
+  }
+
+  @override
+  BinaryMessenger createBinaryMessenger() {
+    return _HapticBinaryMessenger(super.createBinaryMessenger());
+  }
+}
+
 // Requires hot restart when changed
 bool enableDevicePreview = false && kDebugMode;
-bool allowDebugFlags = true || kIsWeb;
+bool allowDebugFlags = kDebugMode || kIsWeb;
 bool allowDangerousDebugFlags = kDebugMode;
 
 void main() async {
   captureLogs(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+    _XpenziWidgetsFlutterBinding.ensureInitialized();
     FlutterForegroundTask.initCommunicationPort();
 
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -82,8 +126,8 @@ void main() async {
     await initializeSettings();
     await initNotificationScanning();
     tz.initializeTimeZones();
-    final String locationName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(locationName ?? "America/New_York"));
+
+    try { final String locationName = await FlutterTimezone.getLocalTimezone(); tz.setLocalLocation(tz.getLocation(locationName)); } catch (_) { tz.setLocalLocation(tz.getLocation("America/New_York")); }
     iconObjects.sort((a, b) => (a.mostLikelyCategoryName ?? a.icon)
         .compareTo((b.mostLikelyCategoryName ?? b.icon)));
     setHighRefreshRate();

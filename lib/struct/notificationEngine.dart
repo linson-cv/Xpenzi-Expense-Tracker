@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:isolate';
+import 'dart:ui';
 import 'package:app_settings/app_settings.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:budget/functions.dart';
@@ -24,6 +26,37 @@ import 'package:provider/provider.dart';
 
 StreamSubscription<ServiceNotificationEvent>? notificationListenerSubscription;
 List<String> recentCapturedNotifications = [];
+ReceivePort? _mainIsolatePingPort;
+const String kMainIsolatePingPortName = 'xpenzi_main_isolate_ping';
+
+void _registerMainIsolatePingPort() {
+  try {
+    _mainIsolatePingPort?.close();
+    _mainIsolatePingPort = ReceivePort();
+    IsolateNameServer.removePortNameMapping(kMainIsolatePingPortName);
+    IsolateNameServer.registerPortWithName(
+      _mainIsolatePingPort!.sendPort,
+      kMainIsolatePingPortName,
+    );
+    _mainIsolatePingPort!.listen((message) {
+      if (message is SendPort) {
+        try {
+          message.send(true);
+        } catch (_) {}
+      }
+    });
+  } catch (e) {
+    print("[NotificationEngine] Error registering main isolate ping port: $e");
+  }
+}
+
+void _unregisterMainIsolatePingPort() {
+  try {
+    IsolateNameServer.removePortNameMapping(kMainIsolatePingPortName);
+    _mainIsolatePingPort?.close();
+    _mainIsolatePingPort = null;
+  } catch (_) {}
+}
 
 List<ScannerTemplate> getAllDefaultScannerTemplates() {
   final now = DateTime.now();
@@ -209,15 +242,21 @@ Future<void> updatePersistentBackgroundServiceNotification() async {
 
 Future initNotificationScanning() async {
   if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return;
-  notificationListenerSubscription?.cancel();
+  await notificationListenerSubscription?.cancel();
+  notificationListenerSubscription = null;
   if (appStateSettings["notificationScanning"] != true) {
+    _unregisterMainIsolatePingPort();
     await updatePersistentBackgroundServiceNotification();
     return;
   }
 
-  bool status = await NotificationListenerService.isPermissionGranted();
+  bool status = await safeIsNotificationPermissionGranted();
 
   if (status == true) {
+    _registerMainIsolatePingPort();
+    try {
+      await database.fixTransactionPolarity();
+    } catch (_) {}
     await populateDefaultScannerTemplatesIfEmpty();
     // If persistent background listener is enabled, run the persistent foreground task to keep app alive
     if (appStateSettings["persistentBackgroundListener"] == true) {
@@ -485,14 +524,19 @@ final Map<String, DateTime> _recentlyProcessedNotificationKeys = {};
 
 onNotification(ServiceNotificationEvent event) async {
   try {
-    // 1. Ignore notification removal/dismissal events to prevent duplicate processing
-    if (event.hasRemoved == true) {
+    // 1. Ignore notification removal/dismissal or ongoing media/service events
+    if (event.hasRemoved == true || event.onGoing == true) {
       return;
     }
 
-    // 2. App-specific package name filtering (if configured)
+    // 2. App-specific package name filtering (if configured) and default non-financial app block
     String? pkg = event.packageName?.trim().toLowerCase();
     String? allowedPackagesString = appStateSettings["notificationAllowedPackages"]?.toString().trim();
+
+    if (isNonFinancialPackageByDefault(pkg, allowedPackagesString: allowedPackagesString)) {
+      return;
+    }
+
     if (allowedPackagesString != null && allowedPackagesString.isNotEmpty) {
       List<String> allowedList = allowedPackagesString
           .split(",")
@@ -506,10 +550,16 @@ onNotification(ServiceNotificationEvent event) async {
     }
 
     String messageString = getNotificationMessage(event);
+    if (isChatOrMediaNotification(messageString)) {
+      return;
+    }
     print("[NotificationEngine] Captured event from $pkg: ${event.title} - ${event.content}");
 
-    recentCapturedNotifications.insert(0, messageString);
-    int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "50") ?? 50;
+    final String trimmedLog = messageString.length > 500
+        ? "${messageString.substring(0, 500)}..."
+        : messageString;
+    recentCapturedNotifications.insert(0, trimmedLog);
+    int maxCount = int.tryParse(appStateSettings["notificationLogRetentionCount"]?.toString() ?? "25") ?? 25;
     if (recentCapturedNotifications.length > maxCount) {
       recentCapturedNotifications.removeRange(maxCount, recentCapturedNotifications.length);
     }
@@ -527,13 +577,17 @@ Future<void> _showBackgroundInsertedNotification({
   required String? transactionPk,
 }) async {
   try {
-    AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'auto_transactions_channel',
       'Auto-Detected Transactions',
       channelDescription: 'Alerts when payment or bank SMS notifications are automatically recorded',
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
+      enableVibration: true,
+      playSound: true,
+      autoCancel: true,
+      ongoing: false,
     );
 
     DarwinNotificationDetails darwinDetails = const DarwinNotificationDetails(
@@ -589,13 +643,19 @@ class _InitializeNotificationServiceState
 
 String? getTransactionTitleFromEmail(String messageString,
     String titleTransactionBefore, String titleTransactionAfter) {
+  if (titleTransactionBefore.isEmpty || titleTransactionAfter.isEmpty) {
+    return null;
+  }
   String? title;
   try {
-    int startIndex = messageString.indexOf(titleTransactionBefore) +
-        titleTransactionBefore.length;
+    int rawStart = messageString.indexOf(titleTransactionBefore);
+    if (rawStart == -1) return null;
+    int startIndex = rawStart + titleTransactionBefore.length;
     int endIndex = messageString.indexOf(titleTransactionAfter, startIndex);
+    if (endIndex == -1 || endIndex <= startIndex) return null;
     title = messageString.substring(startIndex, endIndex);
-    title = title.replaceAll("\n", "");
+    title = title.replaceAll("\n", "").trim();
+    if (title.isEmpty) return null;
     title = title.toLowerCase();
     title = title.capitalizeFirst;
   } catch (e) {}
@@ -604,13 +664,20 @@ String? getTransactionTitleFromEmail(String messageString,
 
 double? getTransactionAmountFromEmail(String messageString,
     String amountTransactionBefore, String amountTransactionAfter) {
+  if (amountTransactionBefore.isEmpty || amountTransactionAfter.isEmpty) {
+    return null;
+  }
   double? amountDouble;
   try {
-    int startIndex = messageString.indexOf(amountTransactionBefore) +
-        amountTransactionBefore.length;
+    int rawStart = messageString.indexOf(amountTransactionBefore);
+    if (rawStart == -1) return null;
+    int startIndex = rawStart + amountTransactionBefore.length;
     int endIndex = messageString.indexOf(amountTransactionAfter, startIndex);
+    if (endIndex == -1 || endIndex <= startIndex) return null;
     String amountString = messageString.substring(startIndex, endIndex);
-    amountDouble = double.parse(amountString.replaceAll(RegExp('[^0-9.]'), ''));
+    String cleaned = amountString.replaceAll(RegExp('[^0-9.]'), '');
+    if (cleaned.isEmpty) return null;
+    amountDouble = double.parse(cleaned);
   } catch (e) {}
   return amountDouble;
 }
@@ -738,7 +805,13 @@ String getReadableAppNameFromPackage(String? packageOrMessage) {
 Future queueTransactionFromMessage(String messageString,
     {bool willPushRoute = true, DateTime? dateTime}) async {
   try {
-    // Step 0. Payment Reminder & Scheduled Pre-Debit Filter
+    // Step 0. Personal Chat & Media Notification Filter
+    if (isChatOrMediaNotification(messageString)) {
+      print("[NotificationEngine] Discarded notification: Detected personal chat or media message.");
+      return false;
+    }
+
+    // Step 0a. Payment Reminder & Scheduled Pre-Debit Filter
     // Immediately discard payment reminders, scheduled bills, due-date notices, and pre-debit notifications
     if (isPaymentReminderOrPendingNotice(messageString)) {
       print("[NotificationEngine] Discarded notification: Detected payment reminder or upcoming bill notice without confirmed debit.");
@@ -759,17 +832,22 @@ Future queueTransactionFromMessage(String messageString,
   ScannerTemplate? templateFound;
 
   for (ScannerTemplate scannerTemplate in scannerTemplates) {
-    if (messageString.contains(scannerTemplate.contains)) {
-      templateFound = scannerTemplate;
-      title = getTransactionTitleFromEmail(
+    if (scannerTemplate.contains.isNotEmpty &&
+        messageString.contains(scannerTemplate.contains)) {
+      String? candidateTitle = getTransactionTitleFromEmail(
           messageString,
           scannerTemplate.titleTransactionBefore,
           scannerTemplate.titleTransactionAfter);
-      amountDouble = getTransactionAmountFromEmail(
+      double? candidateAmount = getTransactionAmountFromEmail(
           messageString,
           scannerTemplate.amountTransactionBefore,
           scannerTemplate.amountTransactionAfter);
-      break;
+      if (candidateTitle != null && candidateAmount != null) {
+        templateFound = scannerTemplate;
+        title = candidateTitle;
+        amountDouble = candidateAmount;
+        break;
+      }
     }
   }
 
@@ -792,7 +870,9 @@ Future queueTransactionFromMessage(String messageString,
   String? aiCategoryName;
 
   // Step 3. Fallback to AI Parsing if template and local NLP returned no result
+  // Only invoke AI if the notification passes financial transaction context verification
   if ((amountDouble == null || title == null) &&
+      hasConfirmedFinancialTransactionContext(messageString) &&
       appStateSettings["geminiEnabled"] == true &&
       appStateSettings["aiNotificationFallback"] != false &&
       aiManager.isConfigured()) {
@@ -831,7 +911,42 @@ Future queueTransactionFromMessage(String messageString,
     window: const Duration(minutes: 5),
   );
   if (existingDbDuplicate != null) {
-    print("Notification Engine: Ignored database duplicate for $title ($absoluteAmount) matching '${existingDbDuplicate.name}'");
+    // Cross-App Smart Merge: If existing transaction has a generic name or default wallet,
+    // and this second notification (e.g. GPay + Bank SMS) provides a better merchant name or specific wallet, enrich it!
+    final Set<String> genericNames = {
+      "transaction",
+      "paid",
+      "payment",
+      "bank",
+      "sms / messages",
+      "notification"
+    };
+    final bool existingNameIsGeneric =
+        genericNames.contains(existingDbDuplicate.name.trim().toLowerCase());
+    final bool newNameIsSpecific =
+        !genericNames.contains(title.trim().toLowerCase());
+    final bool canUpgradeWallet =
+        nlpWallet != null && existingDbDuplicate.walletFk != nlpWallet.walletPk;
+
+    if (existingNameIsGeneric && newNameIsSpecific || canUpgradeWallet) {
+      try {
+        await database.createOrUpdateTransaction(
+          existingDbDuplicate.copyWith(
+            name: (existingNameIsGeneric && newNameIsSpecific)
+                ? title
+                : existingDbDuplicate.name,
+            walletFk: canUpgradeWallet
+                ? nlpWallet!.walletPk
+                : existingDbDuplicate.walletFk,
+          ),
+          insert: false,
+          updateSharedEntry: false,
+        );
+        print("Notification Engine: Enriched existing duplicate transaction '${existingDbDuplicate.name}' -> '$title'");
+      } catch (_) {}
+    } else {
+      print("Notification Engine: Ignored database duplicate for $title ($absoluteAmount) matching '${existingDbDuplicate.name}'");
+    }
     return false;
   }
 
@@ -940,9 +1055,9 @@ Future queueTransactionFromMessage(String messageString,
       }
       String walletPk = wallet?.walletPk ?? "0";
 
-      // Expenses should have positive amount in database when income: false,
+      // Expenses must have negative amount in database when income: false,
       // and income transactions have income: true with positive amount
-      double finalAmount = amountDouble.abs();
+      double finalAmount = isIncome ? amountDouble.abs() : -amountDouble.abs();
 
       final int? rowId = await database.createOrUpdateTransaction(
         Transaction(

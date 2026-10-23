@@ -35,6 +35,7 @@ class GlobalSnackbarState extends State<GlobalSnackbar>
   late AnimationController _animationControllerY;
   late AnimationController _animationControllerX;
   double totalMovedNegative = 0;
+  double totalMovedHorizontal = 0;
   List<SnackbarMessage> currentQueue = [];
   SnackbarMessage? currentMessage;
 
@@ -93,24 +94,25 @@ class GlobalSnackbarState extends State<GlobalSnackbar>
     if (ptr.delta.dy <= 0) {
       totalMovedNegative += ptr.delta.dy;
     }
+    totalMovedHorizontal += ptr.delta.dx;
     if (_animationControllerY.value <= 0.5) {
       _animationControllerY.value += ptr.delta.dy / 400;
     } else {
       _animationControllerY.value +=
           ptr.delta.dy / (2000 * _animationControllerY.value * 8);
     }
-    _animationControllerX.value +=
-        ptr.delta.dx / (1000 + (_animationControllerX.value - 0.5).abs() * 100);
+    _animationControllerX.value += ptr.delta.dx / 350;
 
     currentTimeout!.pause();
   }
 
   _onPointerUp(PointerUpEvent event) {
-    if (totalMovedNegative <= -200) {
-      // if user drags it around but has a net negative, swipe up
+    if (totalMovedNegative <= -150 || totalMovedHorizontal.abs() >= 80) {
+      // Swipe up or swipe left/right to clear the notification snackbar
       animateOut();
-    } else if (_animationControllerY.value <= 0.4) {
-      // it is swiped up
+    } else if (_animationControllerY.value <= 0.4 ||
+        (_animationControllerX.value - 0.5).abs() >= 0.18) {
+      // Swiped up or horizontally past threshold
       animateOut();
     } else {
       _animationControllerY.animateTo(0.5,
@@ -130,6 +132,7 @@ class GlobalSnackbarState extends State<GlobalSnackbar>
                 ((_animationControllerX.value - 0.5).abs() * 800 + 700)
                     .toInt()));
     totalMovedNegative = 0;
+    totalMovedHorizontal = 0;
   }
 
   @override

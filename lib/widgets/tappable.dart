@@ -65,7 +65,7 @@ class Tappable extends StatelessWidget {
         borderRadius: customBorderRadius ?? BorderRadius.circular(borderRadius),
         onTap: onTap,
         onHighlightChanged: onHighlightChanged,
-        onLongPress: onLongPress,
+        onLongPress: onLongPress != null ? () { HapticFeedback.heavyImpact(); onLongPress!(); } : null,
         child: child,
       ),
     );

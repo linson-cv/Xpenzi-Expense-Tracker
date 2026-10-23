@@ -494,10 +494,14 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                         children: [
                           Row(
                             children: [
-                              TextFont(
-                                text: _selectedProviderType.displayName,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: TextFont(
+                                  text: _selectedProviderType.displayName,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                               if (_selectedProviderType == AiProviderType.gemini) ...[
                                 const SizedBox(width: 8),
@@ -529,7 +533,7 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                                         : "OpenRouter, local Ollama, or custom endpoint",
                             fontSize: 11.5,
                             textColor: getColor(context, "textLight"),
-                            maxLines: 1,
+                            maxLines: 2,
                           ),
                         ],
                       ),
@@ -874,53 +878,61 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
                   children: [
                     const Icon(Icons.memory_rounded, size: 22),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const TextFont(
-                          text: "Active Model",
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        TextFont(
-                          text: appStateSettings[
-                                  _selectedProviderType.modelSettingName] ??
-                              _selectedProviderType.defaultModel,
-                          fontSize: 11,
-                          textColor: getColor(context, "textLight"),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: _openModelPicker,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: getColor(context, "canvasContainer"),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: getColor(context, "dividerColor"),
-                            width: 1,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const TextFont(
+                            text: "Active Model",
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextFont(
-                              text: (appStateSettings[_selectedProviderType
-                                          .modelSettingName] ??
-                                      _selectedProviderType.defaultModel)
-                                  .toString(),
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
+                          const SizedBox(height: 2),
+                          TextFont(
+                            text: "Tap to switch model",
+                            fontSize: 11.5,
+                            textColor: getColor(context, "textLight"),
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: _openModelPicker,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: getColor(context, "canvasContainer"),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: getColor(context, "dividerColor"),
+                              width: 1,
                             ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.keyboard_arrow_down_rounded,
-                                size: 18),
-                          ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: TextFont(
+                                  text: (appStateSettings[_selectedProviderType
+                                              .modelSettingName] ??
+                                          _selectedProviderType.defaultModel)
+                                      .toString(),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down_rounded,
+                                  size: 18),
+                            ],
+                          ),
                         ),
                       ),
                     ),

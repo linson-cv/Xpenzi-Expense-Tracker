@@ -7538,7 +7538,7 @@ class FinanceDatabase extends _$FinanceDatabase {
     final end = timestamp.add(window);
     final matching = await (select(transactions)
           ..where((t) {
-            return t.amount.equals(amount) &
+            return (t.amount.equals(amount.abs()) | t.amount.equals(-amount.abs())) &
                 t.dateCreated.isBiggerOrEqualValue(start) &
                 t.dateCreated.isSmallerOrEqualValue(end);
           }))

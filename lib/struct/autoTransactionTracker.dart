@@ -37,6 +37,11 @@ class AutoAddedTransactionInfo {
     };
   }
 
+  String get uniqueKey =>
+      transactionPk != null && transactionPk!.isNotEmpty
+          ? "pk_$transactionPk"
+          : "${title.trim().toLowerCase()}_${amount.abs().toStringAsFixed(2)}_${timestamp.millisecondsSinceEpoch}";
+
   factory AutoAddedTransactionInfo.fromMap(Map<String, dynamic> map) {
     return AutoAddedTransactionInfo(
       title: map['title'] ?? '',
@@ -50,10 +55,27 @@ class AutoAddedTransactionInfo {
 }
 
 final List<AutoAddedTransactionInfo> _pendingReviewTransactions = [];
+final Set<String> _dismissedReviewKeys = {};
 final ValueNotifier<int> pendingReviewTransactionsNotifier = ValueNotifier<int>(0);
 
 List<AutoAddedTransactionInfo> getPendingReviewTransactions() {
   return List.unmodifiable(_pendingReviewTransactions);
+}
+
+void _recordDismissedKey(String key) {
+  _dismissedReviewKeys.add(key);
+  try {
+    List<String> savedDismissed =
+        sharedPreferences.getStringList("dismissed_review_transaction_keys") ?? [];
+    if (!savedDismissed.contains(key)) {
+      savedDismissed.add(key);
+      if (savedDismissed.length > 100) {
+        savedDismissed = savedDismissed.sublist(savedDismissed.length - 100);
+      }
+      sharedPreferences.setStringList(
+          "dismissed_review_transaction_keys", savedDismissed);
+    }
+  } catch (_) {}
 }
 
 void _savePendingToPrefs() {
@@ -65,19 +87,35 @@ void _savePendingToPrefs() {
   }
 }
 
-void syncPendingReviewTransactionsFromPrefs() {
+Future<void> syncPendingReviewTransactionsFromPrefs() async {
   try {
+    await sharedPreferences.reload();
+    final List<String> savedDismissed =
+        sharedPreferences.getStringList("dismissed_review_transaction_keys") ?? [];
+    _dismissedReviewKeys.addAll(savedDismissed);
+
     List<String>? saved = sharedPreferences.getStringList("pending_review_transactions_json");
+    _pendingReviewTransactions.clear();
     if (saved != null && saved.isNotEmpty) {
-      _pendingReviewTransactions.clear();
+      bool prunedAny = false;
       for (var str in saved) {
         try {
           var map = jsonDecode(str);
-          _pendingReviewTransactions.add(AutoAddedTransactionInfo.fromMap(map));
+          final info = AutoAddedTransactionInfo.fromMap(map);
+          if (_dismissedReviewKeys.contains(info.uniqueKey)) {
+            prunedAny = true;
+            continue;
+          }
+          _pendingReviewTransactions.add(info);
         } catch (_) {}
       }
-      pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
+      // Show newest auto-recorded items first
+      _pendingReviewTransactions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      if (prunedAny) {
+        _savePendingToPrefs();
+      }
     }
+    pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
   } catch (e) {
     print("Error syncing pending review transactions: $e");
   }
@@ -110,29 +148,52 @@ void registerAutoDetectedTransactionForReview(
     return;
   }
 
-  _pendingReviewTransactions.add(
-    AutoAddedTransactionInfo(
-      title: title,
-      amount: amount,
-      isIncome: isIncome,
-      timestamp: now,
-      transactionPk: transactionPk,
-      note: note,
-    ),
+  final newItem = AutoAddedTransactionInfo(
+    title: title,
+    amount: amount,
+    isIncome: isIncome,
+    timestamp: now,
+    transactionPk: transactionPk,
+    note: note,
   );
+  if (_dismissedReviewKeys.contains(newItem.uniqueKey)) return;
+
+  // Insert at index 0 so newest item appears first
+  _pendingReviewTransactions.insert(0, newItem);
   pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
   _savePendingToPrefs();
 }
 
 void dismissPendingReviewTransaction(int index) {
   if (index >= 0 && index < _pendingReviewTransactions.length) {
-    _pendingReviewTransactions.removeAt(index);
+    final removed = _pendingReviewTransactions.removeAt(index);
+    _recordDismissedKey(removed.uniqueKey);
     pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
     _savePendingToPrefs();
   }
 }
 
+Future<void> deletePendingReviewTransaction(int index) async {
+  if (index >= 0 && index < _pendingReviewTransactions.length) {
+    final removed = _pendingReviewTransactions.removeAt(index);
+    _recordDismissedKey(removed.uniqueKey);
+    pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
+    _savePendingToPrefs();
+
+    if (removed.transactionPk != null && removed.transactionPk!.isNotEmpty) {
+      try {
+        await database.deleteTransaction(removed.transactionPk!);
+      } catch (e) {
+        print("Error deleting dismissed auto transaction: $e");
+      }
+    }
+  }
+}
+
 void clearAllPendingReviewTransactions() {
+  for (final item in _pendingReviewTransactions) {
+    _recordDismissedKey(item.uniqueKey);
+  }
   _pendingReviewTransactions.clear();
   pendingReviewTransactionsNotifier.value = 0;
   _savePendingToPrefs();

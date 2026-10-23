@@ -67,11 +67,35 @@ class _AddWalletPageState extends State<AddWalletPage> {
       getDevicesDefaultCurrencyCode(); //if no currency selected use empty string
   int selectedDecimals = 2;
   String selectedAccountType = "Bank Account";
+  bool _userManuallySelectedAccountType = false;
   final FocusNode _titleFocusNode = FocusNode();
+
+  String _getDefaultUserAccountType() {
+    try {
+      final String? defaultWalletPk =
+          appStateSettings["selectedWalletPk"]?.toString();
+      if (defaultWalletPk != null && mounted) {
+        final AllWallets allWallets =
+            Provider.of<AllWallets>(context, listen: false);
+        final TransactionWallet? defaultWallet =
+            allWallets.indexedByPk[defaultWalletPk];
+        if (defaultWallet != null) {
+          return getWalletAccountType(defaultWallet);
+        }
+      }
+    } catch (_) {}
+    return "Bank Account";
+  }
 
   void setSelectedTitle(String title) {
     setState(() {
       selectedTitle = title;
+      if (widget.wallet == null && !_userManuallySelectedAccountType) {
+        selectedAccountType = inferAccountTypeFromName(
+          title,
+          defaultType: _getDefaultUserAccountType(),
+        );
+      }
     });
     determineBottomButton();
     return;
@@ -177,6 +201,11 @@ class _AddWalletPageState extends State<AddWalletPage> {
     populateCurrencies();
     Future.delayed(Duration.zero, () async {
       if (widget.runWhenOpen != null) widget.runWhenOpen!();
+      if (widget.wallet == null && !_userManuallySelectedAccountType && (selectedTitle == null || selectedTitle!.isEmpty)) {
+        setState(() {
+          selectedAccountType = _getDefaultUserAccountType();
+        });
+      }
       walletInitial = await createTransactionWallet();
     });
   }
@@ -506,6 +535,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
                           onSelected: (selected) {
                             if (selected) {
                               setState(() {
+                                _userManuallySelectedAccountType = true;
                                 selectedAccountType = type["name"] as String;
                               });
                               determineBottomButton();

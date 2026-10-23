@@ -1,15 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:ui';
 import 'package:budget/database/tables.dart' hide AppSettings;
-import 'package:budget/functions.dart';
 import 'package:budget/struct/databaseGlobal.dart' as db_global;
 import 'package:budget/struct/localNlpParser.dart';
-import 'package:budget/struct/notificationEngine.dart' show getReadableAppNameFromPackage;
+import 'package:budget/struct/notificationEngine.dart'
+    show
+        getReadableAppNameFromPackage,
+        getTransactionAmountFromEmail,
+        getTransactionTitleFromEmail,
+        kMainIsolatePingPortName;
+import 'package:budget/struct/settings.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_listener_service/notification_event.dart';
@@ -21,8 +26,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 // The callback function must be a top-level or static function with vm:entry-point
 @pragma('vm:entry-point')
 void startBackgroundListenerCallback() {
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
   FlutterForegroundTask.setTaskHandler(BackgroundNotificationTaskHandler());
 }
 
@@ -32,14 +35,34 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
   SharedPreferences? _bgPrefs;
   final Map<String, DateTime> _dedupCache = {};
   FlutterLocalNotificationsPlugin? _bgLocalNotifications;
+  List<ScannerTemplate>? _cachedTemplates;
+  List<TransactionCategory>? _cachedCategories;
+  List<TransactionWallet>? _cachedWallets;
+  DateTime? _lastCacheTime;
+
+  Future<void> _refreshMetadataCacheIfNeeded() async {
+    if (_bgDatabase == null) return;
+    final now = DateTime.now();
+    if (_lastCacheTime != null &&
+        now.difference(_lastCacheTime!).inSeconds < 60 &&
+        _cachedTemplates != null &&
+        _cachedCategories != null &&
+        _cachedWallets != null) {
+      return;
+    }
+    try {
+      _cachedTemplates = await _bgDatabase!.getAllScannerTemplates();
+      _cachedCategories = await _bgDatabase!.getAllCategories();
+      _cachedWallets = await _bgDatabase!.getAllWallets();
+      _lastCacheTime = now;
+    } catch (_) {}
+  }
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
-      WidgetsFlutterBinding.ensureInitialized();
-      DartPluginRegistrant.ensureInitialized();
       print("[BackgroundService] Started foreground task with starter: ${starter.name}");
-      await _initBackgroundResources();
+      await _initLightweightResources();
       _startListening();
     } catch (e, stack) {
       print("[BackgroundService] Error during onStart: $e\n$stack");
@@ -49,9 +72,8 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
   @override
   void onRepeatEvent(DateTime timestamp) {
     try {
-      // Health check / periodic cleanup
       _dedupCache.removeWhere(
-        (_, time) => DateTime.now().difference(time).inSeconds.abs() > 120,
+        (_, time) => DateTime.now().difference(time).inSeconds.abs() > 300,
       );
     } catch (e) {
       print("[BackgroundService] Error in onRepeatEvent: $e");
@@ -64,8 +86,7 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       print("[BackgroundService] Destroying background service");
       await _notifSub?.cancel();
       _notifSub = null;
-      await _bgDatabase?.close();
-      _bgDatabase = null;
+      await _closeBackgroundDatabase();
     } catch (e) {
       print("[BackgroundService] Error during onDestroy: $e");
     }
@@ -74,7 +95,6 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
   @override
   void onReceiveData(Object data) {
     try {
-      print("[BackgroundService] Received data from main isolate: $data");
       if (data is Map<String, dynamic> && data["action"] == "process_notification") {
         final String messageString = data["messageString"] ?? "";
         final DateTime eventTime = data["eventTime"] != null
@@ -104,22 +124,31 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
   @override
   void onNotificationDismissed() {}
 
-  Future<void> _initBackgroundResources() async {
+  Future<void> _initLightweightResources() async {
     try {
-      _bgPrefs = await SharedPreferences.getInstance();
-      
-      // Initialize local notifications in background isolate
-      _bgLocalNotifications = FlutterLocalNotificationsPlugin();
-      const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('notification_icon_android2');
-      const InitializationSettings initializationSettings =
-          InitializationSettings(android: initializationSettingsAndroid);
-      await _bgLocalNotifications?.initialize(initializationSettings);
+      _bgPrefs ??= await SharedPreferences.getInstance();
+      db_global.sharedPreferences = _bgPrefs!;
 
-      // Construct a background database instance
+      if (_bgLocalNotifications == null) {
+        _bgLocalNotifications = FlutterLocalNotificationsPlugin();
+        const AndroidInitializationSettings initializationSettingsAndroid =
+            AndroidInitializationSettings('notification_icon_android2');
+        const InitializationSettings initializationSettings =
+            InitializationSettings(android: initializationSettingsAndroid);
+        await _bgLocalNotifications?.initialize(initializationSettings);
+      }
+    } catch (e, stack) {
+      print("[BackgroundService] Error initializing lightweight resources: $e\n$stack");
+    }
+  }
+
+  Future<void> _ensureBackgroundDatabaseOpen() async {
+    if (_bgDatabase != null) return;
+    try {
+      await _initLightweightResources();
       final dbFolder = await getApplicationDocumentsDirectory();
       final file = File(p.join(dbFolder.path, 'db.sqlite'));
-      
+
       void setupDb(dynamic database) {
         try {
           database.execute('PRAGMA journal_mode = WAL;');
@@ -132,14 +161,43 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
 
       QueryExecutor executor = NativeDatabase(file, setup: setupDb);
       _bgDatabase = FinanceDatabase(executor);
-      
-      // Make accessible to localNlpParser if needed
       db_global.database = _bgDatabase!;
-      db_global.sharedPreferences = _bgPrefs!;
-      
-      print("[BackgroundService] Background DB and Prefs initialized successfully");
+      print("[BackgroundService] Background DB opened lazily");
     } catch (e, stack) {
-      print("[BackgroundService] Error initializing background resources: $e\n$stack");
+      print("[BackgroundService] Error opening background DB: $e\n$stack");
+    }
+  }
+
+  Future<void> _closeBackgroundDatabase() async {
+    if (_bgDatabase != null) {
+      try {
+        await _bgDatabase!.close();
+      } catch (_) {}
+      _bgDatabase = null;
+    }
+  }
+
+  /// Checks if the main UI isolate is alive and actively listening to notifications.
+  /// If the main isolate is alive (app open or minimized in RAM), it handles the notification
+  /// directly on its own database connection. If the user swiped the app away from Recents,
+  /// this returns false and the background isolate seamlessly takes over auto-adding transactions.
+  Future<bool> _isMainIsolateActive() async {
+    ReceivePort? replyPort;
+    try {
+      final SendPort? mainPingPort =
+          IsolateNameServer.lookupPortByName(kMainIsolatePingPortName);
+      if (mainPingPort == null) return false;
+
+      replyPort = ReceivePort();
+      mainPingPort.send(replyPort.sendPort);
+
+      final dynamic response = await replyPort.first
+          .timeout(const Duration(milliseconds: 250), onTimeout: () => false);
+      return response == true;
+    } catch (_) {
+      return false;
+    } finally {
+      replyPort?.close();
     }
   }
 
@@ -161,21 +219,43 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
     }
   }
 
+  Future<Map<String, dynamic>> _loadUserSettingsMap() async {
+    try {
+      _bgPrefs ??= await SharedPreferences.getInstance();
+      await _bgPrefs?.reload();
+      String? settingsJson =
+          _bgPrefs?.getString("userSettings") ?? _bgPrefs?.getString("appSettings");
+      if (settingsJson != null && settingsJson.isNotEmpty) {
+        Map<String, dynamic> map = Map<String, dynamic>.from(jsonDecode(settingsJson));
+        map["sharedBudgets"] = false;
+        appStateSettings = map;
+        return map;
+      }
+    } catch (_) {}
+    appStateSettings["sharedBudgets"] = false;
+    return appStateSettings;
+  }
+
   Future<void> _handleBackgroundNotification(ServiceNotificationEvent event) async {
     try {
-      if (event.hasRemoved == true) return;
+      if (event.hasRemoved == true || event.onGoing == true) return;
+
+      // If the main UI isolate is alive in memory, let it handle the notification exclusively
+      if (await _isMainIsolateActive()) {
+        await _closeBackgroundDatabase();
+        return;
+      }
 
       final String? pkg = event.packageName?.trim().toLowerCase();
-      
-      // Check allowed packages from shared preferences
-      String? allowedPackagesString;
-      try {
-        String? settingsJson = _bgPrefs?.getString("appSettings");
-        if (settingsJson != null) {
-          Map<String, dynamic> settingsMap = jsonDecode(settingsJson);
-          allowedPackagesString = settingsMap["notificationAllowedPackages"]?.toString().trim();
-        }
-      } catch (_) {}
+      final Map<String, dynamic> settingsMap = await _loadUserSettingsMap();
+      if (settingsMap["notificationScanning"] == false) return;
+
+      final String? allowedPackagesString =
+          settingsMap["notificationAllowedPackages"]?.toString().trim();
+
+      if (isNonFinancialPackageByDefault(pkg, allowedPackagesString: allowedPackagesString)) {
+        return;
+      }
 
       if (allowedPackagesString != null && allowedPackagesString.isNotEmpty) {
         List<String> allowedList = allowedPackagesString
@@ -183,14 +263,20 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
             .map((e) => e.trim().toLowerCase())
             .where((e) => e.isNotEmpty)
             .toList();
-        if (allowedList.isNotEmpty && pkg != null && !allowedList.any((allowed) => pkg.contains(allowed))) {
+        if (allowedList.isNotEmpty &&
+            pkg != null &&
+            !allowedList.any((allowed) => pkg.contains(allowed))) {
           return;
         }
       }
 
-      String messageString = "Package name: ${event.packageName}\nNotification Title: ${event.title}\n\nNotification Content: ${event.content}";
-      print("[BackgroundService] Processing notification from $pkg: ${event.title} - ${event.content}");
+      String messageString =
+          "Package name: ${event.packageName}\nNotification Title: ${event.title}\n\nNotification Content: ${event.content}";
+      if (isChatOrMediaNotification(messageString)) {
+        return;
+      }
 
+      print("[BackgroundService] Processing notification from $pkg: ${event.title} - ${event.content}");
       await _processAndInsertTransaction(messageString, DateTime.now());
     } catch (e, stack) {
       print("[BackgroundService] Error handling background notification: $e\n$stack");
@@ -199,45 +285,47 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
 
   Future<void> _processAndInsertTransaction(String messageString, DateTime eventTime) async {
     try {
-      // Step 0. Filter out payment reminders, scheduled notices, and due bills
+      if (isChatOrMediaNotification(messageString)) {
+        return;
+      }
       if (isPaymentReminderOrPendingNotice(messageString)) {
         print("[BackgroundService] Discarded notification: Detected payment reminder or upcoming bill notice without confirmed debit.");
         return;
       }
-
-      // Step 0b. Promotional and marketing filter
       if (isPromotionalOrMarketingNotification(messageString)) {
         print("[BackgroundService] Discarded notification: Detected promotional or marketing message without confirmed transaction.");
         return;
       }
 
-      if (_bgDatabase == null) {
-        await _initBackgroundResources();
-        if (_bgDatabase == null) return;
-      }
+      await _ensureBackgroundDatabaseOpen();
+      if (_bgDatabase == null) return;
+      await _refreshMetadataCacheIfNeeded();
 
       String? title;
       double? amountDouble;
       ScannerTemplate? templateFound;
 
       try {
-        List<ScannerTemplate> templates = await _bgDatabase!.getAllScannerTemplates();
+        List<ScannerTemplate> templates =
+            _cachedTemplates ?? await _bgDatabase!.getAllScannerTemplates();
         for (ScannerTemplate tmpl in templates) {
-          if (messageString.contains(tmpl.contains)) {
-            templateFound = tmpl;
-            try {
-              int sIdx = messageString.indexOf(tmpl.titleTransactionBefore) + tmpl.titleTransactionBefore.length;
-              int eIdx = messageString.indexOf(tmpl.titleTransactionAfter, sIdx);
-              title = messageString.substring(sIdx, eIdx).replaceAll("\n", "").toLowerCase().capitalizeFirst;
-            } catch (_) {}
-
-            try {
-              int sIdx = messageString.indexOf(tmpl.amountTransactionBefore) + tmpl.amountTransactionBefore.length;
-              int eIdx = messageString.indexOf(tmpl.amountTransactionAfter, sIdx);
-              String amtStr = messageString.substring(sIdx, eIdx);
-              amountDouble = double.parse(amtStr.replaceAll(RegExp('[^0-9.]'), ''));
-            } catch (_) {}
-            break;
+          if (tmpl.contains.isNotEmpty && messageString.contains(tmpl.contains)) {
+            String? candidateTitle = getTransactionTitleFromEmail(
+              messageString,
+              tmpl.titleTransactionBefore,
+              tmpl.titleTransactionAfter,
+            );
+            double? candidateAmount = getTransactionAmountFromEmail(
+              messageString,
+              tmpl.amountTransactionBefore,
+              tmpl.amountTransactionAfter,
+            );
+            if (candidateTitle != null && candidateAmount != null) {
+              templateFound = tmpl;
+              title = candidateTitle;
+              amountDouble = candidateAmount;
+              break;
+            }
           }
         }
       } catch (e) {
@@ -249,7 +337,8 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
 
       // Local Regex NLP
       if (templateFound == null || amountDouble == null || title == null) {
-        LocalNlpParsedTransaction? nlpParsed = await parseTransactionFromNotificationText(messageString, null);
+        LocalNlpParsedTransaction? nlpParsed =
+            await parseTransactionFromNotificationText(messageString, null);
         if (nlpParsed != null) {
           title ??= nlpParsed.title;
           amountDouble ??= nlpParsed.amount;
@@ -279,7 +368,38 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
           window: const Duration(minutes: 5),
         );
         if (existingDbDuplicate != null) {
-          print("[BackgroundService] Dedup: database duplicate ignored for $title ($absoluteAmount)");
+          final Set<String> genericNames = {
+            "transaction",
+            "paid",
+            "payment",
+            "bank",
+            "sms / messages",
+            "notification"
+          };
+          final bool existingNameIsGeneric = genericNames
+              .contains(existingDbDuplicate.name.trim().toLowerCase());
+          final bool newNameIsSpecific =
+              !genericNames.contains(title.trim().toLowerCase());
+          final bool canUpgradeWallet = nlpWallet != null &&
+              existingDbDuplicate.walletFk != nlpWallet.walletPk;
+
+          if ((existingNameIsGeneric && newNameIsSpecific) || canUpgradeWallet) {
+            await _bgDatabase!.createOrUpdateTransaction(
+              existingDbDuplicate.copyWith(
+                name: (existingNameIsGeneric && newNameIsSpecific)
+                    ? title
+                    : existingDbDuplicate.name,
+                walletFk: canUpgradeWallet
+                    ? nlpWallet!.walletPk
+                    : existingDbDuplicate.walletFk,
+              ),
+              insert: false,
+              updateSharedEntry: false,
+            );
+            print("[BackgroundService] Enriched duplicate transaction '${existingDbDuplicate.name}' -> '$title'");
+          } else {
+            print("[BackgroundService] Dedup: database duplicate ignored for $title ($absoluteAmount)");
+          }
           return;
         }
       } catch (e) {
@@ -304,34 +424,58 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
 
       if (category == null) {
         try {
-          List<TransactionCategory> allCats = await _bgDatabase!.getAllCategories();
+          List<TransactionCategory> allCats =
+              _cachedCategories ?? await _bgDatabase!.getAllCategories();
           category = allCats.where((c) {
             String n = c.name.toLowerCase();
-            return n.contains("other") || n.contains("general") || n.contains("uncategorized") || n.contains("misc");
-          }).firstOrNull ?? allCats.where((c) => c.categoryPk != "0").firstOrNull ?? allCats.firstOrNull;
+            return n.contains("other") ||
+                n.contains("general") ||
+                n.contains("uncategorized") ||
+                n.contains("misc");
+          }).firstOrNull ??
+              allCats.where((c) => c.categoryPk != "0").firstOrNull ??
+              allCats.firstOrNull;
         } catch (_) {}
       }
 
       if (wallet == null) {
         try {
-          List<TransactionWallet> allW = await _bgDatabase!.getAllWallets();
-          wallet = allW.firstOrNull;
+          List<TransactionWallet> allW =
+              _cachedWallets ?? await _bgDatabase!.getAllWallets();
+          String? selectedWalletPk;
+          try {
+            final String? userSettingsRaw = _bgPrefs?.getString("userSettings");
+            if (userSettingsRaw != null && userSettingsRaw.isNotEmpty) {
+              final Map<String, dynamic> parsedSettings =
+                  jsonDecode(userSettingsRaw);
+              selectedWalletPk =
+                  parsedSettings["selectedWalletPk"]?.toString();
+            }
+          } catch (_) {}
+          wallet = (selectedWalletPk != null
+                  ? allW
+                      .where((w) => w.walletPk == selectedWalletPk)
+                      .firstOrNull
+                  : null) ??
+              allW.firstOrNull;
         } catch (_) {}
       }
 
       String categoryPk = category?.categoryPk ?? "1";
       String walletPk = wallet?.walletPk ?? "0";
 
-      final String dateStr = "${eventTime.year}-${eventTime.month.toString().padLeft(2, '0')}-${eventTime.day.toString().padLeft(2, '0')}";
+      final String dateStr =
+          "${eventTime.year}-${eventTime.month.toString().padLeft(2, '0')}-${eventTime.day.toString().padLeft(2, '0')}";
       final String appName = getReadableAppNameFromPackage(messageString);
       final String transactionNote = "Auto-detected from $appName • $dateStr";
+      final double signedAmount = isIncome ? absoluteAmount : -absoluteAmount;
 
       try {
         final int? rowId = await _bgDatabase!.createOrUpdateTransaction(
           Transaction(
             transactionPk: "-1",
             name: title,
-            amount: absoluteAmount,
+            amount: signedAmount,
             note: transactionNote,
             categoryFk: categoryPk,
             subCategoryFk: null,
@@ -343,6 +487,7 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
             methodAdded: MethodAdded.email,
           ),
           insert: true,
+          updateSharedEntry: false,
         );
 
         String? transactionPk;
@@ -353,14 +498,16 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
           } catch (_) {}
         }
 
-        print("[BackgroundService] Auto-inserted transaction: $title - $absoluteAmount (income: $isIncome, pk: $transactionPk)");
+        print("[BackgroundService] Auto-inserted transaction: $title - $signedAmount (income: $isIncome, pk: $transactionPk)");
 
         // 1. Sync to SharedPreferences for UI summary snackbar on app resume
         try {
-          List<String> recordedList = _bgPrefs?.getStringList("recent_auto_added_transactions") ?? [];
+          await _bgPrefs?.reload();
+          List<String> recordedList =
+              _bgPrefs?.getStringList("recent_auto_added_transactions") ?? [];
           final item = jsonEncode({
             'title': title,
-            'amount': isIncome ? -absoluteAmount : absoluteAmount,
+            'amount': signedAmount,
             'isIncome': isIncome,
             'timestamp': eventTime.toIso8601String(),
             'transactionPk': transactionPk,
@@ -373,32 +520,42 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
 
         // 2. Sync to SharedPreferences for UI review banner on Home Page
         try {
-          List<String> pendingList = _bgPrefs?.getStringList("pending_review_transactions_json") ?? [];
+          final Set<String> dismissedKeys = (_bgPrefs
+                      ?.getStringList("dismissed_review_transaction_keys") ??
+                  [])
+              .toSet();
+          List<String> pendingList =
+              (_bgPrefs?.getStringList("pending_review_transactions_json") ?? [])
+                  .where((raw) {
+            try {
+              final map = jsonDecode(raw);
+              final String? pk = map['transactionPk']?.toString();
+              if (pk != null && pk.isNotEmpty && dismissedKeys.contains("pk_$pk")) {
+                return false;
+              }
+            } catch (_) {}
+            return true;
+          }).toList();
+
           final item = jsonEncode({
             'title': title,
-            'amount': isIncome ? -absoluteAmount : absoluteAmount,
+            'amount': signedAmount,
             'isIncome': isIncome,
             'timestamp': eventTime.toIso8601String(),
             'transactionPk': transactionPk,
           });
-          pendingList.add(item);
+          pendingList.insert(0, item);
           await _bgPrefs?.setStringList("pending_review_transactions_json", pendingList);
         } catch (e) {
           print("[BackgroundService] Error saving pending review to prefs: $e");
         }
 
-        // 3. Notify user via local status bar notification with openTransaction payload
+        // 3. Notify user via dismissible (swipeable) local status bar notification
         await _showAutoInsertedNotification(
           title: title,
           amount: absoluteAmount,
           isIncome: isIncome,
           transactionPk: transactionPk,
-        );
-
-        // 4. Update Foreground Task notification banner to show latest recorded info
-        FlutterForegroundTask.updateService(
-          notificationTitle: "Xpenzi Auto-Detection Active",
-          notificationText: "Last recorded: $title · ${absoluteAmount.toStringAsFixed(2)}",
         );
       } catch (e) {
         print("[BackgroundService] Error inserting background transaction: $e");
@@ -418,10 +575,15 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
         'auto_transactions_channel',
         'Auto-Detected Transactions',
-        channelDescription: 'Alerts when payment or bank SMS notifications are automatically recorded',
+        channelDescription:
+            'Alerts when payment or bank SMS notifications are automatically recorded',
         importance: Importance.high,
         priority: Priority.high,
         showWhen: true,
+        enableVibration: true,
+        playSound: true,
+        autoCancel: true,
+        ongoing: false,
       );
 
       const DarwinNotificationDetails darwinDetails = DarwinNotificationDetails(
@@ -430,7 +592,7 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
         presentSound: true,
       );
 
-      final NotificationDetails notificationDetails = NotificationDetails(
+      const NotificationDetails notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: darwinDetails,
       );
@@ -462,7 +624,8 @@ Future<void> initForegroundTask() async {
     androidNotificationOptions: AndroidNotificationOptions(
       channelId: 'persistent_listener_channel',
       channelName: 'SMS & Alert Background Monitor',
-      channelDescription: 'Keeps Xpenzi notification listener active in the background for real-time transaction detection',
+      channelDescription:
+          'Keeps Xpenzi notification listener active in the background for real-time transaction detection',
       channelImportance: NotificationChannelImportance.LOW,
       priority: NotificationPriority.LOW,
       enableVibration: false,
@@ -474,11 +637,11 @@ Future<void> initForegroundTask() async {
       playSound: false,
     ),
     foregroundTaskOptions: ForegroundTaskOptions(
-      eventAction: ForegroundTaskEventAction.repeat(15000),
-      autoRunOnBoot: true,
-      autoRunOnMyPackageReplaced: true,
-      allowWakeLock: true,
-      allowWifiLock: true,
+      eventAction: ForegroundTaskEventAction.nothing(),
+      autoRunOnBoot: false,
+      autoRunOnMyPackageReplaced: false,
+      allowWakeLock: false,
+      allowWifiLock: false,
     ),
   );
 }
@@ -488,7 +651,6 @@ Future<bool> startBackgroundListenerService() async {
     await initForegroundTask();
 
     if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.restartService();
       return true;
     }
 

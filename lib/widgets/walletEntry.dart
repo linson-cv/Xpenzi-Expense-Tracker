@@ -72,7 +72,7 @@ class WalletEntry extends StatelessWidget {
                           borderRadius: BorderRadiusDirectional.circular(100),
                           color: HexColor(walletWithDetails.wallet.colour,
                                   defaultColor:
-                                      Theme.of(context).colorScheme.primary)
+                                  Theme.of(context).colorScheme.primary)
                               .withValues(alpha: 0.7),
                         ),
                         width: 20,
@@ -470,47 +470,85 @@ Future<bool> setPrimaryWallet(String walletPk, {AllWallets? allWallets}) async {
   return true;
 }
 
+String inferAccountTypeFromName(String name, {String defaultType = "Bank Account"}) {
+  final String nameLower = name.trim().toLowerCase();
+  if (nameLower.isEmpty) return defaultType;
+
+  // 1. Meal / Food Cards (check before generic "card" or "wallet")
+  if (RegExp(r'\b(pluxee|sodexo|meal|zaggle|edenred|pantry)\b').hasMatch(nameLower) ||
+      nameLower.contains("food card") ||
+      nameLower.contains("meal card") ||
+      nameLower.contains("food wallet") ||
+      nameLower.contains("ticket restaurant")) {
+    return "Meal Card";
+  }
+
+  // 2. Credit Cards & BNPL Cards (exclude explicit "debit card")
+  final bool isExplicitDebitCard = nameLower.contains("debit card") || nameLower.contains("atm card");
+  if (!isExplicitDebitCard &&
+      (RegExp(r'\b(credit|cc|amex|diners|regalia|millennia|infinia|magnus|atlas|aurum|simplyclick|simplysave|onecard|slice|lazypay|simpl)\b')
+              .hasMatch(nameLower) ||
+          nameLower.contains("credit card") ||
+          nameLower.contains("american express") ||
+          nameLower.contains("amazon pay icici") ||
+          nameLower.contains("icici amazon") ||
+          nameLower.contains("flipkart axis") ||
+          nameLower.contains("uni card") ||
+          nameLower.contains("sbi card") ||
+          nameLower.contains("card"))) {
+    return "Credit Card";
+  }
+
+  // 3. Cash & Digital Wallets
+  if (RegExp(r'\b(cash|petty|coins|mobikwik|freecharge)\b').hasMatch(nameLower) ||
+      nameLower.contains("pocket money") ||
+      nameLower.contains("cash in hand") ||
+      nameLower.contains("paytm wallet") ||
+      nameLower.contains("phonepe wallet") ||
+      nameLower.contains("amazon pay balance") ||
+      (nameLower.contains("wallet") && !nameLower.contains("bank"))) {
+    return "Cash";
+  }
+
+  // 4. Savings, Deposits & Vaults
+  if (RegExp(r'\b(savings?|sav|fd|rd|ppf|epf|vault|piggy|stash|treasury|emergency)\b').hasMatch(nameLower) ||
+      nameLower.contains("fixed deposit") ||
+      nameLower.contains("recurring deposit") ||
+      nameLower.contains("emergency fund") ||
+      nameLower.contains("liquid fund")) {
+    return "Savings";
+  }
+
+  // 5. Bank Accounts
+  if (RegExp(r'\b(bank|debit|checking|current|salary|upi|a/c|acct|hdfc|icici|sbi|axis|kotak|canara|federal|indus|indusind|yes|pnb|bob|idfc|rbl|au|bandhan|union|indian|boi|citi|citibank|hsbc|sc|chase|bofa|barclays|revolut|wise|monzo|n26|jupiter|fi|niyo)\b')
+          .hasMatch(nameLower) ||
+      nameLower.contains("standard chartered") ||
+      nameLower.contains("wells fargo") ||
+      nameLower.contains("bank of")) {
+    return "Bank Account";
+  }
+
+  return defaultType;
+}
+
 String getWalletAccountType(TransactionWallet wallet) {
+  const validTypes = ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"];
   if (wallet.currencyFormat != null &&
-      ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
-          .contains(wallet.currencyFormat)) {
+      validTypes.contains(wallet.currencyFormat) &&
+      wallet.currencyFormat != "Bank Account") {
     return wallet.currencyFormat!;
   }
   if (wallet.iconName != null &&
-      ["Bank Account", "Credit Card", "Meal Card", "Cash", "Savings"]
-          .contains(wallet.iconName)) {
+      validTypes.contains(wallet.iconName) &&
+      wallet.iconName != "Bank Account") {
     return wallet.iconName!;
   }
-  String nameLower = wallet.name.toLowerCase();
-  if (nameLower.contains("cred") || nameLower.contains("card")) {
-    return "Credit Card";
-  } else if (nameLower.contains("pluxee") ||
-      nameLower.contains("meal") ||
-      nameLower.contains("sodexo") ||
-      nameLower.contains("food")) {
-    return "Meal Card";
-  } else if (nameLower.contains("cash") ||
-      nameLower.contains("wallet") ||
-      nameLower.contains("pay")) {
-    return "Cash";
-  } else if (nameLower.contains("sav")) {
-    return "Savings";
-  } else if (nameLower.contains("bank") ||
-      nameLower.contains("icici") ||
-      nameLower.contains("federal") ||
-      nameLower.contains("canara") ||
-      nameLower.contains("hdfc") ||
-      nameLower.contains("sbi") ||
-      nameLower.contains("axis") ||
-      nameLower.contains("kotak") ||
-      nameLower.contains("indus") ||
-      nameLower.contains("yes") ||
-      nameLower.contains("pnb") ||
-      nameLower.contains("bob") ||
-      nameLower.contains("idfc")) {
-    return "Bank Account";
-  }
-  return "Bank Account";
+  return inferAccountTypeFromName(
+    wallet.name,
+    defaultType: (wallet.currencyFormat != null && validTypes.contains(wallet.currencyFormat))
+        ? wallet.currencyFormat!
+        : "Bank Account",
+  );
 }
 
 IconData getWalletAccountIconData(TransactionWallet wallet) {
