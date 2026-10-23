@@ -40,6 +40,7 @@ import 'package:budget/struct/syncClient.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/bottomNavBar.dart';
 import 'package:budget/widgets/categoryIcon.dart';
+import 'package:budget/widgets/askAiBottomSheet.dart';
 import 'package:budget/widgets/fab.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/iconButtonScaled.dart';
@@ -202,33 +203,6 @@ class PageNavigationFrameworkSafeArea extends StatelessWidget {
                 ),
               )
             : const SizedBox.shrink(),
-        // Gradient fade to right overflow, disabled for now
-        // because many pages have full screen elements/banners etc
-        // hasRightSafeArea
-        //     ? Padding(
-        //         padding: EdgeInsets.only(
-        //             right: rightPaddingSafeArea),
-        //         child: Align(
-        //           alignment: Alignment.centerRight,
-        //           child: Container(
-        //             width: 12,
-        //             foregroundDecoration: BoxDecoration(
-        //               gradient: LinearGradient(
-        //                 colors: [
-        //                   Theme.of(context)
-        //                       .colorScheme.background
-        //                       .withOpacity(0.0),
-        //                   Theme.of(context).colorScheme.background,
-        //                 ],
-        //                 begin: Alignment.centerLeft,
-        //                 end: Alignment.centerRight,
-        //                 stops: [0.1, 1],
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       )
-        //     : SizedBox.shrink(),
       ],
     );
   }
@@ -558,15 +532,32 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
             bottom: getHeightNavigationSidebar(context) + 15,
             end: 15,
           ),
-          child: AnimateFAB(
-            key: const ValueKey(1),
-            fab: AddFAB(
-              tooltip: "add-transaction".tr(),
-              openPage: const AddTransactionPage(
-                routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              AnimateFAB(
+                key: const ValueKey(2),
+                fab: AskAiFAB(
+                  tooltip: "Ask AI",
+                  onTap: () {
+                    openAskAiBottomSheet(context);
+                  },
+                ),
+                condition: [0, 1, 2, 14].contains(currentPage),
               ),
-            ),
-            condition: [0, 1, 2, 14].contains(currentPage),
+              const SizedBox(height: 10),
+              AnimateFAB(
+                key: const ValueKey(1),
+                fab: AddFAB(
+                  tooltip: "add-transaction".tr(),
+                  openPage: const AddTransactionPage(
+                    routesToPopAfterDelete: RoutesToPopAfterDelete.None,
+                  ),
+                ),
+                condition: [0, 1, 2, 14].contains(currentPage),
+              ),
+            ],
           ),
         ),
       ),

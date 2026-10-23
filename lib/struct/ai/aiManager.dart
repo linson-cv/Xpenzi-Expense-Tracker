@@ -134,6 +134,21 @@ class AiManager {
     );
   }
 
+  Future<String?> generateAnswer({
+    required String prompt,
+    String? systemInstruction,
+  }) async {
+    if (!isConfigured()) return null;
+
+    return await activeProvider.generateAnswer(
+      prompt: prompt,
+      systemInstruction: systemInstruction,
+      apiKey: getActiveApiKey(),
+      model: getActiveModel(),
+      customEndpoint: appStateSettings["customAiEndpoint"]?.toString(),
+    );
+  }
+
   Future<Map<String, List<String>>> _buildCategoryTree() async {
     Map<String, List<String>> result = {};
     if (appStateSettings["aiShareCategoryNames"] == false) return result;

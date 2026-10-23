@@ -128,7 +128,7 @@ class HomePageUsername extends StatelessWidget {
                     child: TextFont(
                       text: message,
                       fontSize: 13,
-                      textColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.65),
+                      textColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
                     ),
                   );
                 }

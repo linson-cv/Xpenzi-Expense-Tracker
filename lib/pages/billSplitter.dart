@@ -23,10 +23,13 @@ import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/sliverStickyLabelDivider.dart';
 import 'package:budget/widgets/textInput.dart';
+import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' hide TextInput;
+import 'package:share_plus/share_plus.dart';
 import 'package:budget/colors.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:provider/provider.dart';
@@ -301,47 +304,73 @@ class _BillSplitterState extends State<BillSplitter> {
                           ? getColor(context, "warningOrange")
                           : null;
 
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              final int peopleCount = splitPersons.length;
+              final int itemsCount = billSplitterItems.length;
+
+              return Column(
                 children: [
-                  CountNumber(
-                    count: totalAccountedFor,
-                    duration: const Duration(milliseconds: 700),
-                    initialCount: (0),
-                    textBuilder: (number) {
-                      return TextFont(
-                        textAlign: TextAlign.center,
-                        text: convertToMoney(
-                          Provider.of<AllWallets>(context),
-                          number,
-                          finalNumber: number.abs(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      CountNumber(
+                        count: totalAccountedFor,
+                        duration: const Duration(milliseconds: 700),
+                        initialCount: (0),
+                        textBuilder: (number) {
+                          return TextFont(
+                            textAlign: TextAlign.center,
+                            text: convertToMoney(
+                              Provider.of<AllWallets>(context),
+                              number,
+                              finalNumber: number.abs(),
+                            ),
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            textColor: errorColor,
+                          );
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(bottom: 4),
+                        child: CountNumber(
+                          count: totalCost,
+                          duration: const Duration(milliseconds: 700),
+                          initialCount: (0),
+                          textBuilder: (number) {
+                            return TextFont(
+                              textAlign: TextAlign.center,
+                              text: " / ${convertToMoney(
+                                    Provider.of<AllWallets>(context),
+                                    number,
+                                    finalNumber: number.abs(),
+                                  )}",
+                              fontSize: 16,
+                              textColor: getColor(context, "textLight"),
+                            );
+                          },
                         ),
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        textColor: errorColor,
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(bottom: 3.5),
-                    child: CountNumber(
-                      count: totalCost,
-                      duration: const Duration(milliseconds: 700),
-                      initialCount: (0),
-                      textBuilder: (number) {
-                        return TextFont(
-                          textAlign: TextAlign.center,
-                          text: " / ${convertToMoney(
-                                Provider.of<AllWallets>(context),
-                                number,
-                                finalNumber: number.abs(),
-                              )}",
-                          fontSize: 16,
-                          textColor: getColor(context, "textLight"),
-                        );
-                      },
-                    ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextFont(
+                        text: "$itemsCount ${itemsCount == 1 ? "item" : "items"} · $peopleCount ${peopleCount == 1 ? "person" : "people"}",
+                        fontSize: 12.5,
+                        textColor: getColor(context, "textLight"),
+                      ),
+                      if (multiplierAmount != 1.0) ...[
+                        TextFont(
+                          text: " · ${((multiplierAmount - 1.0) * 100).toStringAsFixed(0)}% tip/tax",
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          textColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               );
@@ -419,7 +448,98 @@ class _BillSplitterState extends State<BillSplitter> {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        // Tip / Tax quick presets
+        Padding(
+          padding: const EdgeInsetsDirectional.symmetric(horizontal: 14),
+          child: Row(
+            children: [
+              TextFont(
+                text: "Tip / Tax:",
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                textColor: getColor(context, "textLight"),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final pct in [0, 5, 10, 15, 18, 20])
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 6),
+                          child: Tappable(
+                            color: ((multiplierAmount - 1.0 - (pct / 100)).abs() < 0.005)
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            borderRadius: 10,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setMultiplierAmount(1.0 + (pct / 100));
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              child: TextFont(
+                                text: pct == 0 ? "None (0%)" : "+$pct%",
+                                fontSize: 12,
+                                fontWeight: ((multiplierAmount - 1.0 - (pct / 100)).abs() < 0.005)
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                textColor: ((multiplierAmount - 1.0 - (pct / 100)).abs() < 0.005)
+                                    ? Theme.of(context).colorScheme.onPrimaryContainer
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 10),
+        if (billSplitterItems.isEmpty)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              top: 30,
+              bottom: 40,
+              start: 20,
+              end: 20,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    appStateSettings["outlinedIcons"]
+                        ? Icons.receipt_long_outlined
+                        : Icons.receipt_long_rounded,
+                    size: 60,
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFont(
+                    text: "no-bill-items-yet".tr().isNotEmpty
+                        ? "no-bill-items-yet".tr()
+                        : "No bill items yet",
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  TextFont(
+                    text: "Tap + to add your first bill item or food entry",
+                    fontSize: 14,
+                    textColor: getColor(context, "textLight"),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
         for (int i = 0; i < billSplitterItems.length; i++)
           BillSplitterItemEntry(
             splitPersons: splitPersons,
@@ -1015,7 +1135,6 @@ class _AddBillItemPageState extends State<AddBillItemPage> {
                             }
                           },
                           next: () {
-                            print(multiplierAmount);
                             popRoute(context);
                           },
                           nextLabel: "set-amount".tr(),
@@ -1350,6 +1469,34 @@ class SummaryPage extends StatelessWidget {
     return PageFramework(
       title: "summary".tr(),
       dragDownToDismiss: true,
+      actions: [
+        if (splitPersonSummaries.isNotEmpty) ...[
+          IconButton(
+            tooltip: "share".tr(),
+            icon: Icon(
+              appStateSettings["outlinedIcons"]
+                  ? Icons.share_outlined
+                  : Icons.share_rounded,
+            ),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _shareBillSummary(context, splitPersonSummaries, billSplitterItems, multiplierAmount);
+            },
+          ),
+          IconButton(
+            tooltip: "copy".tr(),
+            icon: Icon(
+              appStateSettings["outlinedIcons"]
+                  ? Icons.copy_outlined
+                  : Icons.copy_rounded,
+            ),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _copyBillSummary(context, splitPersonSummaries, billSplitterItems, multiplierAmount);
+            },
+          ),
+        ],
+      ],
       staticOverlay: Align(
         alignment: AlignmentDirectional.bottomCenter,
         child: SaveBottomButton(
@@ -1389,6 +1536,88 @@ class SummaryPage extends StatelessWidget {
         ),
       ],
       horizontalPaddingConstrained: true,
+    );
+  }
+
+  String _buildShareText(
+    BuildContext context,
+    List<SplitPersonSummary> splitPersonSummaries,
+    List<BillSplitterItem> items,
+    double multiplier,
+  ) {
+    final allWallets = Provider.of<AllWallets>(context, listen: false);
+    double totalBill = 0;
+    for (final item in items) {
+      totalBill += item.cost * multiplier;
+    }
+
+    final StringBuffer buffer = StringBuffer();
+    buffer.writeln("🧾 ${"bill-splitter".tr()} · ${"summary".tr()}");
+    buffer.writeln("--------------------------------");
+
+    for (final person in splitPersonSummaries) {
+      final amountStr = convertToMoney(allWallets, person.total);
+      buffer.writeln("• ${person.splitPerson.name}: $amountStr");
+
+      // List individual items for this person
+      for (final item in items) {
+        SplitPerson? userSplit;
+        for (final sp in item.userAmounts) {
+          if (sp.name == person.splitPerson.name) {
+            userSplit = sp;
+            break;
+          }
+        }
+        if (userSplit == null) continue;
+
+        double percent = item.evenSplit
+            ? (item.userAmounts.isEmpty ? 0 : 1 / item.userAmounts.length)
+            : ((userSplit.percent ?? 0) / 100);
+        double itemAmount = item.cost * multiplier * percent;
+        if (itemAmount > 0) {
+          buffer.writeln(
+              "   - ${item.name}: ${convertToMoney(allWallets, itemAmount)}");
+        }
+      }
+    }
+
+    buffer.writeln("--------------------------------");
+    buffer.writeln(
+        "${"total".tr()}: ${convertToMoney(allWallets, totalBill)}");
+    if (multiplier != 1.0) {
+      final tipPct = ((multiplier - 1.0) * 100).toStringAsFixed(1);
+      buffer.writeln("(${tipPct.startsWith('-') ? '' : '+'}$tipPct% tip/tax included)");
+    }
+    buffer.writeln("\nShared via Xpenzi");
+    return buffer.toString();
+  }
+
+  void _shareBillSummary(
+    BuildContext context,
+    List<SplitPersonSummary> summaries,
+    List<BillSplitterItem> items,
+    double multiplier,
+  ) {
+    final text = _buildShareText(context, summaries, items, multiplier);
+    Share.share(text, subject: "${"bill-splitter".tr()} · ${"summary".tr()}");
+  }
+
+  void _copyBillSummary(
+    BuildContext context,
+    List<SplitPersonSummary> summaries,
+    List<BillSplitterItem> items,
+    double multiplier,
+  ) {
+    final text = _buildShareText(context, summaries, items, multiplier);
+    Clipboard.setData(ClipboardData(text: text));
+    openSnackbar(
+      SnackbarMessage(
+        title: "copied-to-clipboard".tr(),
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.copy_outlined
+            : Icons.copy_rounded,
+        description: "Summary copied to clipboard",
+      ),
     );
   }
 }

@@ -50,6 +50,35 @@ class AddFAB extends StatelessWidget {
   }
 }
 
+class AskAiFAB extends StatelessWidget {
+  const AskAiFAB({
+    this.onTap,
+    this.tooltip,
+    this.color,
+    this.colorIcon,
+    super.key,
+  });
+
+  final VoidCallback? onTap;
+  final String? tooltip;
+  final Color? color;
+  final Color? colorIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FAB(
+      colorIcon: colorIcon ?? theme.colorScheme.onTertiaryContainer,
+      color: color ?? theme.colorScheme.tertiaryContainer,
+      tooltip: tooltip ?? "Ask AI",
+      iconData: Icons.auto_awesome_rounded,
+      onTap: onTap,
+      fabSize: getIsFullScreen(context) == false ? 46 : 52,
+      borderRadius: getIsFullScreen(context) == false ? 15 : 17,
+    );
+  }
+}
+
 class FAB extends StatelessWidget {
   const FAB({
     super.key,

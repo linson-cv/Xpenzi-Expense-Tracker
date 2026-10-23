@@ -1767,7 +1767,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
               return Tappable(
                 color: isSelected
                     ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: 14,
                 onTap: () => updateSort(item.option),
                 child: Container(
@@ -1776,7 +1776,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isSelected
-                          ? Theme.of(context).colorScheme.primary.withOpacity(0.6)
+                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
                           : Colors.transparent,
                       width: 1.5,
                     ),
@@ -1788,7 +1788,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
                         size: 18,
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -1820,7 +1820,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -1842,7 +1842,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
                             size: 16,
                             color: !selectedSortAscending
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 6),
                           Flexible(
@@ -1852,7 +1852,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
                               fontWeight: !selectedSortAscending ? FontWeight.bold : FontWeight.normal,
                               textColor: !selectedSortAscending
                                   ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               maxLines: 1,
                             ),
                           ),
@@ -1879,7 +1879,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
                             size: 16,
                             color: selectedSortAscending
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 6),
                           Flexible(
@@ -1889,7 +1889,7 @@ class _TransactionSortSelectionState extends State<TransactionSortSelection> {
                               fontWeight: selectedSortAscending ? FontWeight.bold : FontWeight.normal,
                               textColor: selectedSortAscending
                                   ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               maxLines: 1,
                             ),
                           ),

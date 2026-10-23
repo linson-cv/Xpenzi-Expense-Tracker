@@ -59,9 +59,10 @@ bool isPaymentReminderOrPendingNotice(String text) {
 bool isPromotionalOrMarketingNotification(String text) {
   String lower = text.toLowerCase();
 
-  // 1. Unconditional promotional indicators: these phrases NEVER appear in real financial debit/credit statements
+  // 1. Unconditional promotional & spam indicators:
+  // These calls-to-action or marketing terms are NEVER part of legitimate bank debit/credit transactional alerts
   final RegExp unconditionalPromoKeywords = RegExp(
-    r'\b(welcome rewards|welcome offer|apply now|get flex|rewards with flex|eligible for|pre-approved|instant loan|personal loan|apply for credit|claim reward|claim your|earn\s+[\$\₹\£\€]?\s*[0-9]+|earn\s+.*welcome|congratulations|unlock rewards|exclusive offer|limited period offer|flat\s*₹|flat\s*rs|use code|discount|cashback up to|win up to|save up to|zero fee credit card|zero-fee|zero fee)\b',
+    r'\b(welcome rewards|welcome offer|apply now|get flex|rewards with flex|eligible for|pre-approved|instant loan|personal loan|apply for credit|claim reward|claim your|claim now|earn\s+[\$\₹\£\€]?\s*[0-9]+|earn\s+.*welcome|congratulations|unlock rewards|exclusive offer|limited period offer|flat\s*₹|flat\s*rs|use code|use promo|save flat|discount of|cashback up to|win up to|save up to|zero fee credit card|zero-fee|zero fee|scratch card|hurry\b|ends soon|order now|shop now|spin and win|refer and earn)\b',
     caseSensitive: false,
   );
 
@@ -69,9 +70,18 @@ bool isPromotionalOrMarketingNotification(String text) {
     return true;
   }
 
-  // 2. Strict phrases that prove real money transfer has occurred
+  // 2. Loan offers / limit increment marketing disguised with "credited"
+  final RegExp fakeCreditMarketing = RegExp(
+    r'\b(loan.*credited|limit increased|credit limit of|approved for loan|sanctioned loan|recharge now to get|avail loan)\b',
+    caseSensitive: false,
+  );
+  if (fakeCreditMarketing.hasMatch(lower)) {
+    return true;
+  }
+
+  // 3. Strict phrases that prove real money transfer has occurred
   final RegExp completedDebitConfirmation = RegExp(
-    r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|withdrawn from|deposited in|deposited to|credited to your|credited with|salary credited)\b',
+    r'\b(has been debited|was debited|debited by|debited for|debited from|debited with|debited\b|successfully debited|payment successful|paid successfully|sent successfully|transferred successfully|txn successful|spent on card|withdrawn from|deposited in|deposited to|credited to your|credited with|salary credited)\b',
     caseSensitive: false,
   );
 
@@ -119,7 +129,7 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
 
   // Strict Transaction Verification: Must contain at least one real transaction keyword
   RegExp transactionVerification = RegExp(
-    r'\b(debited|credited|debit|credit|paid|spent|sent|received|transferred|withdrawn|deposited|refunded|a/c|acct|vpa|txn|ref\s*no|upi\s*ref|imps|neft|rtgs|nach|pos\b|atm\b|autopay|mandate|purchase|charged)\b',
+    r'\b(debited|credited|debit|credit|paid|spent|sent|received|transferred|withdrawn|deposited|refunded|a/c|acct|vpa|txn|ref\s*no|upi\s*ref|imps|neft|rtgs|nach|pos\b|atm\b|autopay|mandate|purchase|charged|pagado|abonado|gasto|compra|pago|retirada|charge\b|prelevement|virement|paiement|retrait|abgebucht|gutgeschrieben|zahlung|ausgabe|bonifico|addebitato|accreditato|spesa|pagamento)\b',
     caseSensitive: false,
   );
   if (!transactionVerification.hasMatch(text)) {
@@ -127,94 +137,221 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
   }
 
   // 2. Amount Extraction
+  // Comprehensive currency matching across North America, Europe, UK, Asia, LatAm, Africa, Middle East, Oceania:
+  // Symbols: $, €, £, ¥, ₹, ₩, ₺, ₱, ฿, ₫, ₴, ₦, ₵, ₸, ₲, ֏, ؋, ৳, ៛, ₭, ₮, ₨, ₢, ₡, ₰, ₳, ₶, ₷, ₻, ₼, ₽, ₾
+  // Codes: USD, EUR, GBP, CAD, AUD, JPY, CNY, INR, CHF, BRL, MXN, SGD, HKD, NZD, SEK, NOK, DKK, PLN, TRY, AED, SAR, ZAR, MYR, IDR, PHP, THB, VND, NGN, KES, EGP, etc.
   double? amount;
-  // Supports global currencies: $, €, £, ¥, ₹, ₩, ₺, ₱, ฿, ₫, ₴, R$, CHF, CAD, AUD, USD, EUR, GBP, INR, etc.
+
+  const String globalCurrencies =
+      r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴\₦\₵\₸\₲\֏\؋\৳\៛\₭\₮\₨\₽\₾]|usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs\.?|brl|mxn|sgd|hkd|nzd|sek|nok|dkk|pln|try|aed|sar|zar|myr|idr|php|thb|vnd|ngn|kes|egp|ils|clp|cop|pen|czk|huf|ron|bgn|kwd|bhd|omr|qgt)';
+
+  // Pattern A: Currency or transactional verb followed by amount (e.g. "$125.50", "EUR 45,99", "debited: 300.00")
   RegExp amountRegex = RegExp(
-    r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|cny|rs\.?|debited\s+(?:by|for|of)?|debit\s+(?:by|for|of)?|credited\s+(?:by|for|of|with)?|credit\s+(?:by|for|of)?|paid|spent|amount)\s*:?\s*([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)',
+    '(?:$globalCurrencies|debited\\s+(?:by|for|of)?|debit\\s+(?:by|for|of)?|credited\\s+(?:by|for|of|with)?|credit\\s+(?:by|for|of)?|paid|spent|amount)\\s*:?\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)',
     caseSensitive: false,
   );
 
+  double? parseAmountString(String rawStr) {
+    String s = rawStr.trim();
+    // Handle European comma decimals (e.g. "1.250,50" -> 1250.50, or "45,99" -> 45.99)
+    if (s.contains(",") && s.contains(".")) {
+      if (s.lastIndexOf(",") > s.lastIndexOf(".")) {
+        // Dot is thousand separator, comma is decimal (1.250,50)
+        s = s.replaceAll('.', '').replaceAll(',', '.');
+      } else {
+        // Comma is thousand separator, dot is decimal (1,250.50)
+        s = s.replaceAll(',', '');
+      }
+    } else if (s.contains(",")) {
+      // Single comma: if followed by exactly 1 or 2 digits, likely decimal (e.g. "45,99")
+      if (RegExp(r',\d{1,2}$').hasMatch(s)) {
+        s = s.replaceAll(',', '.');
+      } else {
+        s = s.replaceAll(',', '');
+      }
+    }
+    return double.tryParse(s);
+  }
+
   var amountMatch = amountRegex.firstMatch(text);
   if (amountMatch != null && amountMatch.group(1) != null) {
-    String cleanAmountStr = amountMatch.group(1)!.replaceAll(',', '');
-    amount = double.tryParse(cleanAmountStr);
+    amount = parseAmountString(amountMatch.group(1)!);
   }
 
-  // Fallback A: standalone currency symbol or code followed by number (e.g. ₹500, Rs 500, $25.50)
+  // Fallback A: Standalone currency followed immediately by number
   if (amount == null) {
-    RegExp fallbackAmountRegex = RegExp(r'(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|cad|aud|chf|jpy|rs\.?)\s*([0-9]+(?:\.[0-9]{1,2})?)', caseSensitive: false);
+    RegExp fallbackAmountRegex = RegExp(
+      '$globalCurrencies\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)',
+      caseSensitive: false,
+    );
     var fallbackMatch = fallbackAmountRegex.firstMatch(text);
     if (fallbackMatch != null && fallbackMatch.group(1) != null) {
-      amount = double.tryParse(fallbackMatch.group(1)!);
+      amount = parseAmountString(fallbackMatch.group(1)!);
     }
   }
 
-  // Fallback B: number followed by currency or debited/credited (e.g. "500 debited", "250.00 rs debited")
+  // Fallback B: Number followed by currency or action keyword (e.g. "50.00 USD spent", "120 € debited")
   if (amount == null) {
-    RegExp numberBeforeKeywordRegex = RegExp(r'([0-9]+(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)\s*(?:[\$\€\£\¥\₹\₩\₺\₱\฿\₫\₴]|usd|eur|gbp|inr|rs\.?|debited|credited|paid|spent)', caseSensitive: false);
+    RegExp numberBeforeKeywordRegex = RegExp(
+      '([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})|[0-9]+(?:[.,][0-9]{1,2})?)\\s*(?:$globalCurrencies|debited|credited|paid|spent)',
+      caseSensitive: false,
+    );
     var match = numberBeforeKeywordRegex.firstMatch(text);
     if (match != null && match.group(1) != null) {
-      amount = double.tryParse(match.group(1)!.replaceAll(',', ''));
+      amount = parseAmountString(match.group(1)!);
     }
   }
 
-  // Fallback C: direct "debited/credited/debit/credit" followed by number anywhere (e.g. "debited 500")
+  // Fallback C: Direct debit/credit followed by number anywhere
   if (amount == null) {
-    RegExp debitCreditRegex = RegExp(r'(?:debited|credited|debit|credit)\s+(?:by|of|for)?\s*:?\s*([0-9]+(?:\.[0-9]{1,2})?)', caseSensitive: false);
+    RegExp debitCreditRegex = RegExp(
+      r'(?:debited|credited|debit|credit)\s+(?:by|of|for)?\s*:?\s*([0-9]+(?:[.,][0-9]{1,2})?)',
+      caseSensitive: false,
+    );
     var match = debitCreditRegex.firstMatch(text);
     if (match != null && match.group(1) != null) {
-      amount = double.tryParse(match.group(1)!);
+      amount = parseAmountString(match.group(1)!);
     }
   }
 
   if (amount == null || amount <= 0) return null;
 
-  // 3. Transaction Type (Income vs Expense)
+  // 3. Transaction Type (Income vs Expense Decision)
+  // When BOTH "debited" and "credited" exist in the message:
+  // Banks (ICICI, HDFC, SBI, Axis, etc.) frequently send messages like:
+  // - "Acct XX322 debited for Rs 330.00 on 17-Sep-26; LOKESH S credited. UPI:..."
+  // - "INR 500.00 debited from a/c ... towards ... credited to merchant"
+  // Here the user's primary account was DEBITED (Expense), and the third-party payee was CREDITED.
+  //
+  // Conversely, reversed transactions or incoming transfers state:
+  // - "Your a/c XX123 is credited with Rs 500 debited from Sender"
+  // Here the user's primary account was CREDITED (Income).
+
+  String lowerText = text.toLowerCase();
+  bool hasDebit = RegExp(r'\b(debited|debit|withdrawn|spent|paid|charged|purchase|sent)\b', caseSensitive: false).hasMatch(lowerText);
+  bool hasCredit = RegExp(r'\b(credited|credit|deposited|refund|refunded|cashback|salary|received)\b', caseSensitive: false).hasMatch(lowerText);
+
   bool isIncome = false;
-  // If scheduled/mandate reminder without actual debit, ignore or treat as expense if debit
-  RegExp incomeKeywords = RegExp(
-    r'\b(credited|received|added to your|deposited|refund|cashback|salary)\b',
-    caseSensitive: false,
-  );
-  if (incomeKeywords.hasMatch(text)) {
-    isIncome = true;
+  String? extractedPayeeFromDualPattern;
+
+  if (hasDebit && hasCredit) {
+    // Both are present! Determine which action applies to the user's account vs the counterparty.
+    int userAcctIndex = lowerText.indexOf(RegExp(r'\b(your a/c|acct|a/c|account|card ending|card)\b'));
+    int debitIndex = lowerText.indexOf(RegExp(r'\b(debited|debit|spent|paid)\b'));
+    int creditIndex = lowerText.indexOf(RegExp(r'\b(credited|credit|deposited|received)\b'));
+
+    // Check specific structural syntax:
+    // Case 1: "debited for ... ; <PAYEE> credited" or "debited ... credited to <PAYEE>" -> User is debited!
+    RegExp userDebitedOtherCredited = RegExp(
+      r'(?:debited|paid|spent).+?(?:;\s*([A-Za-z0-9\s&\.\-\@]+?)\s+credited|credited to\s+([A-Za-z0-9\s&\.\-\@]+?))',
+      caseSensitive: false,
+    );
+    var dualMatch = userDebitedOtherCredited.firstMatch(text);
+    if (dualMatch != null) {
+      isIncome = false; // Expense
+      extractedPayeeFromDualPattern = (dualMatch.group(1) ?? dualMatch.group(2))?.trim();
+    } else {
+      // Case 2: "credited with ... debited from <PAYER>" -> User is credited!
+      RegExp userCreditedOtherDebited = RegExp(
+        r'(?:credited|deposited|received).+?(?:debited from\s+([A-Za-z0-9\s&\.\-\@]+?)|from\s+([A-Za-z0-9\s&\.\-\@]+?))',
+        caseSensitive: false,
+      );
+      var dualCreditMatch = userCreditedOtherDebited.firstMatch(text);
+      if (dualCreditMatch != null) {
+        isIncome = true; // Income
+        extractedPayeeFromDualPattern = (dualCreditMatch.group(1) ?? dualCreditMatch.group(2))?.trim();
+      } else {
+        // Fallback positioning: which action is associated with the user's account identifier?
+        if (userAcctIndex != -1) {
+          int distToDebit = (userAcctIndex - debitIndex).abs();
+          int distToCredit = (userAcctIndex - creditIndex).abs();
+          isIncome = distToCredit < distToDebit;
+        } else {
+          // If no account identifier, debit action takes precedence in standard payment receipts
+          isIncome = false;
+        }
+      }
+    }
+  } else if (hasCredit) {
+    // Only credit terms exist:
+    // Validate that it's real credit to user's account
+    bool explicitUserCredit = RegExp(
+      r'\b(credited to your|credited to a/c|credited to acct|deposited in|refund|refunded|cashback|salary|received in your|received from|added to your)\b',
+      caseSensitive: false,
+    ).hasMatch(lowerText);
+
+    if (explicitUserCredit || !hasDebit) {
+      isIncome = true;
+    }
+  } else if (hasDebit) {
+    // Only debit terms exist:
+    isIncome = false;
   }
 
   // 4. Merchant / Payee Title Extraction
   String title = "Transaction";
 
-  // Check for specialized bank SMS patterns
-  // Pattern A: "by <MERCHANT>, INFO: ..." or "by <MERCHANT>"
-  RegExp byMerchantRegex = RegExp(r'\bby\s+([A-Za-z0-9\s&\.\-\@]+?)(?=,\s*INFO|\s+INFO|//|\.|$)', caseSensitive: false);
-  // Pattern B: "trf to <PAYEE> Refno" or "transfer to <PAYEE>"
-  RegExp trfToRegex = RegExp(r'\b(?:trf to|transfer to|transferred to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:Refno|Ref|on|via|using|If not)|\.|$)', caseSensitive: false);
-  // Pattern C: "AutoPay for <MERCHANT> SIP" or "AutoPay for <MERCHANT>"
-  RegExp autoPayRegex = RegExp(r'\b(?:AutoPay for|mandate for|autopay to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:debit|credit|scheduled|is scheduled)|\.|$)', caseSensitive: false);
-  // Pattern D: Standard "at/to/vpa/for/towards <PAYEE>"
-  RegExp payeeRegex = RegExp(
-    r'(?:at|to|vpa|info|for|towards)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:on|ref|using|via|a/c|card|bal|avbl|date|val)|\.|$)',
-    caseSensitive: false,
-  );
+  if (extractedPayeeFromDualPattern != null && extractedPayeeFromDualPattern.isNotEmpty) {
+    title = extractedPayeeFromDualPattern;
+  } else {
+    // Check for specialized bank SMS patterns
+    // Pattern 0: Bank debit where recipient is credited: "; <RECIPIENT> credited" (e.g. ICICI UPI alert)
+    RegExp recipientCreditedRegex = RegExp(
+      r';\s*([A-Za-z0-9\s&\.\-\@]+?)\s+credited\b',
+      caseSensitive: false,
+    );
+    // Pattern A: "by <MERCHANT>, INFO: ..." or "by <MERCHANT>"
+    RegExp byMerchantRegex = RegExp(r'\bby\s+([A-Za-z0-9\s&\.\-\@]+?)(?=,\s*INFO|\s+INFO|//|\.|$)', caseSensitive: false);
+    // Pattern B: "trf to <PAYEE> Refno" or "transfer to <PAYEE>"
+    RegExp trfToRegex = RegExp(r'\b(?:trf to|transfer to|transferred to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:Refno|Ref|on|via|using|If not)|\.|$)', caseSensitive: false);
+    // Pattern C: "AutoPay for <MERCHANT> SIP" or "AutoPay for <MERCHANT>"
+    RegExp autoPayRegex = RegExp(r'\b(?:AutoPay for|mandate for|autopay to)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:debit|credit|scheduled|is scheduled)|\.|$)', caseSensitive: false);
+    // Pattern D: Standard "at/to/vpa/for/towards <PAYEE>"
+    RegExp payeeRegex = RegExp(
+      r'(?:at|to|vpa|info|for|towards)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:on|ref|using|via|a/c|card|bal|avbl|date|val)|\.|$)',
+      caseSensitive: false,
+    );
+    // Pattern E: Incoming transfer "from <SENDER>"
+    RegExp fromSenderRegex = RegExp(
+      r'\b(?:from)\s+([A-Za-z0-9\s&\.\-\@]+?)(?=\s+(?:on|ref|using|via|a/c|card|bal|avbl|date|val)|\.|$)',
+      caseSensitive: false,
+    );
 
-  var match = trfToRegex.firstMatch(text) ??
-      byMerchantRegex.firstMatch(text) ??
-      autoPayRegex.firstMatch(text) ??
-      payeeRegex.firstMatch(text);
+    var match = recipientCreditedRegex.firstMatch(text) ??
+        trfToRegex.firstMatch(text) ??
+        byMerchantRegex.firstMatch(text) ??
+        autoPayRegex.firstMatch(text) ??
+        (isIncome ? fromSenderRegex.firstMatch(text) : null) ??
+        payeeRegex.firstMatch(text);
 
-  if (match != null && match.group(1) != null) {
-    String extractedTitle = match.group(1)!.trim();
-    // Clean trailing punctuation or noise
-    extractedTitle = extractedTitle.replaceAll(RegExp(r'[\/\,\.]+$'), '').trim();
-    if (extractedTitle.length > 2 && extractedTitle.length < 50) {
-      final List<String> noiseWords = [
-        "your a/c", "your account", "account", "a/c", "bank", "card",
-        "credit card", "debit card", "vpa", "upi", "pay", "payment",
-        "user", "transfer", "info"
-      ];
-      if (!noiseWords.contains(extractedTitle.toLowerCase())) {
-        title = extractedTitle;
-      }
+    if (match != null && match.group(1) != null) {
+      title = match.group(1)!.trim();
     }
+  }
+
+  // Clean trailing punctuation, UPI handle noise, or metadata words
+  title = title.replaceAll(RegExp(r'[\/\,\.;]+$'), '').trim();
+  // Strip UPI handle suffix if present (e.g. "lokesh.s@okhdfcbank" -> "lokesh.s" -> "Lokesh S")
+  if (title.contains("@")) {
+    int atIdx = title.indexOf("@");
+    if (atIdx > 2) {
+      title = title.substring(0, atIdx).trim();
+    }
+  }
+  // Replace dots/underscores often used in handles with spaces
+  title = title.replaceAll(RegExp(r'[\._]'), ' ').trim();
+
+  if (title.length > 2 && title.length < 50) {
+    final List<String> noiseWords = [
+      "your a/c", "your account", "account", "a/c", "bank", "card",
+      "credit card", "debit card", "vpa", "upi", "pay", "payment",
+      "user", "transfer", "info"
+    ];
+    if (noiseWords.contains(title.toLowerCase())) {
+      title = "Transaction";
+    }
+  } else {
+    title = "Transaction";
   }
 
   // Fallback title from package or notification sender if default

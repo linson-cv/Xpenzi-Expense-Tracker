@@ -187,6 +187,14 @@ abstract class BaseAiProvider {
     String? model,
     String? customEndpoint,
   });
+
+  Future<String?> generateAnswer({
+    required String prompt,
+    String? systemInstruction,
+    String? apiKey,
+    String? model,
+    String? customEndpoint,
+  });
 }
 
 // --------------------------------------------------------------------------

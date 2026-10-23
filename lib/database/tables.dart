@@ -7532,23 +7532,53 @@ class FinanceDatabase extends _$FinanceDatabase {
     required double amount,
     required DateTime timestamp,
     String? name,
-    Duration window = const Duration(seconds: 15),
+    Duration window = const Duration(minutes: 5),
   }) async {
     final start = timestamp.subtract(window);
     final end = timestamp.add(window);
     final matching = await (select(transactions)
           ..where((t) {
-            Expression<bool> predicate = t.amount.equals(amount) &
+            return t.amount.equals(amount) &
                 t.dateCreated.isBiggerOrEqualValue(start) &
                 t.dateCreated.isSmallerOrEqualValue(end);
-            if (name != null && name.trim().isNotEmpty) {
-              predicate = predicate & t.name.equals(name.trim());
-            }
-            return predicate;
-          })
-          ..limit(1))
+          }))
         .get();
-    return matching.firstOrNull;
+
+    if (matching.isEmpty) return null;
+    if (name == null || name.trim().isEmpty) return matching.first;
+
+    final targetName = name.trim().toLowerCase();
+    // 1. Exact match
+    for (final tx in matching) {
+      if (tx.name.trim().toLowerCase() == targetName) return tx;
+    }
+
+    // 2. Substring or word-overlap match (e.g. "Swiggy" vs "SWIGGY BANGALORE" or "Uber" vs "Uber India")
+    for (final tx in matching) {
+      final txLower = tx.name.trim().toLowerCase();
+      if (txLower.contains(targetName) || targetName.contains(txLower)) {
+        return tx;
+      }
+    }
+
+    // 3. Fallback: If amount is identical within the short window (e.g. 5 minutes)
+    // and both transactions are automated, it is almost certainly the exact same charge from multiple SMS/push sources
+    for (final tx in matching) {
+      if (tx.methodAdded == MethodAdded.email) {
+        return tx;
+      }
+    }
+
+    // Otherwise return first matching amount in the window if within tight 2 minutes
+    final tightStart = timestamp.subtract(const Duration(minutes: 2));
+    final tightEnd = timestamp.add(const Duration(minutes: 2));
+    for (final tx in matching) {
+      if (tx.dateCreated.isAfter(tightStart) && tx.dateCreated.isBefore(tightEnd)) {
+        return tx;
+      }
+    }
+
+    return null;
   }
 
   // when a change is made we can listen to it, debounce and sync after debounce timer

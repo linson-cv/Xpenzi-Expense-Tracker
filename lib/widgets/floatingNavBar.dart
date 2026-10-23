@@ -32,11 +32,11 @@ class FloatingNavBar extends StatelessWidget {
 
     Color borderColor = isAmoled
         ? const Color(0xFF262626)
-        : getColor(context, "border").withOpacity(0.4);
+        : getColor(context, "border").withValues(alpha: 0.4);
 
-    Color activeIndicatorColor = Theme.of(context).colorScheme.primaryContainer.withOpacity(0.85);
+    Color activeIndicatorColor = Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.85);
     Color activeIconColor = Theme.of(context).colorScheme.onPrimaryContainer;
-    Color inactiveIconColor = Theme.of(context).colorScheme.onSurface.withOpacity(0.65);
+    Color inactiveIconColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65);
 
     List<String> navShortcutKeys = [
       "customNavBarShortcut0",
@@ -56,7 +56,7 @@ class FloatingNavBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.6 : 0.15),
+                color: Colors.black.withValues(alpha: isDark ? 0.6 : 0.15),
                 blurRadius: 20,
                 spreadRadius: 4,
                 offset: const Offset(0, 8),
@@ -123,7 +123,7 @@ class FloatingNavBar extends StatelessWidget {
                                     : Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -178,7 +178,7 @@ class FloatingNavBar extends StatelessWidget {
                                 : Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.7),
+                                    .withValues(alpha: 0.7),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

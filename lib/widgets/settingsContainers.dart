@@ -781,7 +781,7 @@ class SettingsGroupCard extends StatelessWidget {
           border: Border.all(
             color: isAmoled
                 ? const Color(0xFF262626)
-                : getColor(context, "border").withOpacity(0.4),
+                : getColor(context, "border").withValues(alpha: 0.4),
             width: 1.2,
           ),
         ),

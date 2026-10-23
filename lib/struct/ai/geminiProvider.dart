@@ -405,4 +405,58 @@ Return ONLY raw JSON:
       return [];
     }
   }
+
+  @override
+  Future<String?> generateAnswer({
+    required String prompt,
+    String? systemInstruction,
+    String? apiKey,
+    String? model,
+    String? customEndpoint,
+  }) async {
+    String key = (apiKey ?? "").trim();
+    if (key.isEmpty) return null;
+
+    String targetModel = _resolveModel(model);
+
+    try {
+      Map<String, dynamic> body = {
+        "contents": [
+          {
+            "parts": [
+              {"text": prompt}
+            ]
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.3,
+        }
+      };
+
+      if (systemInstruction != null && systemInstruction.trim().isNotEmpty) {
+        body["system_instruction"] = {
+          "parts": [
+            {"text": systemInstruction}
+          ]
+        };
+      }
+
+      var resp = await http.post(
+        Uri.parse(
+            "https://generativelanguage.googleapis.com/v1beta/models/$targetModel:generateContent?key=$key"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 18));
+
+      if (resp.statusCode == 200) {
+        var data = jsonDecode(resp.body);
+        String? content =
+            data["candidates"]?[0]?["content"]?["parts"]?[0]?["text"];
+        return content?.trim();
+      }
+    } catch (e) {
+      debugPrint("Gemini generateAnswer error: $e");
+    }
+    return null;
+  }
 }

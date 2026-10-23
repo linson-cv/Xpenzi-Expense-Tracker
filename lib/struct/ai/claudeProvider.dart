@@ -344,4 +344,51 @@ Return ONLY raw JSON:
       return [];
     }
   }
+
+  @override
+  Future<String?> generateAnswer({
+    required String prompt,
+    String? systemInstruction,
+    String? apiKey,
+    String? model,
+    String? customEndpoint,
+  }) async {
+    String key = (apiKey ?? "").trim();
+    if (key.isEmpty) return null;
+
+    String targetModel = _resolveModel(model);
+
+    try {
+      Map<String, dynamic> body = {
+        "model": targetModel,
+        "max_tokens": 1024,
+        "messages": [
+          {"role": "user", "content": prompt}
+        ],
+      };
+
+      if (systemInstruction != null && systemInstruction.trim().isNotEmpty) {
+        body["system"] = systemInstruction;
+      }
+
+      var resp = await http.post(
+        Uri.parse("https://api.anthropic.com/v1/messages"),
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+        },
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 18));
+
+      if (resp.statusCode == 200) {
+        var data = jsonDecode(resp.body);
+        String? content = data["content"]?[0]?["text"];
+        return content?.trim();
+      }
+    } catch (e) {
+      debugPrint("Claude generateAnswer error: $e");
+    }
+    return null;
+  }
 }

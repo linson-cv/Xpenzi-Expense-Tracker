@@ -680,7 +680,7 @@ class _SelectAmountState extends State<SelectAmount> {
         Padding(
           padding: const EdgeInsetsDirectional.only(start: 4, end: 4),
           child: Tappable(
-            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
             borderRadius: 12,
             onTap: () {
               String currentWalletCurrency = widget.currencyKey ??
@@ -1718,7 +1718,7 @@ class _CurrencyConverterPopupState extends State<CurrencyConverterPopup> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Tappable(
-            color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.6),
+            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.6),
             borderRadius: 15,
             onTap: () {
               openCurrencyPickerPopup(
@@ -1783,10 +1783,10 @@ class _CurrencyConverterPopupState extends State<CurrencyConverterPopup> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Column(

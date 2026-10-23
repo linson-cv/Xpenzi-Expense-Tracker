@@ -20,6 +20,7 @@ import 'package:budget/widgets/util/showDatePicker.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/colors.dart';
+import 'package:budget/widgets/askAiBottomSheet.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 
 int roundToNearestNextFifthYear(int year) {
@@ -27,9 +28,14 @@ int roundToNearestNextFifthYear(int year) {
 }
 
 class TransactionsSearchPage extends StatefulWidget {
-  const TransactionsSearchPage({this.initialFilters, super.key});
+  const TransactionsSearchPage({
+    this.initialFilters,
+    this.initialSearchQuery,
+    super.key,
+  });
 
   final SearchFilters? initialFilters;
+  final String? initialSearchQuery;
 
   @override
   State<TransactionsSearchPage> createState() => TransactionsSearchPageState();
@@ -57,6 +63,12 @@ class TransactionsSearchPageState extends State<TransactionsSearchPage>
         skipDateTimeRange: false,
         skipSearchQuery: true,
       );
+    }
+
+    if (widget.initialSearchQuery != null &&
+        widget.initialSearchQuery!.trim().isNotEmpty) {
+      searchFilters.searchQuery = widget.initialSearchQuery!.trim();
+      searchInputController.text = widget.initialSearchQuery!.trim();
     }
 
     _animationControllerSearch = AnimationController(vsync: this, value: 1);
@@ -291,6 +303,13 @@ class TransactionsSearchPageState extends State<TransactionsSearchPage>
                             ? Icons.filter_alt_outlined
                             : Icons.filter_alt_rounded,
                       ),
+                    ),
+                    const SizedBox(width: 7),
+                    ButtonIcon(
+                      onTap: () {
+                        openAskAiBottomSheet(context);
+                      },
+                      icon: Icons.auto_awesome_rounded,
                     ),
                     const SizedBox(width: 15),
                   ],

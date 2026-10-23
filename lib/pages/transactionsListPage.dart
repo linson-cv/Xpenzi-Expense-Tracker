@@ -2,6 +2,7 @@ import 'package:budget/pages/transactionFilters.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
 import 'package:budget/struct/defaultPreferences.dart';
 import 'package:budget/struct/settings.dart';
+import 'package:budget/widgets/askAiBottomSheet.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
@@ -155,6 +156,14 @@ class TransactionsListPageState extends State<TransactionsListPage>
       selectedTransactionsAppBar: SelectedTransactionsAppBar(pageID: pageId),
       scrollbar: false,
       actions: [
+        IconButton(
+          padding: const EdgeInsetsDirectional.all(15 - 8),
+          tooltip: "Ask AI",
+          onPressed: () {
+            openAskAiBottomSheet(context);
+          },
+          icon: const Icon(Icons.auto_awesome_rounded),
+        ),
         IconButton(
           padding: const EdgeInsetsDirectional.all(15 - 8),
           tooltip: "search-transactions".tr(),

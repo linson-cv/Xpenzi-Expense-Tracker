@@ -15,6 +15,7 @@ class AutoAddedTransactionInfo {
   final bool isIncome;
   final DateTime timestamp;
   final String? transactionPk;
+  final String? note;
 
   AutoAddedTransactionInfo({
     required this.title,
@@ -22,6 +23,7 @@ class AutoAddedTransactionInfo {
     this.isIncome = false,
     required this.timestamp,
     this.transactionPk,
+    this.note,
   });
 
   Map<String, dynamic> toMap() {
@@ -31,6 +33,7 @@ class AutoAddedTransactionInfo {
       'isIncome': isIncome,
       'timestamp': timestamp.toIso8601String(),
       'transactionPk': transactionPk,
+      'note': note,
     };
   }
 
@@ -41,6 +44,7 @@ class AutoAddedTransactionInfo {
       isIncome: map['isIncome'] ?? false,
       timestamp: DateTime.tryParse(map['timestamp'] ?? '') ?? DateTime.now(),
       transactionPk: map['transactionPk']?.toString(),
+      note: map['note']?.toString(),
     );
   }
 }
@@ -84,14 +88,36 @@ void registerAutoDetectedTransactionForReview(
   double amount, {
   bool isIncome = false,
   String? transactionPk,
+  String? note,
 }) {
+  final now = DateTime.now();
+  final double absAmount = amount.abs();
+  final String normTitle = title.trim().toLowerCase();
+
+  // Deduplication check against currently pending review queue
+  final bool isDuplicate = _pendingReviewTransactions.any((pending) {
+    if (pending.amount.abs() != absAmount) return false;
+    final pendingNorm = pending.title.trim().toLowerCase();
+    final bool sameOrSimilarTitle = pendingNorm == normTitle ||
+        pendingNorm.contains(normTitle) ||
+        normTitle.contains(pendingNorm);
+    final bool withinTimeWindow = now.difference(pending.timestamp).inMinutes.abs() <= 10;
+    return sameOrSimilarTitle && withinTimeWindow;
+  });
+
+  if (isDuplicate) {
+    print("[AutoTransactionTracker] Ignored duplicate review item for $title ($amount)");
+    return;
+  }
+
   _pendingReviewTransactions.add(
     AutoAddedTransactionInfo(
       title: title,
       amount: amount,
       isIncome: isIncome,
-      timestamp: DateTime.now(),
+      timestamp: now,
       transactionPk: transactionPk,
+      note: note,
     ),
   );
   pendingReviewTransactionsNotifier.value = _pendingReviewTransactions.length;
@@ -119,6 +145,7 @@ void registerAutoAddedTransaction(
   double amount, {
   bool isIncome = false,
   String? transactionPk,
+  String? note,
 }) {
   _recentAutoAddedTransactions.add(
     AutoAddedTransactionInfo(
@@ -127,6 +154,7 @@ void registerAutoAddedTransaction(
       isIncome: isIncome,
       timestamp: DateTime.now(),
       transactionPk: transactionPk,
+      note: note,
     ),
   );
 }

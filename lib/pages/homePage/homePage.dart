@@ -19,6 +19,7 @@ import 'package:budget/pages/settingsPage.dart';
 import 'package:budget/pages/homePage/homePageCreditDebts.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
+import 'package:budget/widgets/askAiBottomSheet.dart';
 import 'package:budget/widgets/autoDetectedReviewBanner.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
@@ -59,11 +60,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void scrollToTop({int duration = 1200}) {
-    // if (_scrollController.offset <= 0) {
-    //   pushRoute(context, EditHomePage());
-    // } else {
-
-    // }
     _scrollController.animateTo(0,
         duration: Duration(
             milliseconds:
@@ -301,6 +297,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            IconButton(
+                              icon: const Icon(Icons.auto_awesome_rounded),
+                              tooltip: "Ask AI",
+                              onPressed: () {
+                                openAskAiBottomSheet(context);
+                              },
+                            ),
                             IconButton(
                               icon: Icon(appStateSettings["outlinedIcons"]
                                   ? Icons.edit_outlined

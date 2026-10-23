@@ -342,4 +342,51 @@ Return ONLY raw JSON:
       return [];
     }
   }
+
+  @override
+  Future<String?> generateAnswer({
+    required String prompt,
+    String? systemInstruction,
+    String? apiKey,
+    String? model,
+    String? customEndpoint,
+  }) async {
+    String baseUrl = _resolveBaseUrl(customEndpoint);
+    String key = (apiKey ?? "").trim();
+    String targetModel = _resolveModel(model);
+
+    try {
+      List<Map<String, String>> messages = [];
+      if (systemInstruction != null && systemInstruction.trim().isNotEmpty) {
+        messages.add({"role": "system", "content": systemInstruction});
+      }
+      messages.add({"role": "user", "content": prompt});
+
+      Map<String, String> headers = {
+        "Content-Type": "application/json",
+      };
+      if (key.isNotEmpty) {
+        headers["Authorization"] = "Bearer $key";
+      }
+
+      var resp = await http.post(
+        Uri.parse("$baseUrl/chat/completions"),
+        headers: headers,
+        body: jsonEncode({
+          "model": targetModel,
+          "messages": messages,
+          "temperature": 0.3,
+        }),
+      ).timeout(const Duration(seconds: 18));
+
+      if (resp.statusCode == 200) {
+        var data = jsonDecode(resp.body);
+        String? content = data["choices"]?[0]?["message"]?["content"];
+        return content?.trim();
+      }
+    } catch (e) {
+      debugPrint("Custom generateAnswer error: $e");
+    }
+    return null;
+  }
 }

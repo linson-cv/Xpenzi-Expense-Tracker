@@ -175,6 +175,7 @@ class _AutoDetectedReviewBannerState extends State<AutoDetectedReviewBanner> {
                                 routesToPopAfterDelete: RoutesToPopAfterDelete.None,
                                 selectedAmount: firstItem.amount,
                                 selectedTitle: firstItem.title,
+                                selectedNotes: firstItem.note,
                                 selectedCategory: category,
                                 startInitialAddTransactionSequence: false,
                                 selectedDate: firstItem.timestamp,

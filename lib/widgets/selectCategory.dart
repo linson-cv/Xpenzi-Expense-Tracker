@@ -298,9 +298,6 @@ class _SelectCategoryState extends State<SelectCategory> {
           double size = getWidthBottomSheet(context) <= 400
               ? (getWidthBottomSheet(context) - 20) / 4 - 50
               : 45;
-          // print(size);
-          // print(snapshot.data);
-          // print(size);
           List<Widget> categoryIcons = [];
           for (TransactionCategory category in snapshot.data!) {
             if (widget.categoryFks != null &&

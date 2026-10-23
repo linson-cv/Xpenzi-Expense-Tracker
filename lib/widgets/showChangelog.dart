@@ -26,6 +26,14 @@ import 'listItem.dart';
 
 String getChangelogString() {
   return """
+    < 1.3.6
+    (Release: Xpenzi 1.3.6 — Ask AI Financial Assistant & App-Wide Modernization)
+    (A) Ask AI Natural Language Assistant: Query spending patterns, vendor totals, and category breakdowns with conversational answers powered by your configured AI provider or smart local offline engine
+    (A) Quick AI Access: Dedicated floating action button above the add FAB, home dashboard AI action button, transactions list header entry, and search bar AI access
+    (A) Interactive Deep-Linking: Tap filtered transactions directly from the AI response card to inspect and review details in the transaction editor
+    (A) Bill Splitter Upgrades: Real-time item & people count indicator, interactive tip & tax quick presets (None, +5%, +10%, +15%, +18%, +20%), inviting empty state, and one-tap Share/Copy bill breakdown to WhatsApp, SMS, or clipboard
+    (A) Multi-Layer Notification Deduplication: Suppressed duplicate auto-entries from redundant SMS and banking app push notifications across a 5-minute sliding window with fuzzy merchant matching and pending review queue deduplication
+    (A) App-Wide Modernization & Modularization: Migrated deprecated Color APIs to .withValues(alpha:) across navigation, calendar, transaction filters, and settings, and modularized AI engine components
     < 1.3.5
     (Release: Xpenzi 1.3.5 — Robust Offline Intelligence, Auto-Review Sync & Crash Hardening)
     (A) Promotional & Rewards Notification Filter: Multi-layer detection of welcome rewards, credit card offers, marketing pushes, and loan solicitations, preventing fake transactions from being recorded

@@ -154,8 +154,6 @@ class _DayTotals {
 
 // ── Monthly Summary ──────────────────────────────────────────────────────────
 
-// ── Monthly Summary ──────────────────────────────────────────────────────────
-
 class _MonthlySummary extends StatelessWidget {
   const _MonthlySummary({
     required this.income,
@@ -173,10 +171,10 @@ class _MonthlySummary extends StatelessWidget {
       margin: const EdgeInsetsDirectional.symmetric(horizontal: 13, vertical: 4),
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -294,7 +292,7 @@ class _CalendarGrid extends StatelessWidget {
                         textColor: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -364,7 +362,7 @@ class _DayCell extends StatelessWidget {
     final Color bgColor = isSelected
         ? Theme.of(context).colorScheme.primary
         : isToday
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.6)
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6)
             : getColor(context, "lightDarkAccentHeavyLight");
     final Color textColor = isSelected
         ? Theme.of(context).colorScheme.onPrimary
@@ -405,7 +403,7 @@ class _DayCell extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 1),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? textColor.withOpacity(0.8)
+                          ? textColor.withValues(alpha: 0.8)
                           : Theme.of(context).colorScheme.primary,
                       shape: BoxShape.circle,
                     ),
@@ -417,7 +415,7 @@ class _DayCell extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 1),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? textColor.withOpacity(0.8)
+                          ? textColor.withValues(alpha: 0.8)
                           : Theme.of(context).colorScheme.error,
                       shape: BoxShape.circle,
                     ),
@@ -428,8 +426,8 @@ class _DayCell extends StatelessWidget {
                     height: 4,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? textColor.withOpacity(0.4)
-                          : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.4),
+                          ? textColor.withValues(alpha: 0.4)
+                          : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -441,10 +439,10 @@ class _DayCell extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w500,
               textColor: isSelected
-                  ? textColor.withOpacity(0.9)
+                  ? textColor.withValues(alpha: 0.9)
                   : (hasTx && totals!.expense > 0)
-                      ? Theme.of(context).colorScheme.error.withOpacity(0.85)
-                      : textColor.withOpacity(0.5),
+                      ? Theme.of(context).colorScheme.error.withValues(alpha: 0.85)
+                      : textColor.withValues(alpha: 0.5),
             ),
           ],
         ),

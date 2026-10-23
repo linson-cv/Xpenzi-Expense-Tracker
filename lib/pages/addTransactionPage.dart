@@ -765,8 +765,11 @@ class _AddTransactionPageState extends State<AddTransactionPage>
         setSelectedType(transactionTypeDisplayToEnum[widget.selectedType]);
       }
 
-      _titleInputController = TextEditingController();
-      _noteInputController = LinkHighlighter();
+      _titleInputController =
+          TextEditingController(text: widget.selectedTitle ?? "");
+      _noteInputController =
+          LinkHighlighter(initialText: widget.selectedNotes ?? "");
+      selectedTitle = widget.selectedTitle;
 
       Future.delayed(const Duration(milliseconds: 0), () async {
         if (widget.transferBalancePopup) {
@@ -2480,6 +2483,14 @@ class _SelectTitleState extends State<SelectTitle> {
       customDateTimeSelected = true;
     }
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 250), () {
+        if (mounted && enterTitleFocus.canRequestFocus) {
+          enterTitleFocus.requestFocus();
+        }
+      });
+    });
+
     super.initState();
   }
 
@@ -2691,9 +2702,11 @@ class _SelectTitleState extends State<SelectTitle> {
                             ),
                           ),
                   ),
-                  if (widget.disableAskForNote == false &&
-                          getIsFullScreen(context) ||
-                      appStateSettings["askForTransactionNoteWithTitle"])
+                  if ((widget.disableAskForNote == false &&
+                          getIsFullScreen(context)) ||
+                      appStateSettings["askForTransactionNoteWithTitle"] ==
+                          true ||
+                      widget.noteInputController.text.trim().isNotEmpty)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(top: 13),
                       child: Container(

@@ -219,25 +219,26 @@ Future initNotificationScanning() async {
 
   if (status == true) {
     await populateDefaultScannerTemplatesIfEmpty();
-    // If persistent background listener is enabled, run the persistent foreground task
+    // If persistent background listener is enabled, run the persistent foreground task to keep app alive
     if (appStateSettings["persistentBackgroundListener"] == true) {
       await startBackgroundListenerService();
-    } else {
-      await notificationListenerSubscription?.cancel();
-      notificationListenerSubscription =
-          NotificationListenerService.notificationsStream.listen(
-        (event) {
-          try {
-            onNotification(event);
-          } catch (e, stack) {
-            print("[NotificationEngine] Error processing notification: $e\n$stack");
-          }
-        },
-        onError: (err) {
-          print("[NotificationEngine] notificationsStream error: $err");
-        },
-      );
     }
+    
+    // Always maintain main isolate listener subscription as well
+    await notificationListenerSubscription?.cancel();
+    notificationListenerSubscription =
+        NotificationListenerService.notificationsStream.listen(
+      (event) {
+        try {
+          onNotification(event);
+        } catch (e, stack) {
+          print("[NotificationEngine] Error processing notification: $e\n$stack");
+        }
+      },
+      onError: (err) {
+        print("[NotificationEngine] notificationsStream error: $err");
+      },
+    );
   }
 }
 
@@ -614,6 +615,126 @@ double? getTransactionAmountFromEmail(String messageString,
   return amountDouble;
 }
 
+String getReadableAppNameFromPackage(String? packageOrMessage) {
+  if (packageOrMessage == null || packageOrMessage.isEmpty) return "Notification";
+  
+  // If messageString was passed, extract package name line
+  String pkg = packageOrMessage;
+  if (packageOrMessage.contains("Package name:")) {
+    final match = RegExp(r'Package name:\s*([^\n\r]+)', caseSensitive: false).firstMatch(packageOrMessage);
+    if (match != null && match.group(1) != null) {
+      pkg = match.group(1)!.trim();
+    }
+  }
+  
+  String lower = pkg.toLowerCase();
+  if (lower.contains("google.android.apps.messaging") ||
+      lower.contains("samsung.android.messaging") ||
+      lower.contains("messaging") ||
+      lower.contains("mms") ||
+      lower.contains("telephony")) {
+    return "SMS / Messages";
+  } else if (lower.contains("paisa") || lower.contains("gpay") || lower.contains("walletnfcrel")) {
+    return "Google Pay";
+  } else if (lower.contains("paypal")) {
+    return "PayPal";
+  } else if (lower.contains("venmo")) {
+    return "Venmo";
+  } else if (lower.contains("cashapp") || lower.contains("square.cash")) {
+    return "Cash App";
+  } else if (lower.contains("apple")) {
+    return "Apple Pay";
+  } else if (lower.contains("revolut")) {
+    return "Revolut";
+  } else if (lower.contains("monzo")) {
+    return "Monzo";
+  } else if (lower.contains("starlingbank") || lower.contains("starling")) {
+    return "Starling Bank";
+  } else if (lower.contains("n26")) {
+    return "N26";
+  } else if (lower.contains("wise")) {
+    return "Wise";
+  } else if (lower.contains("klarna")) {
+    return "Klarna";
+  } else if (lower.contains("chase")) {
+    return "Chase";
+  } else if (lower.contains("bofa") || lower.contains("bankofamerica")) {
+    return "Bank of America";
+  } else if (lower.contains("wellsfargo")) {
+    return "Wells Fargo";
+  } else if (lower.contains("citi")) {
+    return "Citibank";
+  } else if (lower.contains("capitalone")) {
+    return "Capital One";
+  } else if (lower.contains("barclays")) {
+    return "Barclays";
+  } else if (lower.contains("hsbc")) {
+    return "HSBC";
+  } else if (lower.contains("lloyds")) {
+    return "Lloyds Bank";
+  } else if (lower.contains("santander")) {
+    return "Santander";
+  } else if (lower.contains("natwest")) {
+    return "NatWest";
+  } else if (lower.contains("commbank") || lower.contains("commonwealth")) {
+    return "CommBank";
+  } else if (lower.contains("anz")) {
+    return "ANZ";
+  } else if (lower.contains("westpac")) {
+    return "Westpac";
+  } else if (lower.contains("nab")) {
+    return "NAB";
+  } else if (lower.contains("scotiabank")) {
+    return "Scotiabank";
+  } else if (lower.contains("td") && lower.contains("bank")) {
+    return "TD Bank";
+  } else if (lower.contains("rbc")) {
+    return "RBC";
+  } else if (lower.contains("phonepe")) {
+    return "PhonePe";
+  } else if (lower.contains("paytm")) {
+    return "Paytm";
+  } else if (lower.contains("dreamplug") || lower.contains("cred")) {
+    return "CRED";
+  } else if (lower.contains("whatsapp")) {
+    return "WhatsApp";
+  } else if (lower.contains("amazon")) {
+    return "Amazon Pay";
+  } else if (lower.contains("icici")) {
+    return "ICICI Bank";
+  } else if (lower.contains("hdfc")) {
+    return "HDFC Bank";
+  } else if (lower.contains("sbi")) {
+    return "SBI";
+  } else if (lower.contains("axis")) {
+    return "Axis Bank";
+  } else if (lower.contains("kotak")) {
+    return "Kotak Bank";
+  } else if (lower.contains("jupiter")) {
+    return "Jupiter";
+  } else if (lower.contains("fi.money") || lower.contains("epifi")) {
+    return "Fi Money";
+  } else if (lower.contains("slice")) {
+    return "Slice";
+  } else if (lower.contains("navi")) {
+    return "Navi";
+  } else if (lower.contains("onecard")) {
+    return "OneCard";
+  } else if (lower.contains("standardchartered") || lower.contains("sc.breeze")) {
+    return "Standard Chartered";
+  }
+
+  // Fallback: format package name cleanly (e.g. "com.bbva.mobile" -> "BBVA", "fr.boursorama" -> "Boursorama")
+  List<String> segments = pkg.split('.').where((s) => s.isNotEmpty && s != "android" && s != "app" && s != "mobile" && s != "com" && s != "net" && s != "org" && s != "co" && s != "uk").toList();
+  if (segments.isNotEmpty) {
+    String candidate = segments.firstWhere((s) => s.length > 2, orElse: () => segments.last);
+    if (candidate.length > 2) {
+      return candidate.capitalizeFirst;
+    }
+  }
+  return "Notification";
+}
+
 Future queueTransactionFromMessage(String messageString,
     {bool willPushRoute = true, DateTime? dateTime}) async {
   try {
@@ -694,19 +815,20 @@ Future queueTransactionFromMessage(String messageString,
   final double absoluteAmount = amountDouble.abs();
 
   // ─── Deduplication Check (In-Memory Key + Database Check) ─────────────────
-  final String dedupKey = "${title.trim().toLowerCase()}_${absoluteAmount.toStringAsFixed(2)}";
+  final String normTitle = title.trim().toLowerCase();
+  final String dedupKey = "${normTitle}_${absoluteAmount.toStringAsFixed(2)}";
   final DateTime? lastSeen = _recentlyProcessedNotificationKeys[dedupKey];
-  if (lastSeen != null && eventTime.difference(lastSeen).inSeconds.abs() <= 60) {
-    print("Notification Engine: Ignored in-memory duplicate notification for $dedupKey within 60 seconds.");
+  if (lastSeen != null && eventTime.difference(lastSeen).inMinutes.abs() <= 5) {
+    print("Notification Engine: Ignored in-memory duplicate notification for $dedupKey within 5 minutes.");
     return false;
   }
 
-  // Check existing database records with matching amount and similar name within 60 seconds window
+  // Check existing database records with matching amount within 5 minutes window
   Transaction? existingDbDuplicate = await database.findDuplicateTransaction(
     amount: absoluteAmount,
     timestamp: eventTime,
     name: title,
-    window: const Duration(seconds: 60),
+    window: const Duration(minutes: 5),
   );
   if (existingDbDuplicate != null) {
     print("Notification Engine: Ignored database duplicate for $title ($absoluteAmount) matching '${existingDbDuplicate.name}'");
@@ -715,9 +837,9 @@ Future queueTransactionFromMessage(String messageString,
 
   // Register in deduplication cache
   _recentlyProcessedNotificationKeys[dedupKey] = eventTime;
-  // Prune keys older than 120 seconds
+  // Prune keys older than 10 minutes
   _recentlyProcessedNotificationKeys.removeWhere(
-      (_, time) => DateTime.now().difference(time).inSeconds.abs() > 120);
+      (_, time) => DateTime.now().difference(time).inMinutes.abs() > 10);
 
   TransactionCategory? category;
   TransactionAssociatedTitleWithCategory? foundTitle =
@@ -749,8 +871,16 @@ Future queueTransactionFromMessage(String messageString,
     amountDouble = amountDouble * -1;
   }
 
+  final String appName = getReadableAppNameFromPackage(messageString);
+  final String transactionNote = "Auto-detected from $appName • ${getWordedDateShortMore(eventTime)}";
+
   if (willPushRoute && appStateSettings["autoInsertNotificationsDirectly"] != true) {
-    registerAutoDetectedTransactionForReview(title, amountDouble, isIncome: isIncome);
+    registerAutoDetectedTransactionForReview(
+      title,
+      amountDouble,
+      isIncome: isIncome,
+      note: transactionNote,
+    );
     BuildContext? currentCtx = navigatorKey.currentContext;
     if (currentCtx != null) {
       AllWallets? allWallets;
@@ -777,6 +907,7 @@ Future queueTransactionFromMessage(String messageString,
                 selectedAmount: amountDouble,
                 selectedTitle: title,
                 selectedCategory: category,
+                selectedNotes: transactionNote,
                 startInitialAddTransactionSequence: false,
                 selectedWallet: wallet,
                 selectedDate: dateTime,
@@ -812,8 +943,6 @@ Future queueTransactionFromMessage(String messageString,
       // Expenses should have positive amount in database when income: false,
       // and income transactions have income: true with positive amount
       double finalAmount = amountDouble.abs();
-
-      final String transactionNote = "Auto-detected from notification • ${getWordedDateShortMore(eventTime)}";
 
       final int? rowId = await database.createOrUpdateTransaction(
         Transaction(

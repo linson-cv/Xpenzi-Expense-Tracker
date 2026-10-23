@@ -241,7 +241,7 @@ class _ExploreEditToolbar extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha: 0.18),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -580,7 +580,7 @@ class _MorePagesState extends State<MorePages> {
                   fontFamily: appStateSettings["font"],
                   fontFamilyFallback: const ["Inter"],
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -836,7 +836,7 @@ class _GridCardWrapperState extends State<_GridCardWrapper> with SingleTickerPro
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -2068,7 +2068,7 @@ class _EraseDataConfirmationPopupState extends State<EraseDataConfirmationPopup>
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Button(
                       color: typedText == "DELETE" ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      textColor: typedText == "DELETE" ? Theme.of(context).colorScheme.onError : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      textColor: typedText == "DELETE" ? Theme.of(context).colorScheme.onError : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                       label: "erase".tr(),
                       onTap: () {
                         if (typedText == "DELETE") {

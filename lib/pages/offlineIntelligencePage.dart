@@ -730,7 +730,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
                                             hintText: "e.g. Your electricity bill of Rs. 850 is due on 20-Sep. Pay now.\nOR\nRs. 450 debited from A/c XX1234 at SWIGGY on 13-Sep.",
                                             hintStyle: TextStyle(fontSize: 12, color: getColor(context, "textLight")),
                                             filled: true,
-                                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                                             border: OutlineInputBorder(
                                               borderRadius: BorderRadius.circular(12),
                                               borderSide: BorderSide.none,
@@ -775,13 +775,13 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
                                               color: (isError
                                                       ? Colors.orange
                                                       : (testResult!.contains("Filtered") ? Colors.blue : Colors.green))
-                                                  .withOpacity(0.12),
+                                                  .withValues(alpha: 0.12),
                                               borderRadius: BorderRadius.circular(10),
                                               border: Border.all(
                                                 color: (isError
                                                         ? Colors.orange
                                                         : (testResult!.contains("Filtered") ? Colors.blue : Colors.green))
-                                                    .withOpacity(0.35),
+                                                    .withValues(alpha: 0.35),
                                               ),
                                             ),
                                             child: TextFont(
@@ -912,7 +912,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
                                 color: Theme.of(context)
                                     .colorScheme
                                     .primaryContainer
-                                    .withOpacity(0.4),
+                                    .withValues(alpha: 0.4),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(

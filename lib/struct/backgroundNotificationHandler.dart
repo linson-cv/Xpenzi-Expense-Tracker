@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:budget/functions.dart';
 import 'package:budget/struct/databaseGlobal.dart' as db_global;
 import 'package:budget/struct/localNlpParser.dart';
+import 'package:budget/struct/notificationEngine.dart' show getReadableAppNameFromPackage;
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_listener_service/notification_event.dart';
@@ -18,6 +21,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 // The callback function must be a top-level or static function with vm:entry-point
 @pragma('vm:entry-point')
 void startBackgroundListenerCallback() {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
   FlutterForegroundTask.setTaskHandler(BackgroundNotificationTaskHandler());
 }
 
@@ -31,6 +36,8 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
+      WidgetsFlutterBinding.ensureInitialized();
+      DartPluginRegistrant.ensureInitialized();
       print("[BackgroundService] Started foreground task with starter: ${starter.name}");
       await _initBackgroundResources();
       _startListening();
@@ -68,8 +75,17 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
   void onReceiveData(Object data) {
     try {
       print("[BackgroundService] Received data from main isolate: $data");
-    } catch (e) {
-      print("[BackgroundService] Error in onReceiveData: $e");
+      if (data is Map<String, dynamic> && data["action"] == "process_notification") {
+        final String messageString = data["messageString"] ?? "";
+        final DateTime eventTime = data["eventTime"] != null
+            ? DateTime.tryParse(data["eventTime"]) ?? DateTime.now()
+            : DateTime.now();
+        if (messageString.isNotEmpty) {
+          _processAndInsertTransaction(messageString, eventTime);
+        }
+      }
+    } catch (e, stack) {
+      print("[BackgroundService] Error in onReceiveData: $e\n$stack");
     }
   }
 
@@ -247,9 +263,10 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       final double absoluteAmount = amountDouble.abs();
 
       // Deduplication check
-      final String dedupKey = "${title.trim().toLowerCase()}_${absoluteAmount.toStringAsFixed(2)}";
+      final String normTitle = title.trim().toLowerCase();
+      final String dedupKey = "${normTitle}_${absoluteAmount.toStringAsFixed(2)}";
       final DateTime? lastSeen = _dedupCache[dedupKey];
-      if (lastSeen != null && eventTime.difference(lastSeen).inSeconds.abs() <= 60) {
+      if (lastSeen != null && eventTime.difference(lastSeen).inMinutes.abs() <= 5) {
         print("[BackgroundService] Dedup: in-memory duplicate ignored ($dedupKey)");
         return;
       }
@@ -259,7 +276,7 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
           amount: absoluteAmount,
           timestamp: eventTime,
           name: title,
-          window: const Duration(seconds: 60),
+          window: const Duration(minutes: 5),
         );
         if (existingDbDuplicate != null) {
           print("[BackgroundService] Dedup: database duplicate ignored for $title ($absoluteAmount)");
@@ -306,7 +323,8 @@ class BackgroundNotificationTaskHandler extends TaskHandler {
       String walletPk = wallet?.walletPk ?? "0";
 
       final String dateStr = "${eventTime.year}-${eventTime.month.toString().padLeft(2, '0')}-${eventTime.day.toString().padLeft(2, '0')}";
-      final String transactionNote = "Auto-detected from background notification • $dateStr";
+      final String appName = getReadableAppNameFromPackage(messageString);
+      final String transactionNote = "Auto-detected from $appName • $dateStr";
 
       try {
         final int? rowId = await _bgDatabase!.createOrUpdateTransaction(
