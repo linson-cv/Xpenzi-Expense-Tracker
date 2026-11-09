@@ -4124,7 +4124,7 @@ class FinanceDatabase extends _$FinanceDatabase {
             budgetPk: sharedBudget.budgetPk,
             order: sharedBudget.order,
             pinned: sharedBudget.pinned);
-        return into(budgets).insertOnConflictUpdate(
+        return await into(budgets).insertOnConflictUpdate(
             sharedBudget.copyWith(dateTimeModified: Value(DateTime.now())));
       } catch (e) {
         int numberOfBudgets = (await database.getAmountOfBudgets());
@@ -4224,7 +4224,7 @@ class FinanceDatabase extends _$FinanceDatabase {
         sharedTransaction = sharedTransactions[0];
         sharedTransaction = transaction.copyWith(
             transactionPk: sharedTransaction.transactionPk);
-        return into(transactions).insertOnConflictUpdate(sharedTransaction
+        return await into(transactions).insertOnConflictUpdate(sharedTransaction
             .copyWith(dateTimeModified: Value(DateTime.now())));
       } catch (e) {
         print(e.toString());

@@ -207,7 +207,7 @@ Future<bool> shareFeedback(String feedbackText, String feedbackType,
   try {
     String subject = "Xpenzi Feedback - $feedbackType";
     String body = "Stars: ${(selectedStars ?? -1) + 1}\n\n$feedbackText\n\nApp Version: ${getVersionString()}";
-    String emailUrlString = "mailto:nav.lin.dev@gmail.com?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}";
+    String emailUrlString = "mailto:navlinlabs@gmail.com?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}";
     bool success = await openUrl(emailUrlString);
     
     if (!success) {

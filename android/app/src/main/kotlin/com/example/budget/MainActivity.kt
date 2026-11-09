@@ -1,4 +1,4 @@
-package com.navlin.xpenzi
+package com.navlinlabs.xpenzi
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -12,7 +12,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterFragmentActivity() {
-    private val HAPTIC_CHANNEL = "com.navlin.xpenzi/haptics"
+    private val HAPTIC_CHANNEL = "com.navlinlabs.xpenzi/haptics"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

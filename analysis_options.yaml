@@ -5,6 +5,10 @@ analyzer:
     - "packages/**"
     - "**/*.g.dart"
     - "lib/database/schema_versions.dart"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
   errors:
     deprecated_member_use: ignore
     invalid_use_of_protected_member: ignore

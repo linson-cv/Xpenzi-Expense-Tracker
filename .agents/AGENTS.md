@@ -14,7 +14,7 @@
 - **No Automatic Builds**: Never run `flutter build` commands (`apk`, `appbundle`, `ipa`, `web`) unless explicitly requested by the user. Use `flutter analyze` for verification.
 
 ## 4. App Identity & Compatibility
-- **App Name**: Xpenzi (`com.navlin.xpenzi`)
+- **App Name**: Xpenzi (`com.navlinlabs.xpenzi`)
 - **Baseline**: Forked from [Cashew](https://github.com/jameskokoska/Cashew).
 - **Compatibility**: Maintain full backup/restore and CSV/JSON import compatibility with legacy Cashew files.
 
@@ -26,7 +26,7 @@
 
 ## 6. Google Sign-In, OAuth & Cloud Sync Architecture
 - **Android Client Configuration**:
-  - Package Name: `com.navlin.xpenzi`
+  - Package Name: `com.navlinlabs.xpenzi`
   - On Android, `serverClientId` (the Web Client ID from `google-services.json`) MUST be passed to `GoogleSignIn(serverClientId: ..., scopes: ...)` when requesting Drive scopes (`drive.appdata`). NEVER pass an Android client ID to `clientId` on Android.
 - **Keystores & Fingerprints**:
   - Ensure all 4 key fingerprints (Play Store App Signing classic & PQ, Upload Key, and Local Debug Key) are registered in Firebase / Google Cloud Console.

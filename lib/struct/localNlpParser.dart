@@ -113,7 +113,7 @@ bool isNonFinancialPackageByDefault(String? packageName,
   final String pkg = packageName.trim().toLowerCase();
 
   // Always ignore Xpenzi's own notifications
-  if (pkg == "com.navlin.xpenzi" || pkg.contains("xpenzi")) {
+  if (pkg == "com.navlinlabs.xpenzi" || pkg.contains("xpenzi")) {
     return true;
   }
 

@@ -229,7 +229,7 @@ String getChangelogString() {
     (A) Removed all lingering backend references to the original Cashew open-source tracker
     < 1.0.4
     (A) Fixed Pay Bill quick action to open Credit/Debt Transactions screen cleanly without stacked blank pages
-    (A) Updated developer attribution to LN.Dev & support email to nav.lin.dev@gmail.com
+    (A) Updated developer attribution to LN.Dev & support email to navlinlabs@gmail.com
     (A) Enhanced Amoled Black mode surface theme consistency across cards, scaffolds, & dialogs
     (A) Positioned Home Quick Action Dock as floating overlay with scroll pass-through
     (A) Resolved onboarding continuation freeze & added Google Sign-In error notification snackbars

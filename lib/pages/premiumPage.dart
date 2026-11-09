@@ -26,7 +26,7 @@ import 'package:sa3_liquid/sa3_liquid.dart';
 import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
-bool premiumPopupEnabled = kIsWeb == false;
+bool premiumPopupEnabled = false;
 bool tryStoreEnabled = kIsWeb == false && kDebugMode == false;
 StreamSubscription<List<PurchaseDetails>>? purchaseListener;
 Map<String, ProductDetails> storeProducts = {};
@@ -480,10 +480,10 @@ openManagePurchase() {
     openUrl("https://apps.apple.com/account/subscriptions");
   } else if (appStateSettings["purchaseID"] == productIDs["monthly"]) {
     openUrl(
-        "https://play.google.com/store/account/subscriptions?sku=xpenzi.pro.monthly&package=com.navlin.xpenzi");
+        "https://play.google.com/store/account/subscriptions?sku=xpenzi.pro.monthly&package=com.navlinlabs.xpenzi");
   } else if (appStateSettings["purchaseID"] == productIDs["yearly"]) {
     openUrl(
-        "https://play.google.com/store/account/subscriptions?sku=xpenzi.pro.yearly&package=com.navlin.xpenzi");
+        "https://play.google.com/store/account/subscriptions?sku=xpenzi.pro.yearly&package=com.navlinlabs.xpenzi");
   } else {
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
       openUrl("https://play.google.com/store/account/subscriptions");
@@ -703,8 +703,8 @@ showHelpRestorePopup(BuildContext context) {
     onCancelLabel: "close".tr(),
     onSubmitLabel: "contact".tr(),
     onSubmit: () async {
-      bool openResult = await openUrl('mailto:nav.lin.dev@gmail.com');
-      if (openResult == false) copyToClipboard("nav.lin.dev@gmail.com");
+      bool openResult = await openUrl('mailto:navlinlabs@gmail.com');
+      if (openResult == false) copyToClipboard("navlinlabs@gmail.com");
     },
     onExtra: () =>
         openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/assets/faq.md"),
@@ -1421,7 +1421,7 @@ class PremiumBanner extends StatelessWidget {
             borderRadius: borderRadius,
             onTap: () {
               if (kIsWeb) {
-                openUrl("mailto:nav.lin.dev@gmail.com");
+                openUrl("mailto:navlinlabs@gmail.com");
               } else {
                 openContainer();
               }

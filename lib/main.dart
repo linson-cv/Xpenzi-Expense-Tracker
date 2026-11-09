@@ -53,7 +53,7 @@ class _HapticBinaryMessenger extends BinaryMessenger {
       try {
         final MethodCall call = _jsonCodec.decodeMethodCall(message);
         if (call.method == 'HapticFeedback.vibrate') {
-          _delegate.send('com.navlin.xpenzi/haptics', _stdCodec.encodeMethodCall(MethodCall('vibrate', call.arguments?.toString())));
+          _delegate.send('com.navlinlabs.xpenzi/haptics', _stdCodec.encodeMethodCall(MethodCall('vibrate', call.arguments?.toString())));
           return Future<ByteData?>.value(null);
         }
       } catch (_) {}

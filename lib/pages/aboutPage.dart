@@ -87,8 +87,8 @@ class AboutPageState extends State<AboutPage> {
           Tappable(
             borderRadius: 12,
             color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
-            onTap: () => openUrl('mailto:nav.lin.dev@gmail.com'),
-            onLongPress: () => copyToClipboard("nav.lin.dev@gmail.com"),
+            onTap: () => openUrl('mailto:navlinlabs@gmail.com'),
+            onLongPress: () => copyToClipboard("navlinlabs@gmail.com"),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Column(
@@ -114,7 +114,7 @@ class AboutPageState extends State<AboutPage> {
                   ),
                   const SizedBox(height: 2),
                   TextFont(
-                    text: "nav.lin.dev@gmail.com",
+                    text: "navlinlabs@gmail.com",
                     fontSize: 12,
                     textColor: getColor(context, "textLight"),
                   ),

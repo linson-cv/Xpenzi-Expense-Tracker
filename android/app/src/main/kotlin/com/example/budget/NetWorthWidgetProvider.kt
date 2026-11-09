@@ -1,4 +1,4 @@
-package com.navlin.xpenzi
+package com.navlinlabs.xpenzi
 
 import android.appwidget.AppWidgetManager
 import android.content.Context

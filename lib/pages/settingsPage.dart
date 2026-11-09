@@ -619,9 +619,7 @@ class _MorePagesState extends State<MorePages> {
             // NORMAL / SEARCH MODE: 2-column card grid (Strict Sizing)
             // ────────────────────────────────────────────────────────────
             Builder(builder: (context) {
-              final isPremiumVisible = !hidden.contains("premium") &&
-                  catalogue.containsKey("premium") &&
-                  catalogue["premium"]!.matchesSearch(widget.searchValue);
+              const isPremiumVisible = false;
 
               final gridCards = orderedKeys
                   .where((k) => k != "premium")
