@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Xpenzi: Expense Tracker</title>
+  <style>
+    :root {
+      --bg-color: #070d1e;
+      --card-bg: #0d1938;
+      --text-color: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent-color: #00e5ff;
+      --border-color: #1e293b;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .back-nav {
+      margin-bottom: 25px;
+    }
+    .back-nav a {
+      color: var(--accent-color);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .last-updated {
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+    .content-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 35px;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin-top: 25px;
+      margin-bottom: 12px;
+      color: var(--accent-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    p {
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    ul {
+      margin-left: 22px;
+      margin-bottom: 16px;
+      color: var(--text-muted);
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="back-nav">
+      <a href="./index.html">&larr; Back to Xpenzi Home</a>
+    </div>
+
+    <div class="content-box">
+      <h1>Privacy Policy</h1>
+      <div class="last-updated">Last updated: November 9, 2026 &bull; Application ID: <code>com.navlinlabs.xpenzi</code></div>
+
+      <p><strong>Navlin Labs</strong> ("we", "our", or "us") develops and maintains <strong>Xpenzi: Expense Tracker</strong>. We are committed to safeguarding your personal and financial privacy. This Privacy Policy outlines how your data is handled, stored, and protected when you use our Application.</p>
+
+      <h2>1. Privacy-First & Local Storage</h2>
+      <p>Xpenzi is architected as an offline-capable, local-first application:</p>
+      <ul>
+        <li>All transaction entries, budgets, account balances, categories, and personal notes are stored locally on your device in a secure SQLite database.</li>
+        <li>We do not sell, rent, monetize, or harvest your financial transactions or personal records.</li>
+        <li>We do not operate any proprietary servers that store your personal financial data.</li>
+      </ul>
+
+      <h2>2. Information Handled and Processed</h2>
+      <h3>A. Financial Transactions and Budgets</h3>
+      <p>Expense amounts, income, descriptions, categories, wallets, recurring bills, and budgets you create or import are stored entirely locally on your device. You maintain full ownership and control of your financial database.</p>
+
+      <h3>B. On-Device SMS & Notification Intelligence (Optional)</h3>
+      <p>If you grant SMS or notification permissions, transaction parsing is executed 100% on-device using local regular expressions and offline NLP. Raw SMS messages, transaction alerts, and contact details are NEVER uploaded or transmitted to any external server.</p>
+
+      <h3>C. Google Drive Cloud Backups & Authentication (Optional)</h3>
+      <p>Google Sign-In is used solely to authenticate your identity with Google to enable cloud backups. The Application only interacts with its own isolated application data folder (<code>appDataFolder</code> / <code>drive.appdata</code>) inside your personal Google Drive account. The App cannot view, modify, access, or delete your personal files, Google Photos, or documents.</p>
+
+      <h3>D. Biometric Authentication</h3>
+      <p>If enabled, biometric authentication (fingerprint or face recognition) is handled directly by Android's native BiometricPrompt API. Biometric data never leaves your device and is never accessible to the Application.</p>
+
+      <h2>3. Third-Party Services</h2>
+      <ul>
+        <li><strong>Google Play Services:</strong> Authentication and billing (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>).</li>
+        <li><strong>Google Drive API:</strong> User-controlled cloud backups.</li>
+        <li><strong>Firebase Analytics & Crashlytics:</strong> Anonymous telemetry and diagnostics to resolve bugs.</li>
+      </ul>
+
+      <h2>4. Data Retention and Deletion</h2>
+      <p>You can export or permanently delete all your data at any time via <strong>Settings > Database > Erase/Reset Database</strong> within the app, or delete your Google Drive backup directly from your Google Drive settings.</p>
+
+      <h2>5. Contact Us</h2>
+      <p>If you have any questions or inquiries regarding this Privacy Policy, please contact:</p>
+      <ul>
+        <li><strong>Developer / Organization:</strong> Navlin Labs</li>
+        <li><strong>Application ID:</strong> <code>com.navlinlabs.xpenzi</code></li>
+        <li><strong>Support Email:</strong> <a href="mailto:navlinlabs@gmail.com">navlinlabs@gmail.com</a></li>
+      </ul>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 Navlin Labs. All rights reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>
