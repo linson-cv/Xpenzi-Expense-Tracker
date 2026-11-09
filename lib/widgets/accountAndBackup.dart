@@ -138,7 +138,7 @@ Future<bool> signInGoogle(
               scopes: scopes)
           : signIn.GoogleSignIn(
               serverClientId:
-                  "722336458062-qus0b9e1ffrah6t2sc2aoecnke5aaasr.apps.googleusercontent.com",
+                  "958951838080-b3309j66p79itvlf2b2u83945ce812t8.apps.googleusercontent.com",
               scopes: scopes,
             );
       // googleSignIn?.currentUser?.clearAuthCache();

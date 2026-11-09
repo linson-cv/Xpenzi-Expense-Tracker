@@ -50,20 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC1N9_KqyEYJkQ_hbizd1KGpBsSwZbf_WM',
-    appId: '1:722336458062:android:611658d8ba6955626baa1f',
-    messagingSenderId: '722336458062',
-    projectId: 'xpenzi-f315a',
-    authDomain: 'xpenzi-f315a.firebaseapp.com',
-    storageBucket: 'xpenzi-f315a.firebasestorage.app',
+    apiKey: 'AIzaSyCQPQIeuCRXHUFkJvZ4NP0RAwHqFCGlJ-s',
+    appId: '1:958951838080:android:f356843a9a64e75e5cf165',
+    messagingSenderId: '958951838080',
+    projectId: 'xpenzi-fb1ae',
+    authDomain: 'xpenzi-fb1ae.firebaseapp.com',
+    storageBucket: 'xpenzi-fb1ae.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC1N9_KqyEYJkQ_hbizd1KGpBsSwZbf_WM',
-    appId: '1:722336458062:android:611658d8ba6955626baa1f',
-    messagingSenderId: '722336458062',
-    projectId: 'xpenzi-f315a',
-    storageBucket: 'xpenzi-f315a.firebasestorage.app',
+    apiKey: 'AIzaSyCQPQIeuCRXHUFkJvZ4NP0RAwHqFCGlJ-s',
+    appId: '1:958951838080:android:f356843a9a64e75e5cf165',
+    messagingSenderId: '958951838080',
+    projectId: 'xpenzi-fb1ae',
+    storageBucket: 'xpenzi-fb1ae.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
