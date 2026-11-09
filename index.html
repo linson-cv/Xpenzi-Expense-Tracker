@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xpenzi: Expense Tracker - Smart, Private Budget Planner</title>
+  <link rel="icon" type="image/png" href="assets/icon/icon.png">
+  <style>
+    :root {
+      --bg-color: #070d1e;
+      --card-bg: #0d1938;
+      --text-color: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent-color: #00e5ff;
+      --accent-blue: #2563eb;
+      --border-color: #1e293b;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--accent-color);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+    }
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent-color) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 15px;
+    }
+    p.subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 60px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 25px;
+      border-radius: 16px;
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color);
+    }
+    .card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    section.policy {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 40px;
+      margin-top: 40px;
+    }
+    section.policy h2 {
+      font-size: 2rem;
+      margin-bottom: 25px;
+      color: #fff;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+    section.policy h3 {
+      font-size: 1.3rem;
+      margin-top: 25px;
+      margin-bottom: 10px;
+      color: var(--accent-color);
+    }
+    section.policy h4 {
+      font-size: 1.1rem;
+      margin-top: 15px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    section.policy ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: var(--text-muted);
+    }
+    section.policy li {
+      margin-bottom: 6px;
+    }
+    section.policy p {
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border-color);
+    }
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">OFFLINE-FIRST & PRIVACY-FOCUSED</div>
+      <h1>Xpenzi: Expense Tracker</h1>
+      <p class="subtitle">A smart, offline personal finance tracker and budget planner designed to help you monitor spending, plan savings goals, and secure your financial future.</p>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h3>🔒 100% Private & Local</h3>
+        <p>All transaction entries, accounts, and budgets are saved in a local database directly on your phone. No personal data is tracked or sold.</p>
+      </div>
+      <div class="card">
+        <h3>⚡ On-Device Intelligence</h3>
+        <p>Smart on-device detection of bank transactional alerts and SMS. Zero raw financial text leaves your device.</p>
+      </div>
+      <div class="card">
+        <h3>☁️ Google Drive Backup</h3>
+        <p>Secure, user-controlled cloud backups stored solely in your personal Google Drive hidden application data folder (drive.appdata).</p>
+      </div>
+      <div class="card">
+        <h3>📊 Visual Budget Reports</h3>
+        <p>Dynamic charts, net worth progression, category budget alerts, and multi-wallet currency management.</p>
+      </div>
+    </div>
+
+    <!-- Official Privacy Policy Section Required for Google Verification -->
+    <section class="policy" id="privacy">
+      <h2>Privacy Policy for Xpenzi: Expense Tracker</h2>
+      <p><strong>Last updated:</strong> November 9, 2026</p>
+      <p><strong>Navlin Labs</strong> ("we", "our", or "us") develops and maintains <strong>Xpenzi: Expense Tracker</strong> (Application ID: <code>com.navlinlabs.xpenzi</code>). We are committed to protecting your personal and financial privacy. This Privacy Policy outlines how your data is handled, stored, and protected when you use our Application.</p>
+
+      <h3>1. Privacy-First & Local Storage</h3>
+      <p>Xpenzi is architected as an offline-capable, privacy-first tool:</p>
+      <ul>
+        <li>All transaction entries, budgets, account balances, categories, and personal notes are stored locally on your device in a secure SQLite database.</li>
+        <li>We do not sell, rent, monetize, or harvest your financial transactions or personal records.</li>
+        <li>We do not operate any proprietary servers that store your personal financial data.</li>
+      </ul>
+
+      <h3>2. Information Handled and Processed</h3>
+      <h4>A. Financial Transactions and Budgets</h4>
+      <p>Expense amounts, income, descriptions, categories, wallets, recurring bills, and budgets you create or import are stored entirely locally on your device. You maintain full ownership and control of your financial database.</p>
+
+      <h4>B. On-Device SMS & Notification Intelligence (Optional)</h4>
+      <p>If you grant SMS or notification permissions, transaction parsing is executed 100% on-device using local regular expressions and offline NLP. Raw SMS messages, transaction alerts, and contact details are NEVER uploaded or transmitted to any external server.</p>
+
+      <h4>C. Google Drive Cloud Backups & Authentication (Optional)</h4>
+      <p>Google Sign-In is used solely to authenticate your identity with Google to enable cloud backups. The Application only interacts with its own isolated application data folder (<code>appDataFolder</code> / <code>drive.appdata</code>) inside your personal Google Drive account. The App cannot view, modify, access, or delete your personal files, Google Photos, or documents.</p>
+
+      <h4>D. Biometric Authentication</h4>
+      <p>If enabled, biometric authentication (fingerprint or face recognition) is handled directly by Android's native BiometricPrompt API. Biometric data never leaves your device and is never accessible to the Application.</p>
+
+      <h3>3. Third-Party Services</h3>
+      <ul>
+        <li><strong>Google Play Services:</strong> Authentication and billing (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>).</li>
+        <li><strong>Google Drive API:</strong> User-controlled cloud backups.</li>
+        <li><strong>Firebase Analytics & Crashlytics:</strong> Anonymous telemetry and diagnostics to resolve bugs.</li>
+      </ul>
+
+      <h3>4. Contact Us</h3>
+      <p>If you have any questions or feedback regarding this Privacy Policy or application practices, please reach out to us:</p>
+      <ul>
+        <li><strong>Developer:</strong> Navlin Labs</li>
+        <li><strong>Application ID:</strong> com.navlinlabs.xpenzi</li>
+        <li><strong>Email:</strong> <a href="mailto:navlinlabs@gmail.com">navlinlabs@gmail.com</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>&copy; 2026 Navlin Labs. All rights reserved. &bull; <a href="#privacy">Privacy Policy</a> &bull; Contact: <a href="mailto:navlinlabs@gmail.com">navlinlabs@gmail.com</a></p>
+    </footer>
+  </div>
+</body>
+</html>
