@@ -5,12 +5,14 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
+import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -18,6 +20,11 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity: FlutterFragmentActivity() {
     private val HAPTIC_CHANNEL = "com.navlinlabs.xpenzi/haptics"
     private val PERMISSIONS_CHANNEL = "com.navlinlabs.xpenzi/permissions"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
