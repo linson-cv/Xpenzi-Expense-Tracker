@@ -1,20 +1,36 @@
 {
-  "version": "1.3.9+36",
-  "releaseName": "v1.3.9 Initial Public Release",
-  "releasedDate": "2026-11-09",
+  "version": "1.4.0+37",
+  "releaseName": "v1.4.0 Onboarding, Permissions & Compliance Polish",
+  "releasedDate": "2026-11-10",
   "majorChanges": [
-    "🔒 100% Offline-First & Private: Secure local SQLite database on your device with no data selling",
-    "⚡ On-Device SMS & Alert Intelligence: Automatic, private financial SMS and notification parsing running 100% locally",
-    "☁️ Google Drive Cloud Backups: One-tap encrypted backup and restore directly with your personal Google Drive",
-    "✨ Ask AI Financial Assistant: Conversational natural language search to query spending and trends instantly"
+    "🛡️ Google Play Prominent Disclosures: Clear, sequential in-app disclosures for App Notifications, Notification Listener Access, and Battery Optimization",
+    "🔄 Seamless Settings Navigation: Opening Android permission screens now stays inside the app task so pressing Back returns directly to Xpenzi",
+    "🟢 Live Device Permission Status: Real-time Active/Off badges in Device Permissions with confirmation dialogs before disabling active permissions"
   ],
   "notes": [
-    "🎯 Visual Category Budgets: Set monthly spending limits with real-time progress indicators",
-    "📈 Interactive Net Worth & Cash-Flow Charts: Track monthly trends and balances with clean charts",
-    "💳 Multi-Wallet & Multi-Currency: Manage bank accounts, cash, and credit cards with exchange rates",
-    "⏰ Recurring Transactions: Scheduled budgets and bill payment reminders across device reboots",
-    "🔐 Biometric App Lock: Protect your financial records with Fingerprint & Face Unlock",
-    "📤 Data Export & Portability: Full control to export your data anytime to CSV or JSON"
+    "⌨️ Smooth Nickname Onboarding: Auto-focuses the keyboard when continuing without sign-in and prevents accidental app exit on save or back",
+    "👤 Instant Google Account Display: Explore tab and Home greeting immediately reflect your signed-in Google profile name",
+    "🔗 Updated Privacy Policy & Web Links: Linked directly to the official Xpenzi Privacy Policy and web portal"
   ],
-  "previousReleases": []
+  "previousReleases": [
+    {
+      "version": "1.3.9+36",
+      "releaseName": "v1.3.9 Initial Public Release",
+      "releasedDate": "2026-11-09",
+      "majorChanges": [
+        "🔒 100% Offline-First & Private: Secure local SQLite database on your device with no data selling",
+        "⚡ On-Device SMS & Alert Intelligence: Automatic, private financial SMS and notification parsing running 100% locally",
+        "☁️ Google Drive Cloud Backups: One-tap encrypted backup and restore directly with your personal Google Drive",
+        "✨ Ask AI Financial Assistant: Conversational natural language search to query spending and trends instantly"
+      ],
+      "notes": [
+        "🎯 Visual Category Budgets: Set monthly spending limits with real-time progress indicators",
+        "📈 Interactive Net Worth & Cash-Flow Charts: Track monthly trends and balances with clean charts",
+        "💳 Multi-Wallet & Multi-Currency: Manage bank accounts, cash, and credit cards with exchange rates",
+        "⏰ Recurring Transactions: Scheduled budgets and bill payment reminders across device reboots",
+        "🔐 Biometric App Lock: Protect your financial records with Fingerprint & Face Unlock",
+        "📤 Data Export & Portability: Full control to export your data anytime to CSV or JSON"
+      ]
+    }
+  ]
 }

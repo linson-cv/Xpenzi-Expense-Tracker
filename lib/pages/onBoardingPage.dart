@@ -21,9 +21,6 @@ import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/textInput.dart';
 import 'package:budget/pages/addTransactionPage.dart';
-import 'package:budget/pages/autoTransactionsPageEmail.dart';
-import 'package:budget/pages/offlineIntelligencePage.dart';
-import 'package:budget/struct/notificationEngine.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/viewAllTransactionsButton.dart';
 import 'package:drift/drift.dart' hide Column;
@@ -161,28 +158,6 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       popRoute(context);
     }
 
-    bool shouldOpenOfflineIntelligence = false;
-
-    if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid &&
-        appStateSettings["notificationScanning"] != true &&
-        !widget.popNavigationWhenDone) {
-      try {
-        bool isGranted = await safeIsNotificationPermissionGranted();
-        if (!isGranted && context.mounted) {
-          bool status =
-              await requestReadNotificationPermission(context: context);
-          if (status) {
-            shouldOpenOfflineIntelligence = true;
-          } else {
-            await updateSettings("skippedOfflineIntelligenceOnboarding", true,
-                updateGlobalState: false);
-          }
-        }
-      } catch (e, stack) {
-        recordAppError("OnboardingNotificationCheck", e, stackTrace: stack);
-      }
-    }
-
     if (widget.popNavigationWhenDone) {
       popRoute(context);
     } else {
@@ -192,13 +167,11 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
           updateGlobalState: true,
           forceGlobalStateUpdate: true);
       initialPageSwitcherKey.currentState?.refresh();
-      if (shouldOpenOfflineIntelligence && context.mounted) {
-        pushRoute(context, const OfflineIntelligencePage());
-      }
     }
   }
 
   Future<void> continueWithoutSignInWithForcedName(BuildContext context) async {
+    _focusNode.unfocus();
     String currentName = (appStateSettings["username"] ?? "").toString().trim();
     if (currentName.isEmpty) {
       dynamic result = await openBottomSheet(
@@ -215,18 +188,20 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
             nextWithInput: (text) {
               if (text.trim().isNotEmpty) {
                 updateSettings("username", text.trim(),
-                    updateGlobalState: false);
+                    pagesNeedingRefresh: [0], updateGlobalState: false);
               }
             },
             selectedText: appStateSettings["username"],
             placeholder: "nickname".tr(),
             autoFocus: true,
+            requestLateAutoFocus: true,
+            textCapitalization: TextCapitalization.words,
           ),
         ),
       );
       if (result is String && result.trim().isNotEmpty) {
         await updateSettings("username", result.trim(),
-            updateGlobalState: false);
+            pagesNeedingRefresh: [0], updateGlobalState: false);
       }
     }
 
@@ -822,12 +797,16 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
+        if (Navigator.canPop(context)) {
+          popRoute(context);
+          return;
+        }
         int currentPage = controller.page?.round() ?? 0;
         if (currentPage > 0) {
           previousOnBoardPage();
         } else {
-          if (widget.popNavigationWhenDone && Navigator.canPop(context)) {
-            popRoute(context);
+          if (widget.popNavigationWhenDone) {
+            nextNavigation();
           } else {
             SystemNavigator.pop();
           }

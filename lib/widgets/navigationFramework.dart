@@ -45,7 +45,6 @@ import 'package:budget/widgets/fab.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/iconButtonScaled.dart';
 import 'package:budget/widgets/navigationSidebar.dart';
-import 'package:budget/widgets/notificationsSettings.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
@@ -426,12 +425,14 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       bool isDatabaseCorruptedPopupShown = openDatabaseCorruptedPopup(context);
       if (isDatabaseCorruptedPopupShown) return;
 
-      await initializeNotificationsPlatform();
-
       bool isChangelogShown = showChangelog(context);
       bool isRatingPopupShown = false;
       if (isChangelogShown == false) {
         isRatingPopupShown = openRatingPopupCheck(context);
+      }
+
+      if (isChangelogShown == false && isRatingPopupShown == false) {
+        await runOrderedAppPermissionsFlow(context);
       }
 
       await setDailyNotifications(context);

@@ -3800,7 +3800,9 @@ class PermissionsSettingsSubPage extends StatefulWidget {
 
 class _PermissionsSettingsSubPageState
     extends State<PermissionsSettingsSubPage> {
+  bool _isPostNotificationsGranted = false;
   bool _isNotificationAccessGranted = false;
+  bool _isBatteryOptimizationIgnored = false;
   bool _isLoading = true;
 
   @override
@@ -3810,13 +3812,37 @@ class _PermissionsSettingsSubPageState
   }
 
   Future<void> _checkPermissions() async {
-    bool granted = await safeIsNotificationPermissionGranted();
+    bool postNotifications = await arePostNotificationsEnabledAndroid();
+    bool notificationAccess = await safeIsNotificationPermissionGranted();
+    bool batteryUnrestricted = await isIgnoringBatteryOptimizationsAndroid();
     if (mounted) {
       setState(() {
-        _isNotificationAccessGranted = granted;
+        _isPostNotificationsGranted = postNotifications;
+        _isNotificationAccessGranted = notificationAccess;
+        _isBatteryOptimizationIgnored = batteryUnrestricted;
         _isLoading = false;
       });
     }
+  }
+
+  Widget _buildStatusBadge(BuildContext context, bool isActive) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive
+            ? getColor(context, "incomeAmount").withValues(alpha: 0.15)
+            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextFont(
+        text: isActive ? "Active" : "Off",
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        textColor: isActive
+            ? getColor(context, "incomeAmount")
+            : getColor(context, "textLight"),
+      ),
+    );
   }
 
   @override
@@ -3837,12 +3863,44 @@ class _PermissionsSettingsSubPageState
             children: [
               SettingsContainer(
                 title: "Notifications",
-                description: "Enable or disable notifications for this app",
+                description: _isLoading
+                    ? "Checking permission status..."
+                    : _isPostNotificationsGranted
+                        ? "Active • Bill reminders, budget & confirmation alerts enabled"
+                        : "Not Enabled • Tap to enable app notifications",
+                afterWidget: _isLoading
+                    ? null
+                    : _buildStatusBadge(context, _isPostNotificationsGranted),
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.notifications_outlined
                     : Icons.notifications_rounded,
-                onTap: () {
-                  AppSettings.openAppSettings(type: AppSettingsType.notification);
+                onTap: () async {
+                  if (_isPostNotificationsGranted) {
+                    openPopup(
+                      context,
+                      title: "Notifications Active",
+                      icon: Icons.check_circle_rounded,
+                      description:
+                          "App notifications are currently active for Xpenzi.\n\nDo you want to open Android notification settings to manage or disable them?",
+                      onSubmitLabel: "Manage / Disable",
+                      onCancelLabel: "Keep Active",
+                      onSubmit: () async {
+                        popRoute(context);
+                        await openAppNotificationSettingsInTask();
+                      },
+                      onCancel: () {
+                        popRoute(context);
+                      },
+                    );
+                  } else {
+                    bool granted =
+                        await promptPostNotificationsPermissionWithDisclosure(
+                            context);
+                    if (!granted) {
+                      await openAppNotificationSettingsInTask();
+                    }
+                    _checkPermissions();
+                  }
                 },
               ),
               SettingsContainer(
@@ -3854,41 +3912,19 @@ class _PermissionsSettingsSubPageState
                         : "Not Enabled • Tap to set up auto-detection",
                 afterWidget: _isLoading
                     ? null
-                    : Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 9, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _isNotificationAccessGranted
-                              ? getColor(context, "incomeAmount")
-                                  .withValues(alpha: 0.15)
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextFont(
-                          text: _isNotificationAccessGranted ? "Active" : "Off",
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          textColor: _isNotificationAccessGranted
-                              ? getColor(context, "incomeAmount")
-                              : getColor(context, "textLight"),
-                        ),
-                      ),
+                    : _buildStatusBadge(context, _isNotificationAccessGranted),
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.mark_email_read_outlined
                     : Icons.mark_email_read_rounded,
                 onTap: () async {
                   if (_isNotificationAccessGranted) {
-                    // Requirement 4: Already turned on popup - only open settings if user confirms they want to manage it
                     openPopup(
                       context,
                       title: "Notification Access Active",
                       icon: Icons.check_circle_rounded,
                       description:
-                          "Notification access is already turned on and actively capturing payment alerts on this device.\n\nDo you want to open Android device settings to manage or turn off this permission?",
-                      onSubmitLabel: "Manage Settings",
+                          "Notification access is already turned on and actively capturing payment alerts on this device.\n\nDo you want to open Android device settings to manage or disable this permission?",
+                      onSubmitLabel: "Manage / Disable",
                       onCancelLabel: "Keep Active",
                       onSubmit: () async {
                         popRoute(context);
@@ -3899,22 +3935,47 @@ class _PermissionsSettingsSubPageState
                       },
                     );
                   } else {
-                    // Requirement 1-3: Standard flow to turn it on with disclosure, setting all templates, & battery popup
-                    bool status = await requestReadNotificationPermission(
-                        context: context);
+                    await requestReadNotificationPermission(context: context);
                     _checkPermissions();
                   }
                 },
               ),
               SettingsContainer(
                 title: "Battery Optimization",
-                description:
-                    "Allow unrestricted background running for notification capture",
+                description: _isLoading
+                    ? "Checking permission status..."
+                    : _isBatteryOptimizationIgnored
+                        ? "Active • Unrestricted background running enabled"
+                        : "Not Enabled • Tap to allow unrestricted background capture",
+                afterWidget: _isLoading
+                    ? null
+                    : _buildStatusBadge(context, _isBatteryOptimizationIgnored),
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.battery_saver_outlined
                     : Icons.battery_saver_rounded,
-                onTap: () {
-                  promptBatteryOptimizationPopup(context);
+                onTap: () async {
+                  if (_isBatteryOptimizationIgnored) {
+                    openPopup(
+                      context,
+                      title: "Unrestricted Battery Active",
+                      icon: Icons.check_circle_rounded,
+                      description:
+                          "Battery optimization exemption is already active so Xpenzi can reliably capture alerts in the background.\n\nDo you want to open Android battery settings to manage or disable this exemption?",
+                      onSubmitLabel: "Manage / Disable",
+                      onCancelLabel: "Keep Active",
+                      onSubmit: () async {
+                        popRoute(context);
+                        await openBatteryOptimizationSettingsInTask(
+                            directRequest: false);
+                      },
+                      onCancel: () {
+                        popRoute(context);
+                      },
+                    );
+                  } else {
+                    await promptBatteryOptimizationPopup(context);
+                    _checkPermissions();
+                  }
                 },
               ),
               SettingsContainer(
@@ -3924,7 +3985,7 @@ class _PermissionsSettingsSubPageState
                     ? Icons.settings_applications_outlined
                     : Icons.settings_applications_rounded,
                 onTap: () {
-                  AppSettings.openAppSettings();
+                  openAppDetailsSettingsInTask();
                 },
               ),
             ],

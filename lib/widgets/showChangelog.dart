@@ -55,7 +55,7 @@ bool showChangelog(
   bool majorChangesOnly = false,
   Widget? extraWidget,
 }) {
-  final String currentVersion = packageInfoGlobal?.version ?? "1.3.9";
+  final String currentVersion = packageInfoGlobal?.version ?? "1.4.0";
   final int currentVersionInt = parseVersionInt(currentVersion);
   final int lastLoginVersionInt =
       parseVersionInt(appStateSettings["lastLoginVersion"]);

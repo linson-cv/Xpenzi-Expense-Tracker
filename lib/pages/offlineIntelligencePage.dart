@@ -36,6 +36,7 @@ class OfflineIntelligencePage extends StatefulWidget {
 class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
     with WidgetsBindingObserver {
   bool isPermissionGranted = false;
+  bool isBatteryUnrestricted = false;
   bool isCheckingPermission = true;
   bool _showAllCapturedLogs = false;
   StreamSubscription<ServiceNotificationEvent>? _uiNotificationSub;
@@ -98,10 +99,12 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
   Future<void> _checkPermission() async {
     setState(() => isCheckingPermission = true);
     if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
-      bool status = await NotificationListenerService.isPermissionGranted();
+      bool status = await safeIsNotificationPermissionGranted();
+      bool batteryStatus = await isIgnoringBatteryOptimizationsAndroid();
       if (mounted) {
         setState(() {
           isPermissionGranted = status;
+          isBatteryUnrestricted = batteryStatus;
           isCheckingPermission = false;
         });
       }
@@ -109,6 +112,7 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
       if (mounted) {
         setState(() {
           isPermissionGranted = false;
+          isBatteryUnrestricted = false;
           isCheckingPermission = false;
         });
       }
@@ -578,10 +582,57 @@ class _OfflineIntelligencePageState extends State<OfflineIntelligencePage>
             const Divider(height: 1),
             SettingsContainer(
               title: "Battery Optimization Settings",
-              description: "Ensure Android doesn't put background listener to sleep",
+              description: isBatteryUnrestricted
+                  ? "Active • Unrestricted background running enabled"
+                  : "Ensure Android doesn't put background listener to sleep",
+              afterWidget: isCheckingPermission
+                  ? null
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isBatteryUnrestricted
+                            ? getColor(context, "incomeAmount")
+                                .withValues(alpha: 0.15)
+                            : Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextFont(
+                        text: isBatteryUnrestricted ? "Active" : "Off",
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        textColor: isBatteryUnrestricted
+                            ? getColor(context, "incomeAmount")
+                            : getColor(context, "textLight"),
+                      ),
+                    ),
               icon: Icons.battery_charging_full_rounded,
-              onTap: () {
-                promptBatteryOptimizationPopup(context);
+              onTap: () async {
+                if (isBatteryUnrestricted) {
+                  openPopup(
+                    context,
+                    title: "Unrestricted Battery Active",
+                    icon: Icons.check_circle_rounded,
+                    description:
+                        "Battery optimization exemption is already active so Xpenzi can reliably capture alerts in the background.\n\nDo you want to open Android battery settings to manage or disable this exemption?",
+                    onSubmitLabel: "Manage / Disable",
+                    onCancelLabel: "Keep Active",
+                    onSubmit: () async {
+                      popRoute(context);
+                      await openBatteryOptimizationSettingsInTask(
+                          directRequest: false);
+                    },
+                    onCancel: () {
+                      popRoute(context);
+                    },
+                  );
+                } else {
+                  await promptBatteryOptimizationPopup(context);
+                  _checkPermission();
+                }
               },
             ),
             const Divider(height: 1),

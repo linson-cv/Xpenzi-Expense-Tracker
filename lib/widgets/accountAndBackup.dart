@@ -163,6 +163,11 @@ Future<bool> signInGoogle(
         googleUser = account;
         await updateSettings("currentUserEmail", googleUser?.email ?? "",
             updateGlobalState: false);
+        if ((appStateSettings["username"] ?? "").toString().trim().isEmpty &&
+            (googleUser?.displayName ?? "").trim().isNotEmpty) {
+          await updateSettings("username", googleUser!.displayName!.trim(),
+              pagesNeedingRefresh: [0], updateGlobalState: false);
+        }
       } else {
         // User cancelled the sign-in flow or dismissed the account picker
         print("[Google Sign-In] Account returned null (cancelled or dismissed).");
@@ -231,6 +236,8 @@ void refreshUIAfterLoginChange() {
   sidebarStateKey.currentState?.refreshState();
   accountsPageStateKey.currentState?.refreshState();
   settingsGoogleAccountLoginButtonKey.currentState?.refreshState();
+  settingsPageStateKey.currentState?.refreshState();
+  homePageStateKey.currentState?.refreshState();
 }
 
 Future<bool> testIfHasGmailAccess() async {
@@ -737,10 +744,24 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
 
   @override
   Widget build(BuildContext context) {
+    final String savedEmail =
+        (appStateSettings["currentUserEmail"] ?? "").toString().trim();
+    final bool isSignedIn = googleUser != null ||
+        (appStateSettings["hasSignedIn"] == true && savedEmail.isNotEmpty);
+    final String displayLabel = (googleUser?.displayName != null &&
+            googleUser!.displayName!.trim().isNotEmpty)
+        ? googleUser!.displayName!.trim()
+        : (appStateSettings["username"] != null &&
+                appStateSettings["username"].toString().trim().isNotEmpty)
+            ? appStateSettings["username"].toString().trim()
+            : savedEmail.isNotEmpty
+                ? savedEmail.split('@').first
+                : "account".tr();
+
     if (widget.navigationSidebarButton == true) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 600),
-        child: googleUser == null
+        child: !isSignedIn
             ? getPlatform() == PlatformOS.isIOS
                 ? NavigationSidebarButton(
                     key: const ValueKey("login"),
@@ -768,7 +789,7 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
                   )
                 : NavigationSidebarButton(
                     key: const ValueKey("user"),
-                    label: googleUser!.displayName ?? "",
+                    label: displayLabel,
                     icon: widget.forceButtonName == null
                         ? appStateSettings["outlinedIcons"]
                             ? Icons.person_outlined
@@ -780,7 +801,7 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
                   ),
       );
     }
-    return googleUser == null
+    return !isSignedIn
         ? getPlatform() == PlatformOS.isIOS
             ? SettingsContainerOpenPage(
                 openPage: const AccountsPage(),
@@ -814,7 +835,12 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
               )
             : SettingsContainerOpenPage(
                 openPage: const AccountsPage(),
-                title: widget.forceButtonName ?? googleUser!.displayName ?? "",
+                onTap: googleUser == null
+                    ? (openContainer) {
+                        loginWithSync(onNext: openContainer);
+                      }
+                    : null,
+                title: widget.forceButtonName ?? displayLabel,
                 icon: widget.forceButtonName == null
                     ? appStateSettings["outlinedIcons"]
                         ? Icons.person_outlined
@@ -942,7 +968,7 @@ class _BackupManagementState extends State<BackupManagement> {
                     Expanded(
                       child: AboutInfoBox(
                         title: "web-app".tr(),
-                        link: "https://budget-track.web.app/",
+                        link: "https://linson-cv.github.io/Xpenzi-Expense-Tracker/",
                         color: appStateSettings["materialYou"]
                             ? Theme.of(context).colorScheme.secondaryContainer
                             : getColor(context, "lightDarkAccentHeavyLight"),

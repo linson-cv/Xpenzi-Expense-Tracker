@@ -19,10 +19,78 @@ import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/struct/backgroundNotificationHandler.dart';
 import 'package:budget/struct/errorLog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:provider/provider.dart';
+
+const MethodChannel _kPermissionsChannel =
+    MethodChannel('com.navlinlabs.xpenzi/permissions');
+
+Future<bool> isIgnoringBatteryOptimizationsAndroid() async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return false;
+  try {
+    final bool? result = await _kPermissionsChannel
+        .invokeMethod<bool>('isIgnoringBatteryOptimizations');
+    return result == true;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<bool> arePostNotificationsEnabledAndroid() async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) return false;
+  try {
+    final androidPlugin = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    bool? enabled = await androidPlugin?.areNotificationsEnabled();
+    return enabled == true;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<void> openAppNotificationSettingsInTask() async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) {
+    await AppSettings.openAppSettings(type: AppSettingsType.notification);
+    return;
+  }
+  try {
+    await _kPermissionsChannel.invokeMethod('openAppNotificationSettings');
+  } catch (_) {
+    await AppSettings.openAppSettings(type: AppSettingsType.notification);
+  }
+}
+
+Future<void> openBatteryOptimizationSettingsInTask({bool directRequest = true}) async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) {
+    await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+    return;
+  }
+  try {
+    if (directRequest) {
+      await _kPermissionsChannel.invokeMethod('requestIgnoreBatteryOptimizations');
+    } else {
+      await _kPermissionsChannel.invokeMethod('openBatteryOptimizationSettings');
+    }
+  } catch (_) {
+    await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+  }
+}
+
+Future<void> openAppDetailsSettingsInTask() async {
+  if (getPlatform(ignoreEmulation: true) != PlatformOS.isAndroid) {
+    await AppSettings.openAppSettings();
+    return;
+  }
+  try {
+    await _kPermissionsChannel.invokeMethod('openAppDetailsSettings');
+  } catch (_) {
+    await AppSettings.openAppSettings();
+  }
+}
 
 StreamSubscription<ServiceNotificationEvent>? notificationListenerSubscription;
 List<String> recentCapturedNotifications = [];
@@ -301,25 +369,60 @@ Future initNotificationScanning() async {
 }
 
 Future<void> promptBatteryOptimizationPopup(BuildContext context) async {
+  BuildContext? popupContext =
+      context.mounted ? context : navigatorKey.currentContext;
+  if (popupContext == null) return;
+
+  Completer<void> completer = Completer<void>();
+  _AppResumeObserver? resumeObserver;
+  bool submitted = false;
+
+  void cleanup() {
+    resumeObserver?.dispose();
+    resumeObserver = null;
+  }
+
   openPopup(
-    context,
+    popupContext,
     title: "Disable Battery Optimization",
     icon: Icons.battery_charging_full_rounded,
     description:
-        "To ensure continuous, real-time background detection of bank SMS & payment alerts when the app is closed, Android requires battery optimization to be turned off for Xpenzi.\n\n• Prevents Android from killing the notification listener\n• Ensures transactions are captured immediately in the background\n\n⚙️ You can customize auto-insert, NLP parsing rules, and templates anytime under Settings > Offline Intelligence.",
+        "To ensure continuous, real-time background detection of bank SMS & payment alerts when the app is closed, Android requires battery optimization to be turned off for Xpenzi.\n\n"
+        "• Prevents Android from stopping the offline notification listener\n"
+        "• Ensures transactions are captured immediately in the background\n"
+        "• Does not drain battery — only wakes briefly on incoming bank alerts\n\n"
+        "⚙️ You can customize auto-insert, NLP parsing rules, and templates anytime under Settings > Offline Intelligence.",
     onSubmitLabel: "Open Battery Settings",
     onCancelLabel: "Later",
     onSubmit: () async {
-      popRoute(context);
+      submitted = true;
+      popRoute(popupContext);
+
+      resumeObserver = _AppResumeObserver(() async {
+        cleanup();
+        await Future.delayed(const Duration(milliseconds: 350));
+        openSnackbar(
+          SnackbarMessage(
+            title: "Offline Intelligence Active!",
+            icon: Icons.check_circle_outline_rounded,
+            description:
+                "Xpenzi is ready to automatically detect your bank & payment alerts.",
+          ),
+        );
+        if (!completer.isCompleted) completer.complete();
+      });
+
       try {
-        await AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+        await openBatteryOptimizationSettingsInTask(directRequest: true);
       } catch (e) {
         print("Error opening battery optimization settings: $e");
-        await AppSettings.openAppSettings();
+        cleanup();
+        if (!completer.isCompleted) completer.complete();
       }
     },
     onCancel: () {
-      popRoute(context);
+      popRoute(popupContext);
+      cleanup();
       openSnackbar(
         SnackbarMessage(
           title: "Background Alerts May Be Delayed",
@@ -328,8 +431,142 @@ Future<void> promptBatteryOptimizationPopup(BuildContext context) async {
               "Battery optimization remains enabled. Transactions will still be detected while the app is active, but background capture when closed might be delayed by Android.",
         ),
       );
+      if (!completer.isCompleted) completer.complete();
     },
-  );
+  ).then((_) {
+    if (!submitted && resumeObserver == null && !completer.isCompleted) {
+      cleanup();
+      completer.complete();
+    }
+  });
+
+  return completer.future;
+}
+
+/// Prompts the user with a prominent disclosure before requesting POST_NOTIFICATIONS
+/// permission on Android 13+ (or iOS).
+Future<bool> promptPostNotificationsPermissionWithDisclosure(
+    BuildContext context) async {
+  try {
+    if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
+      final androidPlugin = flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      bool? alreadyEnabled = await androidPlugin?.areNotificationsEnabled();
+      if (alreadyEnabled == true) {
+        return true;
+      }
+
+      if (appStateSettings["hasPromptedPostNotificationsDisclosure"] == true) {
+        bool? granted = await androidPlugin?.requestNotificationsPermission();
+        return granted == true;
+      }
+
+      BuildContext? popupContext =
+          context.mounted ? context : navigatorKey.currentContext;
+      if (popupContext == null) return false;
+
+      Completer<bool> completer = Completer<bool>();
+      bool submitted = false;
+
+      openPopup(
+        popupContext,
+        title: "Allow App Notifications",
+        icon: Icons.notifications_outlined,
+        description:
+            "Xpenzi uses notifications to keep you informed about your finances:\n\n"
+            "• Instant confirmation alerts when an expense or income is auto-detected\n"
+            "• Upcoming bill & recurring subscription reminders\n"
+            "• Daily expense logging reminders (when enabled)\n\n"
+            "You can customize or turn off specific alerts anytime in Settings.",
+        onSubmitLabel: "Allow Notifications",
+        onCancelLabel: "Not Now",
+        onSubmit: () async {
+          submitted = true;
+          popRoute(popupContext);
+          await updateSettings("hasPromptedPostNotificationsDisclosure", true,
+              updateGlobalState: false);
+          bool? granted = await androidPlugin?.requestNotificationsPermission();
+          if (!completer.isCompleted) completer.complete(granted == true);
+        },
+        onCancel: () async {
+          popRoute(popupContext);
+          await updateSettings("hasPromptedPostNotificationsDisclosure", true,
+              updateGlobalState: false);
+          if (!completer.isCompleted) completer.complete(false);
+        },
+      ).then((_) {
+        if (!submitted && !completer.isCompleted) {
+          completer.complete(false);
+        }
+      });
+
+      return await completer.future;
+    } else if (getPlatform(ignoreEmulation: true) == PlatformOS.isIOS) {
+      bool? result = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+      return result == true;
+    }
+  } catch (e, stack) {
+    recordAppError("PostNotificationsDisclosure", e, stackTrace: stack);
+  }
+  return false;
+}
+
+/// Runs all startup permissions strictly in order so dialogs never overlap
+/// and the user always returns cleanly to the main app home screen.
+bool _isRunningOrderedPermissionsFlow = false;
+Future<void> runOrderedAppPermissionsFlow(BuildContext context) async {
+  if (_isRunningOrderedPermissionsFlow) return;
+  _isRunningOrderedPermissionsFlow = true;
+  try {
+    // Wait briefly for home screen transition to settle
+    await Future.delayed(const Duration(milliseconds: 350));
+
+    BuildContext? activeContext =
+        navigatorKey.currentContext ?? (context.mounted ? context : null);
+    if (activeContext == null) return;
+
+    // Step 1: Post Notifications Permission (Android 13+ / iOS) with Prominent Disclosure
+    await promptPostNotificationsPermissionWithDisclosure(activeContext);
+
+    // Step 2 & 3: Notification Listener Access -> followed sequentially by Battery Optimization
+    if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid &&
+        appStateSettings["notificationScanning"] != true &&
+        appStateSettings["skippedOfflineIntelligenceOnboarding"] != true) {
+      bool isGranted = await safeIsNotificationPermissionGranted();
+      if (!isGranted) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        BuildContext? nextContext =
+            navigatorKey.currentContext ?? (context.mounted ? context : null);
+        if (nextContext != null) {
+          bool status = await requestReadNotificationPermission(
+            context: nextContext,
+            showBatteryPopup: true,
+          );
+          if (!status) {
+            await updateSettings("skippedOfflineIntelligenceOnboarding", true,
+                updateGlobalState: false);
+          }
+        }
+      } else {
+        // Permission already granted in OS, ensure scanning is initialized
+        await updateSettings("notificationScanning", true,
+            updateGlobalState: true);
+        await initNotificationScanning();
+      }
+    }
+  } catch (e, stack) {
+    recordAppError("OrderedPermissionsFlow", e, stackTrace: stack);
+  } finally {
+    _isRunningOrderedPermissionsFlow = false;
+  }
 }
 
 /// Safely requests notification access without failing or leaking unhandled zone errors.
@@ -337,6 +574,11 @@ Future<void> promptBatteryOptimizationPopup(BuildContext context) async {
 /// causing a cast error `type 'Null' is not a subtype of type 'FutureOr<bool>'`.
 Future<bool> safeRequestNotificationPermission() async {
   try {
+    if (getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid) {
+      final bool? opened = await _kPermissionsChannel
+          .invokeMethod<bool>('openNotificationListenerSettings');
+      if (opened == true) return true;
+    }
     return await NotificationListenerService.requestPermission().catchError((error) {
       print("Notification permission request handled platform channel result: $error");
       return false;
@@ -398,6 +640,7 @@ Future<bool> requestReadNotificationPermission({
 
   Completer<bool> completer = Completer<bool>();
   _AppResumeObserver? resumeObserver;
+  bool submitted = false;
 
   void cleanup() {
     resumeObserver?.dispose();
@@ -419,6 +662,7 @@ Future<bool> requestReadNotificationPermission({
     onSubmitLabel: "Open Android Settings",
     onCancelLabel: "Cancel",
     onSubmit: () async {
+      submitted = true;
       popRoute(popupContext);
 
       // Listen for app resumption after user returns from Android Settings
@@ -436,12 +680,14 @@ Future<bool> requestReadNotificationPermission({
           await populateDefaultScannerTemplatesIfEmpty(forceAll: true);
           await initNotificationScanning();
 
-          // 3. Battery optimization popup; on accept open settings
+          // 3. Battery optimization popup; on accept open settings and wait for return
           if (showBatteryPopup) {
-            Future.delayed(const Duration(milliseconds: 400), () {
-              BuildContext ctx = navigatorKey.currentContext ?? popupContext;
-              promptBatteryOptimizationPopup(ctx);
-            });
+            await Future.delayed(const Duration(milliseconds: 350));
+            BuildContext? ctx = navigatorKey.currentContext ??
+                (popupContext.mounted ? popupContext : null);
+            if (ctx != null) {
+              await promptBatteryOptimizationPopup(ctx);
+            }
           }
 
           if (!completer.isCompleted) completer.complete(true);
@@ -478,7 +724,7 @@ Future<bool> requestReadNotificationPermission({
     },
   ).then((_) {
     // If dismissed via barrier tap or system back gesture without tapping Cancel or Submit
-    if (resumeObserver == null && !completer.isCompleted) {
+    if (!submitted && resumeObserver == null && !completer.isCompleted) {
       cleanup();
       openSnackbar(
         SnackbarMessage(

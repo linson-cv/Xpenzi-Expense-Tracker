@@ -1,4 +1,4 @@
-﻿import 'package:budget/colors.dart';
+import 'package:budget/colors.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
 import 'package:budget/pages/addTransactionPage.dart';
@@ -50,7 +50,10 @@ class AccountsPageState extends State<AccountsPage> {
       ),
       child: Center(
         child: TextFont(
-            text: googleUser?.displayName![0] ?? "",
+            text: (googleUser?.displayName != null &&
+                    googleUser!.displayName!.isNotEmpty)
+                ? googleUser!.displayName![0]
+                : "",
             fontSize: 60,
             textAlign: TextAlign.center,
             fontWeight: FontWeight.bold,

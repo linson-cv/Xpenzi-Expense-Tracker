@@ -2853,6 +2853,7 @@ class SelectText extends StatefulWidget {
 class _SelectTextState extends State<SelectText> {
   String? input = "";
   late FocusNode _focusNode;
+  bool _hasCompleted = false;
 
   @override
   void initState() {
@@ -2861,12 +2862,17 @@ class _SelectTextState extends State<SelectText> {
     _focusNode = FocusNode();
     if (widget.requestLateAutoFocus) {
       Future.delayed(const Duration(milliseconds: 250), () {
-        _focusNode.requestFocus();
+        if (mounted) {
+          _focusNode.requestFocus();
+          SystemChannels.textInput.invokeMethod('TextInput.show');
+        }
       });
     }
   }
 
   onEditingComplete() {
+    if (_hasCompleted) return;
+    _hasCompleted = true;
     widget.setSelectedText(input ?? "");
     if (widget.popContext) {
       popRoute(context, input);

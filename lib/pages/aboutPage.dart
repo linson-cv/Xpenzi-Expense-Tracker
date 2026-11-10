@@ -469,7 +469,7 @@ class AboutLinks extends StatelessWidget {
             _buildTappable(
               context: context,
               isExternalLink: true,
-              onTap: () => openUrl("https://github.com/linson-cv/Xpenzi-Expense-Tracker/blob/main/PRIVACY.md"),
+              onTap: () => openUrl("https://linson-cv.github.io/Xpenzi-Expense-Tracker/privacy.html"),
               icon: appStateSettings["outlinedIcons"]
                   ? Icons.policy_outlined
                   : Icons.policy_rounded,
