@@ -195,7 +195,7 @@ Future<bool> signInGoogle(
     if (waitForCompletion == true && context != null) popRoute(context);
     BuildContext? currentContext = context ?? navigatorKey.currentContext;
     if (currentContext != null) {
-      openPopup(
+      await openPopup(
         currentContext,
         title: "Google Sign-In Error",
         icon: Icons.error_outline_rounded,

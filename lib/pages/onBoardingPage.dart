@@ -712,7 +712,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                         }
                         if (appStateSettings["username"] == "" &&
                             googleUser != null) {
-                          updateSettings(
+                          await updateSettings(
                               "username", googleUser?.displayName ?? "",
                               pagesNeedingRefresh: [0],
                               updateGlobalState: false);
@@ -730,7 +730,6 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                         }
 
                         signedInSuccessfully = true;
-                        await nextNavigation();
                         loadingIndeterminateKey.currentState
                             ?.setVisibility(false);
                       },
@@ -742,8 +741,10 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                       },
                     );
 
-                    // If sign-in failed or was cancelled, ask user to enter name manually and move on
-                    if (!signedInSuccessfully && context.mounted) {
+                    if (signedInSuccessfully) {
+                      await nextNavigation();
+                    } else if (context.mounted) {
+                      // If sign-in failed or was cancelled, ask user to enter name manually and move on
                       await continueWithoutSignInWithForcedName(context);
                     }
                   },

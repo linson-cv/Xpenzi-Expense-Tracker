@@ -37,12 +37,16 @@ class ReleaseNoteItem {
   }
 }
 
+ReleaseNoteItem? _cachedReleaseNotes;
+
 Future<ReleaseNoteItem?> loadLatestReleaseNotes() async {
+  if (_cachedReleaseNotes != null) return _cachedReleaseNotes;
   try {
     final String jsonString =
         await rootBundle.loadString('assets/release_notes.json');
     final Map<String, dynamic> data = json.decode(jsonString);
-    return ReleaseNoteItem.fromJson(data);
+    _cachedReleaseNotes = ReleaseNoteItem.fromJson(data);
+    return _cachedReleaseNotes;
   } catch (e) {
     print('Error loading release_notes.json: $e');
     return null;
@@ -55,7 +59,10 @@ bool showChangelog(
   bool majorChangesOnly = false,
   Widget? extraWidget,
 }) {
-  final String currentVersion = packageInfoGlobal?.version ?? "1.4.0";
+  final String currentVersion = packageInfoGlobal?.version ??
+      (_cachedReleaseNotes?.version.split('+').first ?? "");
+  if (!forceShow && currentVersion.isEmpty) return false;
+
   final int currentVersionInt = parseVersionInt(currentVersion);
   final int lastLoginVersionInt =
       parseVersionInt(appStateSettings["lastLoginVersion"]);
@@ -66,12 +73,14 @@ bool showChangelog(
 
   if (!shouldShow) return false;
 
-  updateSettings(
-    "lastLoginVersion",
-    currentVersion,
-    pagesNeedingRefresh: [],
-    updateGlobalState: false,
-  );
+  if (currentVersion.isNotEmpty) {
+    updateSettings(
+      "lastLoginVersion",
+      currentVersion,
+      pagesNeedingRefresh: [],
+      updateGlobalState: false,
+    );
+  }
 
   openBottomSheet(
     context,

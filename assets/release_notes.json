@@ -1,18 +1,31 @@
 {
-  "version": "1.4.0+37",
-  "releaseName": "v1.4.0 Onboarding, Permissions & Compliance Polish",
-  "releasedDate": "2026-11-10",
+  "version": "1.4.1+38",
+  "releaseName": "v1.4.1 Google Sign-In & Sync Reliability",
+  "releasedDate": "2026-11-14",
   "majorChanges": [
-    "🛡️ Google Play Prominent Disclosures: Clear, sequential in-app disclosures for App Notifications, Notification Listener Access, and Battery Optimization",
-    "🔄 Seamless Settings Navigation: Opening Android permission screens now stays inside the app task so pressing Back returns directly to Xpenzi",
-    "🟢 Live Device Permission Status: Real-time Active/Off badges in Device Permissions with confirmation dialogs before disabling active permissions"
+    "🔐 Fixed Onboarding Google Sign-In Hang: Resolved a sync completer deadlock that caused Google Sign-In during onboarding to remain stuck on the loading spinner",
+    "☁️ Reliable Cloud Sync Lifecycle: Ensured sync operations safely recover from cancellations or errors without locking future syncs"
   ],
   "notes": [
-    "⌨️ Smooth Nickname Onboarding: Auto-focuses the keyboard when continuing without sign-in and prevents accidental app exit on save or back",
-    "👤 Instant Google Account Display: Explore tab and Home greeting immediately reflect your signed-in Google profile name",
-    "🔗 Updated Privacy Policy & Web Links: Linked directly to the official Xpenzi Privacy Policy and web portal"
+    "🧭 Smooth Post-Login Navigation: Onboarding now closes the loading indicator before navigating to the home screen",
+    "🛡️ Improved Sign-In Error Handling: Error popups during Google Sign-In now remain visible instead of being dismissed prematurely"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.0+37",
+      "releaseName": "v1.4.0 Onboarding, Permissions & Compliance Polish",
+      "releasedDate": "2026-11-10",
+      "majorChanges": [
+        "🛡️ Google Play Prominent Disclosures: Clear, sequential in-app disclosures for App Notifications, Notification Listener Access, and Battery Optimization",
+        "🔄 Seamless Settings Navigation: Opening Android permission screens now stays inside the app task so pressing Back returns directly to Xpenzi",
+        "🟢 Live Device Permission Status: Real-time Active/Off badges in Device Permissions with confirmation dialogs before disabling active permissions"
+      ],
+      "notes": [
+        "⌨️ Smooth Nickname Onboarding: Auto-focuses the keyboard when continuing without sign-in and prevents accidental app exit on save or back",
+        "👤 Instant Google Account Display: Explore tab and Home greeting immediately reflect your signed-in Google profile name",
+        "🔗 Updated Privacy Policy & Web Links: Linked directly to the official Xpenzi Privacy Policy and web portal"
+      ]
+    },
     {
       "version": "1.3.9+36",
       "releaseName": "v1.3.9 Initial Public Release",
