@@ -90,6 +90,7 @@ Future generatePreviewData() async {
       currency: "usd",
       decimals: 2,
       homePageWidgetDisplay: defaultWalletHomePageWidgetDisplay,
+      archived: false,
     ),
   );
   await database.createOrUpdateWallet(
@@ -104,6 +105,7 @@ Future generatePreviewData() async {
       currency: "eur",
       decimals: 2,
       homePageWidgetDisplay: defaultWalletHomePageWidgetDisplay,
+      archived: false,
     ),
   );
   await database.createOrUpdateWallet(
@@ -118,6 +120,7 @@ Future generatePreviewData() async {
       currency: "btc",
       decimals: 7,
       homePageWidgetDisplay: defaultWalletHomePageWidgetDisplay,
+      archived: false,
     ),
   );
   DateTime tripStart = DateTime.now().subtract(const Duration(days: 7));

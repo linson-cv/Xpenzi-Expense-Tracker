@@ -152,6 +152,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
       homePageWidgetDisplay: widget.wallet != null
           ? widget.wallet!.homePageWidgetDisplay
           : defaultWalletHomePageWidgetDisplay,
+      archived: widget.wallet?.archived ?? false,
     );
   }
 
@@ -1072,6 +1073,7 @@ Future<TransactionCategory> initializeBalanceCorrectionCategory() async {
         dateTimeModified: null,
         order: numberOfCategories,
         income: false,
+        archived: false,
       ),
     );
     return await database.getCategory("0").$2;

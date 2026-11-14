@@ -3053,6 +3053,7 @@ Future<bool> addAssociatedTitles(
             dateCreated: DateTime.now(),
             dateTimeModified: null,
             order: length,
+            archived: false,
           ),
         );
       }
@@ -4999,6 +5000,7 @@ class _TitleInputState extends State<TitleInput> {
                     title: text,
                     dateCreated: DateTime.now(),
                     order: 0,
+                    archived: false,
                   ),
                   category: categoryToUse,
                 ),

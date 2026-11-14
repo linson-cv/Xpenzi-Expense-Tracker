@@ -332,6 +332,7 @@ class _ObjectivePageContentState extends State<_ObjectivePageContent> {
                                       colour: widget.objective.colour,
                                       emojiIconName:
                                           widget.objective.emojiIconName,
+                                      archived: false,
                                     ),
                                     size: 40,
                                     sizePadding: 30,

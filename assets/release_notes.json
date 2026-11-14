@@ -1,18 +1,31 @@
 {
-  "version": "1.4.2+39",
-  "releaseName": "v1.4.2 Backup Restore, CSV Import & UI Polish",
-  "releasedDate": "2026-11-14",
+  "version": "1.4.3+40",
+  "releaseName": "v1.4.3 Cashew Backup Compatibility & Category Polish",
+  "releasedDate": "2026-11-15",
   "majorChanges": [
-    "🔄 Seamless Backup & Restore: Fixed SQLite WAL/SHM conflicts when importing or exporting backups and added automatic in-app restart after restore or reset",
-    "📊 Smarter CSV Import: Improved amount parsing for formatted numbers and automatically matched category icons & colors instead of showing broken placeholders",
-    "🗂️ Polished Account Groups: Added crisp borders and a distinct Total footer to Account Type groups on the Home screen"
+    "🔄 Full Cashew v48 Backup Compatibility: Upgraded the local database schema from v46 to v48 so latest Cashew .sql/.sqlite backups restore cleanly",
+    "🏷️ Expanded Database Schema: Added support for tags, transaction tag links, archive flags, wallet emoji icons, and scanner template default titles"
   ],
   "notes": [
-    "🏷️ 8 New Default Categories: Added Subscriptions & Mobile, Home & Maintenance, EMI & Loans, Coffee & Snacks, Fitness & Sports, Pets, Charity & Donations, and Freelance & Bonus",
-    "✨ Cleaner Home Greeting: Replaced legacy Unicode emojis in the weekly spending banner with modern Material icons",
-    "ℹ️ Settings Organization: Moved the About screen to the bottom of Settings"
+    "🍔 Category Polish: Renamed the default Dining category to Food with a vibrant orange fast-food icon",
+    "🛡️ Automatic Database Migration: Existing users smoothly migrate from schema v46 to v48 on app launch without data loss"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.2+39",
+      "releaseName": "v1.4.2 Backup Restore, CSV Import & UI Polish",
+      "releasedDate": "2026-11-14",
+      "majorChanges": [
+        "🔄 Seamless Backup & Restore: Fixed SQLite WAL/SHM conflicts when importing or exporting backups and added automatic in-app restart after restore or reset",
+        "📊 Smarter CSV Import: Improved amount parsing for formatted numbers and automatically matched category icons & colors instead of showing broken placeholders",
+        "🗂️ Polished Account Groups: Added crisp borders and a distinct Total footer to Account Type groups on the Home screen"
+      ],
+      "notes": [
+        "🏷️ 8 New Default Categories: Added Subscriptions & Mobile, Home & Maintenance, EMI & Loans, Coffee & Snacks, Fitness & Sports, Pets, Charity & Donations, and Freelance & Bonus",
+        "✨ Cleaner Home Greeting: Replaced legacy Unicode emojis in the weekly spending banner with modern Material icons",
+        "ℹ️ Settings Organization: Moved the About screen to the bottom of Settings"
+      ]
+    },
     {
       "version": "1.4.1+38",
       "releaseName": "v1.4.1 Google Sign-In & Sync Reliability",

@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:drift/drift.dart';
 import 'dart:io';
+import 'dart:typed_data';
 
 Future<FinanceDatabase> constructDb(String dbName,
     {Uint8List? initialDataWeb}) async {
@@ -68,6 +69,15 @@ Future overwriteDefaultDB(Uint8List dataStore) async {
   if (!isValidSqlite) {
     throw const FormatException(
         "Selected file is not a valid SQLite database backup.");
+  }
+
+  if (dataStore.length >= 64) {
+    final int dbVersion =
+        ByteData.sublistView(dataStore, 60, 64).getInt32(0, Endian.big);
+    if (dbVersion > schemaVersionGlobal) {
+      throw FormatException(
+          "This backup uses database schema v$dbVersion, which is newer than Xpenzi's supported v$schemaVersionGlobal. Export as CSV instead or update Xpenzi.");
+    }
   }
 
   try {

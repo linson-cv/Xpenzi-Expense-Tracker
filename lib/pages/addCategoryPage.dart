@@ -208,6 +208,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
               mainCategoryPkForSubcategoryWhenCreating != null
           ? mainCategoryPkForSubcategoryWhenCreating
           : widget.mainCategoryPkWhenSubCategory ?? widget.category?.mainCategoryPk,
+      archived: widget.category?.archived ?? false,
     );
   }
 
@@ -1022,6 +1023,7 @@ class _AddCategoryPageState extends State<AddCategoryPage>
                                             dateCreated: DateTime.now(),
                                             dateTimeModified: null,
                                             order: associatedTitle.order,
+                                            archived: associatedTitle.archived,
                                           ),
                                         );
                                       },
@@ -1079,6 +1081,7 @@ class _AddTitleState extends State<AddTitle> {
               dateCreated: DateTime.now(),
               dateTimeModified: null,
               order: length,
+              archived: false,
             ),
           );
         },
@@ -1503,6 +1506,7 @@ class FakeCategoryEntryPlaceholder extends StatelessWidget {
         iconName: iconName,
         colour: toHexString(Colors.red),
         emojiIconName: null,
+        archived: false,
       ),
       size: 40,
       sizePadding: showAsSubcategory ? 0 : 20,
@@ -1589,6 +1593,7 @@ class IconPreview extends StatelessWidget {
                 iconName: selectedImage,
                 colour: toHexString(selectedColor),
                 emojiIconName: selectedEmoji,
+                archived: false,
               ),
               size: smallPreview ? 35 : 50,
               sizePadding: smallPreview ? 25 : 30,

@@ -67,6 +67,7 @@ class _AddAssociatedTitlePageState extends State<AddAssociatedTitlePage> {
         order: widget.associatedTitle != null
             ? widget.associatedTitle!.order
             : length,
+        archived: widget.associatedTitle?.archived ?? false,
       ),
     );
     savingHapticFeedback();

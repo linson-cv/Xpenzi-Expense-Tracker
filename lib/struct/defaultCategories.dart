@@ -9,12 +9,13 @@ List<TransactionCategory> defaultCategories() {
     TransactionCategory(
       categoryPk: "1",
       name: "default-category-dining".tr(),
-      colour: toHexString(Colors.blueGrey),
-      iconName: "cutlery.png",
+      colour: toHexString(Colors.orange),
+      iconName: "fast-food.png",
       dateCreated: DateTime.now(),
       dateTimeModified: null,
       order: 0,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "2",
@@ -25,6 +26,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 1,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "3",
@@ -35,6 +37,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 2,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "4",
@@ -45,6 +48,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 3,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "5",
@@ -55,6 +59,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 4,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "6",
@@ -65,6 +70,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 5,
       income: false,
+      archived: false,
     ),
     // TransactionCategory(
     //   categoryPk: "7,
@@ -95,6 +101,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 6,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "8",
@@ -105,6 +112,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 7,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "9",
@@ -115,6 +123,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 8,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "10",
@@ -125,6 +134,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 9,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "11",
@@ -135,6 +145,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 10,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "12",
@@ -145,6 +156,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 11,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "13",
@@ -155,6 +167,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 12,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "14",
@@ -165,6 +178,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 13,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "15",
@@ -175,6 +189,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 14,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "16",
@@ -185,6 +200,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 15,
       income: true,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "17",
@@ -195,6 +211,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 16,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "18",
@@ -205,6 +222,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 17,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "19",
@@ -215,6 +233,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 18,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "20",
@@ -225,6 +244,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 19,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "21",
@@ -235,6 +255,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 20,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "22",
@@ -245,6 +266,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 21,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "23",
@@ -255,6 +277,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 22,
       income: false,
+      archived: false,
     ),
     TransactionCategory(
       categoryPk: "24",
@@ -265,6 +288,7 @@ List<TransactionCategory> defaultCategories() {
       dateTimeModified: null,
       order: 23,
       income: true,
+      archived: false,
     ),
   ];
 }

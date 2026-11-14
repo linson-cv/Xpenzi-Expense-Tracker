@@ -26,7 +26,7 @@ import 'package:budget/pages/activityPage.dart';
 import 'package:flutter/material.dart' show RangeValues;
 part 'tables.g.dart';
 
-int schemaVersionGlobal = 46;
+int schemaVersionGlobal = 48;
 
 // To update and migrate the database, check the README
 
@@ -265,6 +265,8 @@ class Wallets extends Table {
       .nullable()
       .withDefault(const Constant(null))
       .map(const HomePageWidgetDisplayListInColumnConverter())();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
+  TextColumn get emojiIconName => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {walletPk};
@@ -359,6 +361,7 @@ class Categories extends Table {
       .references(Categories, #categoryPk)
       .withDefault(const Constant(null))
       .nullable()();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
   // Attributes to configure sharing of transactions:
   // sharedKey will have the key referencing the entry in the firebase database, if this is null, it is not shared
@@ -402,6 +405,7 @@ class AssociatedTitles extends Table {
       dateTime().withDefault(Constant(DateTime.now())).nullable()();
   IntColumn get order => integer()();
   BoolColumn get isExactMatch => boolean().withDefault(const Constant(false))();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {associatedTitlePk};
@@ -504,9 +508,39 @@ class ScannerTemplates extends Table {
   TextColumn get walletFk =>
       text().references(Wallets, #walletPk).withDefault(const Constant("0"))();
   BoolColumn get ignore => boolean().withDefault(const Constant(false))();
+  TextColumn get defaultTitle =>
+      text().withDefault(const Constant(null)).nullable()();
 
   @override
   Set<Column> get primaryKey => {scannerTemplatePk};
+}
+
+@DataClassName('Tag')
+class Tags extends Table {
+  TextColumn get tagPk => text().clientDefault(() => uuid.v4())();
+  TextColumn get name => text().withLength(max: NAME_LIMIT)();
+  TextColumn get colour => text().withLength(max: COLOUR_LIMIT).nullable()();
+  TextColumn get iconName => text().nullable()();
+  TextColumn get emojiIconName => text().nullable()();
+  DateTimeColumn get dateCreated =>
+      dateTime().clientDefault(() => DateTime.now())();
+  DateTimeColumn get dateTimeModified =>
+      dateTime().withDefault(Constant(DateTime.now())).nullable()();
+  IntColumn get order => integer()();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {tagPk};
+}
+
+@DataClassName('TransactionToTagLink')
+class TransactionToTagLinks extends Table {
+  TextColumn get transactionPk =>
+      text().references(Transactions, #transactionPk).nullable()();
+  TextColumn get tagPk => text().references(Tags, #tagPk).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {transactionPk, tagPk};
 }
 
 // Objective, savings jars, payment goals, installments, targets etc.
@@ -687,6 +721,8 @@ class CategoryWithTotal {
   ScannerTemplates,
   DeleteLogs,
   Objectives,
+  Tags,
+  TransactionToTagLinks,
 ])
 class FinanceDatabase extends _$FinanceDatabase {
   // FinanceDatabase() : super(_openConnection());
@@ -1138,6 +1174,52 @@ class FinanceDatabase extends _$FinanceDatabase {
               } catch (e) {
                 print(
                     "Migration Error: Error creating column objectives.type $e");
+              }
+            },
+            from46To48: (m, schema) async {
+              try {
+                await m.createTable(schema.tags);
+              } catch (e) {
+                print("Migration Error: Error creating table tags $e");
+              }
+              try {
+                await m.createTable(schema.transactionToTagLinks);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating table transactionToTagLinks $e");
+              }
+              try {
+                await m.addColumn(schema.wallets, schema.wallets.archived);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating column wallets.archived $e");
+              }
+              try {
+                await m.addColumn(schema.wallets, schema.wallets.emojiIconName);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating column wallets.emojiIconName $e");
+              }
+              try {
+                await m.addColumn(
+                    schema.categories, schema.categories.archived);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating column categories.archived $e");
+              }
+              try {
+                await m.addColumn(
+                    schema.associatedTitles, schema.associatedTitles.archived);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating column associatedTitles.archived $e");
+              }
+              try {
+                await m.addColumn(
+                    schema.scannerTemplates, schema.scannerTemplates.defaultTitle);
+              } catch (e) {
+                print(
+                    "Migration Error: Error creating column scannerTemplates.defaultTitle $e");
               }
             },
           ),
@@ -2141,6 +2223,7 @@ class FinanceDatabase extends _$FinanceDatabase {
             dateCreated: category.dateCreated,
             order: -1,
             isExactMatch: false,
+            archived: false,
           ),
           category: category,
           type: category.mainCategoryPk == null
@@ -3112,6 +3195,7 @@ class FinanceDatabase extends _$FinanceDatabase {
               income: false,
               dateCreated: DateTime.now(),
               dateTimeModified: null,
+              archived: false,
             ));
   }
 
@@ -3136,6 +3220,7 @@ class FinanceDatabase extends _$FinanceDatabase {
           income: false,
           dateCreated: DateTime.now(),
           dateTimeModified: null,
+          archived: false,
         ));
     final future = query.getSingleOrNull().then((c) =>
         c ??
@@ -3149,6 +3234,7 @@ class FinanceDatabase extends _$FinanceDatabase {
           income: false,
           dateCreated: DateTime.now(),
           dateTimeModified: null,
+          archived: false,
         ));
     return (stream, future);
   }
@@ -3168,6 +3254,7 @@ class FinanceDatabase extends _$FinanceDatabase {
           dateTimeModified: null,
           order: 0,
           isExactMatch: false,
+          archived: false,
         ));
     final future = query.getSingleOrNull().then((t) =>
         t ??
@@ -3179,6 +3266,7 @@ class FinanceDatabase extends _$FinanceDatabase {
           dateTimeModified: null,
           order: 0,
           isExactMatch: false,
+          archived: false,
         ));
     return (stream, future);
   }
@@ -4366,6 +4454,7 @@ class FinanceDatabase extends _$FinanceDatabase {
       income: false,
       dateCreated: DateTime.now(),
       dateTimeModified: null,
+      archived: false,
     );
   }
 

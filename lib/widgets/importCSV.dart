@@ -863,15 +863,26 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
       String dateFormat,
       List<String> row,
       int i,
-      {int? transactionTypeIndex}) async {
+      {int? transactionTypeIndex,
+      int? amountUnpaidIndex}) async {
     String name = "";
     if (assignedColumns["name"]!["setHeaderIndex"] != -1) {
       name = row[assignedColumns["name"]!["setHeaderIndex"]].toString().trim();
     }
 
+    bool isUnpaidAmount = false;
     double? amount;
     amount = getAmountFromString(
         (row[assignedColumns["amount"]!["setHeaderIndex"]]).toString().trim());
+    if (amount == null &&
+        amountUnpaidIndex != null &&
+        amountUnpaidIndex >= 0 &&
+        amountUnpaidIndex < row.length) {
+      amount = getAmountFromString(row[amountUnpaidIndex].toString().trim());
+      if (amount != null) {
+        isUnpaidAmount = true;
+      }
+    }
     if (amount == null) throw ("Unable to parse amount");
 
     // Handle Mint transaction types
@@ -941,6 +952,7 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
             order: numberOfCategories,
             income: amount > 0,
             methodAdded: MethodAdded.csv,
+            archived: false,
           ),
         );
         selectedCategory = await database.getCategoryInstanceGivenName(
@@ -1077,7 +1089,7 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
         dateCreated: dateCreated,
         dateTimeModified: DateTime.now(),
         income: income,
-        paid: true,
+        paid: !isUnpaidAmount,
         skipPaid: false,
         methodAdded: MethodAdded.csv,
       ),
@@ -1091,6 +1103,7 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
               dateCreated: dateCreated,
               dateTimeModified: DateTime.now(),
               order: 0,
+              archived: false,
             ),
     );
   }
@@ -1116,16 +1129,20 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
           currentFileLength = fileContents.length;
         });
         List<String> row = fileContents[i];
-        List<String>? header = fileContents.firstOrNull;
+        List<String>? header = headersIndex < fileContents.length
+            ? fileContents[headersIndex]
+            : fileContents.firstOrNull;
         // Importing a CSV from Mint uses a column name of "Transaction Type" to determine the polarity of the transaction amount
         // If this is the case, we will use this to determine the polarity of the amount (+/-)
         int? transactionTypeIndex;
+        int? amountUnpaidIndex;
         if (header != null) {
-          String searchTerm = "Transaction Type";
-          for (int i = 0; i < header.length; i++) {
-            if (header[i].toString().trim() == searchTerm.trim()) {
-              transactionTypeIndex = i;
-              break;
+          for (int colIndex = 0; colIndex < header.length; colIndex++) {
+            final String colName = header[colIndex].toString().trim().toLowerCase();
+            if (colName == "transaction type") {
+              transactionTypeIndex = colIndex;
+            } else if (colName == "amount unpaid" || colName == "amountunpaid") {
+              amountUnpaidIndex = colIndex;
             }
           }
         }
@@ -1137,6 +1154,7 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
             row,
             i,
             transactionTypeIndex: transactionTypeIndex,
+            amountUnpaidIndex: amountUnpaidIndex,
           );
         } catch (e) {
           transactionAndTitle = null;

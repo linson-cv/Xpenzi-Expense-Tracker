@@ -58,5 +58,6 @@ TransactionWallet defaultWallet() {
     dateTimeModified: null,
     decimals: 2,
     homePageWidgetDisplay: defaultWalletHomePageWidgetDisplay,
+    archived: false,
   );
 }
