@@ -92,6 +92,9 @@ bool allowDangerousDebugFlags = kDebugMode;
 void main() async {
   captureLogs(() async {
     _XpenziWidgetsFlutterBinding.ensureInitialized();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     FlutterForegroundTask.initCommunicationPort();
 
     FlutterError.onError = (FlutterErrorDetails details) {
