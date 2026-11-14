@@ -55,18 +55,16 @@ Future<bool> initializeSettings() async {
       print("Settings were restored");
     } catch (e) {
       print("Error restoring imported settings $e");
-      if (e is DriftRemoteException) {
-        if (e.remoteCause
-            .toString()
-            .toLowerCase()
-            .contains("file is not a database")) {
-          isDatabaseCorrupted = true;
-          databaseCorruptedError = e.toString();
-        }
-      } else if (e
-          .toString()
-          .toLowerCase()
-          .contains("file is not a database")) {
+      userSettings["databaseJustImported"] = false;
+      final String errorStr = (e is DriftRemoteException
+              ? e.remoteCause.toString()
+              : e.toString())
+          .toLowerCase();
+      if (errorStr.contains("file is not a database") ||
+          errorStr.contains("malformed") ||
+          errorStr.contains("corrupt") ||
+          errorStr.contains("not a database") ||
+          errorStr.contains("no such table")) {
         isDatabaseCorrupted = true;
         databaseCorruptedError = e.toString();
       }

@@ -944,6 +944,21 @@ String pluralString(bool condition, String string) {
 //   }
 // }
 
+Future<void> performInAppRestart(BuildContext context) async {
+  lockAppWaitForRestart = false;
+  entireAppLoaded = false;
+  isDatabaseCorrupted = false;
+  databaseCorruptedError = "";
+  try {
+    await database.close();
+  } catch (_) {}
+  database = await constructDb('db');
+  await initializeSettings();
+  if (context.mounted) {
+    RestartApp.restartApp(context);
+  }
+}
+
 bool lockAppWaitForRestart = false;
 void restartAppPopup(context,
     {String? subtitle, String? description, String? codeBlock}) async {
@@ -952,6 +967,12 @@ void restartAppPopup(context,
     // Lock the side navigation
     lockAppWaitForRestart = true;
     appStateKey.currentState?.refreshAppState();
+
+    final bool canCloseApp = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux ||
+            defaultTargetPlatform == TargetPlatform.macOS);
 
     openPopup(
       context,
@@ -970,6 +991,15 @@ void restartAppPopup(context,
           ? Icons.restart_alt_outlined
           : Icons.restart_alt_rounded,
       barrierDismissible: false,
+      onSubmit: canCloseApp
+          ? () {
+              if (defaultTargetPlatform == TargetPlatform.android) {
+                SystemNavigator.pop();
+              }
+              exit(0);
+            }
+          : null,
+      onSubmitLabel: canCloseApp ? "close".tr() : null,
       // Show code widget with the name of the file monospace font
     );
   } else {
@@ -1336,31 +1366,36 @@ Future<double?> readAmountFromClipboard({bool showSnackbar = true}) async {
 }
 
 double? getAmountFromString(String inputString) {
+  final String trimmed = inputString.trim();
+  if (trimmed.isEmpty) return null;
+
   bool isNegative = false;
-  if (inputString.contains("-") ||
-      inputString.contains("—") ||
-      inputString.contains("−") ||
-      inputString.contains("–") ||
-      inputString.contains("‐") ||
-      inputString.contains("−") ||
-      inputString.contains("⁃") ||
-      inputString.contains("‑") ||
-      inputString.contains("‒") ||
-      inputString.contains("–") ||
-      inputString.contains("—") ||
-      inputString.contains("―")) {
+  if (trimmed.contains("-") ||
+      trimmed.contains("—") ||
+      trimmed.contains("−") ||
+      trimmed.contains("–") ||
+      trimmed.contains("‐") ||
+      trimmed.contains("⁃") ||
+      trimmed.contains("‑") ||
+      trimmed.contains("‒") ||
+      trimmed.contains("―") ||
+      (trimmed.startsWith("(") && trimmed.endsWith(")")) ||
+      RegExp(r'\bDR\b', caseSensitive: false).hasMatch(trimmed)) {
     isNegative = true;
   }
+
+  String normalized = trimmed.replaceAll(RegExp(r'[\s\u00A0]+'), '');
   if (getDecimalSeparator() == ",") {
-    inputString = inputString.replaceAll(",", ".");
+    normalized = normalized.replaceAll(",", ".");
   } else {
-    inputString = inputString.replaceAll(",", "");
+    normalized = normalized.replaceAll(",", "");
   }
   RegExp regex = RegExp(r'[0-9]+(?:\.[0-9]+)?');
-  String? match = regex.stringMatch(inputString);
+  String? match = regex.stringMatch(normalized);
 
   if (match != null) {
-    double amount = double.tryParse(match) ?? 0.0;
+    double? amount = double.tryParse(match);
+    if (amount == null) return null;
     amount = amount.abs();
     if (isNegative) {
       amount = amount * -1;

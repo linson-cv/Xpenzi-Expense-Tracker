@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart' hide AppSettings;
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
@@ -1186,25 +1187,6 @@ class SettingsPageContent extends StatelessWidget {
             ),
           ),
           AnimatedExpanded(
-            expand: _match("about-app".tr(namedArgs: {"app": globalAppName}), "App version, changelog, licensing info", [
-              "about", "version", "changelog", "license", "licensing", "app info", "what's new", "updates", "privacy policy"
-            ]),
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: SettingsContainerOpenPage(
-                openPage: const AboutPage(),
-                title: "about-app".tr(namedArgs: {"app": globalAppName}),
-                description: "App version, changelog, licensing info",
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.info_outline
-                    : Icons.info_rounded,
-                isOutlined: true,
-                isWideOutlined: true,
-              ),
-            ),
-          ),
-
-          AnimatedExpanded(
             expand: _match("Intelligence & Automation", "Offline intelligence, AI models, email automation", [
               "ai", "automation", "mail", "email", "gemini", "openai", "claude", "openrouter", "chatgpt", "read emails", "parse", "offline", "sms", "notification", "bank alerts", "intelligence", "bank sms", "auto detect", "gemini model", "custom prompt", "receipt scanner"
             ]),
@@ -1257,6 +1239,25 @@ class SettingsPageContent extends StatelessWidget {
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.extension_outlined
                     : Icons.extension_rounded,
+                isOutlined: true,
+                isWideOutlined: true,
+              ),
+            ),
+          ),
+
+          AnimatedExpanded(
+            expand: _match("about-app".tr(namedArgs: {"app": globalAppName}), "App version, changelog, licensing info", [
+              "about", "version", "changelog", "license", "licensing", "app info", "what's new", "updates", "privacy policy"
+            ]),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SettingsContainerOpenPage(
+                openPage: const AboutPage(),
+                title: "about-app".tr(namedArgs: {"app": globalAppName}),
+                description: "App version, changelog, licensing info",
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.info_outline
+                    : Icons.info_rounded,
                 isOutlined: true,
                 isWideOutlined: true,
               ),
@@ -1969,7 +1970,11 @@ Future clearDatabase(BuildContext context) async {
   }
   await Future.wait([database.deleteEverything(), sharedPreferences.clear()]);
   popRoute(context);
-  restartAppPopup(context);
+  if (kIsWeb) {
+    restartAppPopup(context);
+  } else {
+    await performInAppRestart(context);
+  }
 }
 
 Future clearTransactionsFlow(BuildContext context) async {

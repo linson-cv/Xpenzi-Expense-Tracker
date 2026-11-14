@@ -527,8 +527,10 @@ class DebugPage extends StatelessWidget {
                   if (kIsWeb) {
                     final html.Storage localStorage = html.window.localStorage;
                     localStorage["moor_db_version_db"] = "37";
+                    restartAppPopup(context);
+                  } else {
+                    await performInAppRestart(context);
                   }
-                  restartAppPopup(context);
                 },
               ),
               const SizedBox(height: 20),

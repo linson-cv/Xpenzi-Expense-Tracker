@@ -5,6 +5,7 @@ import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/pages/addTransactionPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/iconObjects.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
@@ -923,25 +924,27 @@ class _ImportingEntriesPopupState extends State<ImportingEntriesPopup> {
         // just create a category
         int numberOfCategories =
             (await database.getTotalCountOfCategories())[0] ?? 0;
+        final String categoryName = row[assignedColumns["category"]!["setHeaderIndex"]]
+            .toString()
+            .trim();
+        final List<Color> palette = selectableColors(context);
+        final Color matchedColor = palette[categoryName.hashCode.abs() % palette.length];
         await database.createOrUpdateCategory(
           insert: true,
           TransactionCategory(
             categoryPk: "-1",
-            name: row[assignedColumns["category"]!["setHeaderIndex"]]
-                .toString()
-                .trim(),
+            name: categoryName,
+            colour: toHexString(matchedColor),
+            iconName: _getBestIconForCategoryName(categoryName, isIncome: amount > 0),
             dateCreated: DateTime.now(),
             dateTimeModified: DateTime.now(),
             order: numberOfCategories,
             income: amount > 0,
-            iconName: "image.png",
             methodAdded: MethodAdded.csv,
           ),
         );
         selectedCategory = await database.getCategoryInstanceGivenName(
-            row[assignedColumns["category"]!["setHeaderIndex"]]
-                .toString()
-                .trim());
+            categoryName);
       }
 
       // }
@@ -1291,4 +1294,96 @@ DateTime tryToParseCustomDateFormat(
     dateCreated.second,
   );
   return dateCreated;
+}
+
+String _getBestIconForCategoryName(String categoryName,
+    {bool isIncome = false}) {
+  final String normalized = categoryName.toLowerCase().trim();
+  if (normalized.isEmpty) {
+    return isIncome ? "coin.png" : "clipboard.png";
+  }
+
+  const Map<String, String> keywordToIcon = {
+    "emi": "bank.png",
+    "loan": "bank.png",
+    "borrow": "bank.png",
+    "lend": "money-bag.png",
+    "bank": "bank.png",
+    "transfer": "credit-card.png",
+    "balance": "wallet.png",
+    "food": "cutlery.png",
+    "dining": "cutlery.png",
+    "restaurant": "cutlery.png",
+    "grocer": "groceries.png",
+    "coffee": "coffee.png",
+    "fuel": "fuel.png",
+    "petrol": "fuel.png",
+    "gas": "fuel.png",
+    "mobile": "smartphone.png",
+    "recharge": "smartphone.png",
+    "phone": "smartphone.png",
+    "subscription": "smartphone.png",
+    "rent": "rent.png",
+    "home": "home2.png",
+    "house": "home2.png",
+    "maintenance": "construction-helmet.png",
+    "repair": "construction-helmet.png",
+    "construction": "construction-helmet.png",
+    "groom": "barber.png",
+    "salon": "barber.png",
+    "movie": "popcorn.png",
+    "cinema": "popcorn.png",
+    "entertainment": "popcorn.png",
+    "health": "healthcare-and-medical.png",
+    "medical": "healthcare-and-medical.png",
+    "doctor": "healthcare-and-medical.png",
+    "donat": "heart.png",
+    "charity": "heart.png",
+    "trip": "plane.png",
+    "travel": "plane.png",
+    "flight": "plane.png",
+    "invest": "piggy-bank.png",
+    "saving": "piggy-bank.png",
+    "return": "coin.png",
+    "refund": "coin.png",
+    "salary": "money-bag.png",
+    "income": "coin.png",
+    "shop": "shopping.png",
+    "bill": "bills.png",
+    "gift": "gift.png",
+    "edu": "graduation.png",
+    "sport": "sports.png",
+    "fitness": "sports.png",
+    "pet": "dog.png",
+  };
+
+  for (final entry in keywordToIcon.entries) {
+    if (normalized.contains(entry.key)) {
+      return entry.value;
+    }
+  }
+
+  for (final iconObj in iconObjects) {
+    if (iconObj.icon == "image.png") continue;
+    final String? likely = iconObj.mostLikelyCategoryName?.toLowerCase();
+    if (likely != null &&
+        (normalized.contains(likely) || likely.contains(normalized))) {
+      return iconObj.icon;
+    }
+  }
+
+  final List<String> tokens = normalized
+      .split(RegExp(r'[\s/&,_-]+'))
+      .where((t) => t.length >= 3)
+      .toList();
+  for (final token in tokens) {
+    for (final iconObj in iconObjects) {
+      if (iconObj.icon == "image.png") continue;
+      if (iconObj.tags.any((tag) => tag.toLowerCase().contains(token))) {
+        return iconObj.icon;
+      }
+    }
+  }
+
+  return isIncome ? "coin.png" : "clipboard.png";
 }

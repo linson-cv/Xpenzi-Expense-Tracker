@@ -40,14 +40,19 @@ Future<String?> importDBFileFromDevice(BuildContext context) async {
 
   await cancelAndPreventSyncOperation();
 
+  Uint8List fileBytes;
   if (kIsWeb) {
-    Uint8List fileBytes = result.files.single.bytes!;
-    await overwriteDefaultDB(fileBytes);
+    fileBytes = result.files.single.bytes!;
+  } else if (result.files.single.path != null &&
+      result.files.single.path!.isNotEmpty) {
+    File file = File(result.files.single.path!);
+    fileBytes = await file.readAsBytes();
+  } else if (result.files.single.bytes != null) {
+    fileBytes = result.files.single.bytes!;
   } else {
-    File file = File(result.files.single.path ?? "");
-    Uint8List fileBytes = await file.readAsBytes();
-    await overwriteDefaultDB(fileBytes);
+    throw Exception("Could not read selected backup file.");
   }
+  await overwriteDefaultDB(fileBytes);
   await resetLanguageToSystem(context);
   await updateSettings("databaseJustImported", true,
       pagesNeedingRefresh: [], updateGlobalState: false);
@@ -90,15 +95,16 @@ Future importDB(BuildContext context, {ignoreOverwriteWarning = false}) async {
       () async {
         return await importDBFileFromDevice(context);
       },
-      onSuccess: (result) {
+      onSuccess: (result) async {
         if (result != null) {
-          restartAppPopup(
-            context,
-            description: kIsWeb
-                ? "refresh-required-to-load-backup".tr()
-                : "restart-required-to-load-backup".tr(),
-            // codeBlock: result.toString(),
-          );
+          if (kIsWeb) {
+            restartAppPopup(
+              context,
+              description: "refresh-required-to-load-backup".tr(),
+            );
+          } else {
+            await performInAppRestart(context);
+          }
         }
       },
     );

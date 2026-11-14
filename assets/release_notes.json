@@ -1,16 +1,31 @@
 {
-  "version": "1.4.1+38",
-  "releaseName": "v1.4.1 Google Sign-In & Sync Reliability",
+  "version": "1.4.2+39",
+  "releaseName": "v1.4.2 Backup Restore, CSV Import & UI Polish",
   "releasedDate": "2026-11-14",
   "majorChanges": [
-    "🔐 Fixed Onboarding Google Sign-In Hang: Resolved a sync completer deadlock that caused Google Sign-In during onboarding to remain stuck on the loading spinner",
-    "☁️ Reliable Cloud Sync Lifecycle: Ensured sync operations safely recover from cancellations or errors without locking future syncs"
+    "🔄 Seamless Backup & Restore: Fixed SQLite WAL/SHM conflicts when importing or exporting backups and added automatic in-app restart after restore or reset",
+    "📊 Smarter CSV Import: Improved amount parsing for formatted numbers and automatically matched category icons & colors instead of showing broken placeholders",
+    "🗂️ Polished Account Groups: Added crisp borders and a distinct Total footer to Account Type groups on the Home screen"
   ],
   "notes": [
-    "🧭 Smooth Post-Login Navigation: Onboarding now closes the loading indicator before navigating to the home screen",
-    "🛡️ Improved Sign-In Error Handling: Error popups during Google Sign-In now remain visible instead of being dismissed prematurely"
+    "🏷️ 8 New Default Categories: Added Subscriptions & Mobile, Home & Maintenance, EMI & Loans, Coffee & Snacks, Fitness & Sports, Pets, Charity & Donations, and Freelance & Bonus",
+    "✨ Cleaner Home Greeting: Replaced legacy Unicode emojis in the weekly spending banner with modern Material icons",
+    "ℹ️ Settings Organization: Moved the About screen to the bottom of Settings"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.1+38",
+      "releaseName": "v1.4.1 Google Sign-In & Sync Reliability",
+      "releasedDate": "2026-11-14",
+      "majorChanges": [
+        "🔐 Fixed Onboarding Google Sign-In Hang: Resolved a sync completer deadlock that caused Google Sign-In during onboarding to remain stuck on the loading spinner",
+        "☁️ Reliable Cloud Sync Lifecycle: Ensured sync operations safely recover from cancellations or errors without locking future syncs"
+      ],
+      "notes": [
+        "🧭 Smooth Post-Login Navigation: Onboarding now closes the loading indicator before navigating to the home screen",
+        "🛡️ Improved Sign-In Error Handling: Error popups during Google Sign-In now remain visible instead of being dismissed prematurely"
+      ]
+    },
     {
       "version": "1.4.0+37",
       "releaseName": "v1.4.0 Onboarding, Permissions & Compliance Polish",

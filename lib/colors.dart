@@ -497,27 +497,33 @@ SystemUiOverlayStyle getSystemUiOverlayStyle(
     return SystemUiOverlayStyle(
       statusBarBrightness: Brightness.light,
       systemStatusBarContrastEnforced: false,
+      systemNavigationBarContrastEnforced: false,
       statusBarIconBrightness: Brightness.dark,
       statusBarColor: kIsWeb ? Colors.black : Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: getBottomNavbarBackgroundColor(
-        colorScheme: getColorScheme(brightness),
-        brightness: Brightness.light,
-        lightDarkAccent: colors?.colors["lightDarkAccent"] ?? Colors.white,
-      ),
+      systemNavigationBarColor: kIsWeb
+          ? getBottomNavbarBackgroundColor(
+              colorScheme: getColorScheme(brightness),
+              brightness: Brightness.light,
+              lightDarkAccent: colors?.colors["lightDarkAccent"] ?? Colors.white,
+            )
+          : Colors.transparent,
     );
   } else {
     return SystemUiOverlayStyle(
       statusBarBrightness: Brightness.dark,
       systemStatusBarContrastEnforced: false,
+      systemNavigationBarContrastEnforced: false,
       statusBarIconBrightness: Brightness.light,
       statusBarColor: kIsWeb ? Colors.black : Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: getBottomNavbarBackgroundColor(
-        colorScheme: getColorScheme(brightness),
-        brightness: Brightness.dark,
-        lightDarkAccent: colors?.colors["lightDarkAccent"] ?? Colors.black,
-      ),
+      systemNavigationBarColor: kIsWeb
+          ? getBottomNavbarBackgroundColor(
+              colorScheme: getColorScheme(brightness),
+              brightness: Brightness.dark,
+              lightDarkAccent: colors?.colors["lightDarkAccent"] ?? Colors.black,
+            )
+          : Colors.transparent,
     );
   }
 }

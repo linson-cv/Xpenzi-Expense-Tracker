@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/struct/databaseGlobal.dart';
+import 'package:budget/struct/settings.dart';
 
 class HomePageUsername extends StatelessWidget {
   final AnimationController animationControllerHeader;
@@ -114,21 +115,52 @@ class HomePageUsername extends StatelessWidget {
                 if (snapshot.hasData && snapshot.data != null) {
                   final spent = snapshot.data!;
                   final spentFormatted = convertToMoney(Provider.of<AllWallets>(context), spent);
-                  String message;
+                  final IconData statusIcon;
+                  final String message;
                   if (spent == 0) {
-                    message = "✨ No expenses logged yet this week. Great start!";
+                    statusIcon = appStateSettings["outlinedIcons"]
+                        ? Icons.auto_awesome_outlined
+                        : Icons.auto_awesome_rounded;
+                    message = "No expenses logged yet this week. Great start!";
                   } else if (DateTime.now().weekday >= 5) {
-                    message = "📊 $spentFormatted spent this week. Keep your goals in focus!";
+                    statusIcon = appStateSettings["outlinedIcons"]
+                        ? Icons.insights_outlined
+                        : Icons.insights_rounded;
+                    message = "$spentFormatted spent this week. Keep your goals in focus!";
                   } else {
-                    message = "🎯 $spentFormatted spent so far this week. Stay on track!";
+                    statusIcon = appStateSettings["outlinedIcons"]
+                        ? Icons.track_changes_outlined
+                        : Icons.track_changes_rounded;
+                    message = "$spentFormatted spent so far this week. Stay on track!";
                   }
+
+                  final Color mutedColor = Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.65);
 
                   return Padding(
                     padding: const EdgeInsets.only(top: 2.0, bottom: 4.0),
-                    child: TextFont(
-                      text: message,
-                      fontSize: 13,
-                      textColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          statusIcon,
+                          size: 15,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.85),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: TextFont(
+                            text: message,
+                            fontSize: 13,
+                            textColor: mutedColor,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }

@@ -381,9 +381,18 @@ Future forceDeleteDB() async {
     final html.Storage localStorage = html.window.localStorage;
     localStorage.clear();
   } else {
+    try {
+      await database.close();
+    } catch (e) {
+      print("Error closing database before delete: $e");
+    }
     final dbFolder = await getApplicationDocumentsDirectory();
-    final dbFile = File(p.join(dbFolder.path, 'db.sqlite'));
-    await dbFile.delete();
+    for (final suffix in ['', '-wal', '-shm', '-journal']) {
+      final file = File(p.join(dbFolder.path, 'db.sqlite$suffix'));
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
   }
 }
 
@@ -411,7 +420,11 @@ bool openDatabaseCorruptedPopup(BuildContext context) {
           await forceDeleteDB();
           await sharedPreferences.clear();
         });
-        restartAppPopup(context);
+        if (kIsWeb) {
+          restartAppPopup(context);
+        } else {
+          await performInAppRestart(context);
+        }
       },
       onCancelLabel: "reset".tr(),
     );
@@ -648,21 +661,14 @@ Future<void> loadBackup(
                   : Icons.settings_backup_restore_rounded),
         );
         popRoute(context);
-        restartAppPopup(
-          context,
-          description: kIsWeb
-              ? "refresh-required-to-load-backup".tr()
-              : "restart-required-to-load-backup".tr(),
-          // codeBlock: file.name.toString() +
-          //     (file.modifiedTime == null
-          //         ? ""
-          //         : ("\n" +
-          //             getWordedDateShort(
-          //               file.modifiedTime!,
-          //               showTodayTomorrow: false,
-          //               includeYear: true,
-          //             ))),
-        );
+        if (kIsWeb) {
+          restartAppPopup(
+            context,
+            description: "refresh-required-to-load-backup".tr(),
+          );
+        } else {
+          await performInAppRestart(context);
+        }
       },
       onError: (error) {
         recordAppError(

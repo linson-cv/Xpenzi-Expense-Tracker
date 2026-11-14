@@ -172,6 +172,13 @@ class HomePageWalletList extends StatelessWidget {
                                   color: getColor(
                                       context, "lightDarkAccentHeavyLight"),
                                   borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant
+                                        .withValues(alpha: 0.45),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -225,15 +232,25 @@ class HomePageWalletList extends StatelessWidget {
                                         showAccountIcon: false,
                                       ),
                                     if (groupWallets.length > 1) ...[
-                                      const SizedBox(height: 2),
+                                      const SizedBox(height: 4),
                                       Container(
                                         height: 1,
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        color: getColor(context, "dividerColor")
-                                            .withValues(alpha: 0.3),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .outlineVariant
+                                            .withValues(alpha: 0.4),
                                       ),
-                                      Padding(
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.22),
+                                          borderRadius:
+                                              const BorderRadius.vertical(
+                                            bottom: Radius.circular(15),
+                                          ),
+                                        ),
                                         padding:
                                             const EdgeInsetsDirectional.only(
                                           start: 48,

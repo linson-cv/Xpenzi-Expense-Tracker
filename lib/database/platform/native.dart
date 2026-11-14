@@ -36,6 +36,12 @@ Future<DBFileInfo> getCurrentDBFileInfo() async {
   Uint8List dbFileBytes;
   late Stream<List<int>> mediaStream;
 
+  try {
+    await database.customStatement('PRAGMA wal_checkpoint(TRUNCATE);');
+  } catch (e) {
+    print("Error checkpointing WAL before export: $e");
+  }
+
   final dbFolder = await getApplicationDocumentsDirectory();
   final dbFile = File(p.join(dbFolder.path, 'db.sqlite'));
   //print("FILE SIZE:" + (dbFile.lengthSync() / 1e+6).toString());
@@ -46,9 +52,40 @@ Future<DBFileInfo> getCurrentDBFileInfo() async {
 }
 
 Future overwriteDefaultDB(Uint8List dataStore) async {
+  const List<int> sqliteHeader = [
+    0x53, 0x51, 0x4c, 0x69, 0x74, 0x65, 0x20, 0x66,
+    0x6f, 0x72, 0x6d, 0x61, 0x74, 0x20, 0x33, 0x00,
+  ];
+  bool isValidSqlite = dataStore.length >= sqliteHeader.length;
+  if (isValidSqlite) {
+    for (int i = 0; i < sqliteHeader.length; i++) {
+      if (dataStore[i] != sqliteHeader[i]) {
+        isValidSqlite = false;
+        break;
+      }
+    }
+  }
+  if (!isValidSqlite) {
+    throw const FormatException(
+        "Selected file is not a valid SQLite database backup.");
+  }
+
+  try {
+    await database.close();
+  } catch (e) {
+    print("Error closing database before overwrite: $e");
+  }
+
   final dbFolder = await getApplicationDocumentsDirectory();
+  for (final suffix in ['-wal', '-shm', '-journal']) {
+    final auxFile = File(p.join(dbFolder.path, 'db.sqlite$suffix'));
+    if (await auxFile.exists()) {
+      await auxFile.delete();
+    }
+  }
+
   final dbFile = File(p.join(dbFolder.path, 'db.sqlite'));
-  await dbFile.writeAsBytes(dataStore);
+  await dbFile.writeAsBytes(dataStore, flush: true);
   // we need to be able to sync with others after the restore
   await sharedPreferences.setString("dateOfLastSyncedWithClient", "{}");
 }
