@@ -10,20 +10,25 @@ class OpenAiProvider extends BaseAiProvider {
   @override
   List<AiModelOption> get availableModels => const [
         AiModelOption(
-          key: "gpt-4o-mini",
-          label: "GPT-4o mini",
+          key: "gpt-6-luna",
+          label: "GPT-6 Luna",
           description: "Recommended: Ultra fast, cost-effective, and highly intelligent.",
           isDefault: true,
         ),
         AiModelOption(
-          key: "gpt-4o",
-          label: "GPT-4o",
-          description: "Flagship high-intelligence model for multimodal reasoning.",
+          key: "gpt-6.1-sol",
+          label: "GPT-6.1 Sol",
+          description: "Balanced performance and reasoning for complex prompts.",
         ),
         AiModelOption(
-          key: "gpt-3.5-turbo",
-          label: "GPT-3.5 Turbo",
-          description: "Legacy lightweight model.",
+          key: "gpt-6-astra",
+          label: "GPT-6 Astra",
+          description: "Flagship high-intelligence model for deep reasoning.",
+        ),
+        AiModelOption(
+          key: "gpt-5-mini",
+          label: "GPT-5 mini",
+          description: "Fast lightweight GPT-5 generation model.",
         ),
       ];
 
@@ -31,9 +36,102 @@ class OpenAiProvider extends BaseAiProvider {
     if (model == null ||
         model.trim().isEmpty ||
         model.trim().toLowerCase() == "default") {
-      return "gpt-4o-mini";
+      return "gpt-6-luna";
     }
     return model.trim();
+  }
+
+  @override
+  Future<AiModelListResult> fetchAvailableModels({
+    String? apiKey,
+    String? customEndpoint,
+  }) async {
+    String key = (apiKey ?? "").trim();
+    if (key.isEmpty) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: "Enter an OpenAI API key to fetch live models.",
+      );
+    }
+
+    try {
+      var resp = await http.get(
+        Uri.parse("https://api.openai.com/v1/models"),
+        headers: {"Authorization": "Bearer $key"},
+      ).timeout(const Duration(seconds: 10));
+
+      if (resp.statusCode == 200) {
+        var decoded = jsonDecode(resp.body);
+        List<dynamic> rawModels = decoded["data"] as List<dynamic>? ?? [];
+        List<MapEntry<int, AiModelOption>> items = [];
+        for (var item in rawModels) {
+          if (item is! Map) continue;
+          String id = (item["id"] ?? "").toString().trim();
+          if (id.isEmpty) continue;
+          String lower = id.toLowerCase();
+          bool isChatModel = lower.startsWith("gpt-") ||
+              lower.startsWith("o1") ||
+              lower.startsWith("o3") ||
+              lower.startsWith("o4") ||
+              lower.startsWith("chatgpt-");
+          if (!isChatModel) continue;
+          if (lower.contains("realtime") ||
+              lower.contains("audio") ||
+              lower.contains("transcribe") ||
+              lower.contains("tts") ||
+              lower.contains("image") ||
+              lower.contains("search") ||
+              lower.contains("instruct") ||
+              lower.contains("diarize")) {
+            continue;
+          }
+          int created = (item["created"] is int) ? item["created"] as int : 0;
+          String ownedBy = (item["owned_by"] ?? "openai").toString();
+          items.add(MapEntry(
+            created,
+            AiModelOption(
+              key: id,
+              label: id,
+              description: "OpenAI • $ownedBy",
+              isDefault: id == providerType.defaultModel,
+            ),
+          ));
+        }
+
+        if (items.isNotEmpty) {
+          items.sort((a, b) {
+            if (a.value.isDefault != b.value.isDefault) {
+              return a.value.isDefault ? -1 : 1;
+            }
+            return b.key.compareTo(a.key);
+          });
+          return AiModelListResult(
+            models: items.map((e) => e.value).toList(),
+            fromApi: true,
+          );
+        }
+      }
+
+      String msg = "HTTP ${resp.statusCode}";
+      try {
+        var err = jsonDecode(resp.body);
+        if (err["error"]?["message"] != null) {
+          msg = err["error"]["message"].toString();
+        }
+      } catch (_) {}
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: msg,
+      );
+    } catch (e) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: e.toString().replaceFirst("Exception: ", ""),
+      );
+    }
   }
 
   @override

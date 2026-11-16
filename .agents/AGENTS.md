@@ -1,9 +1,9 @@
 # Project Instructions & Agent Guidelines
 
 ## 1. Changelog & Versioning
-- **Automatic Changelog**: Update [`lib/widgets/showChangelog.dart`](file:///d:/Projects/Android%20Apps/Xpenzi-Expense-Tracker/lib/widgets/showChangelog.dart) whenever bumping app version.
-- **Preserve History**: Never delete or truncate prior changelogs.
-- **Format**: Prepend `< X.Y.Z` at the top of `getChangelogString()`. Use `(A)` for Android and `(i)` for iOS notes.
+- **Automatic Changelog**: Update [`assets/release_notes.json`](file:///d:/Projects/Android%20Apps/Xpenzi-Expense-Tracker/assets/release_notes.json) (rendered by [`lib/widgets/showChangelog.dart`](file:///d:/Projects/Android%20Apps/Xpenzi-Expense-Tracker/lib/widgets/showChangelog.dart)) whenever bumping the app version in `pubspec.yaml`.
+- **Preserve History**: Move the previous top-level release into `previousReleases` in `assets/release_notes.json`. Never delete or truncate prior releases.
+- **Major Changes Only for Breaking Changes**: Do NOT add `majorChanges` for every release — leave `"majorChanges": []` unless the release introduces breaking changes. Put regular features, UI polish, and bug fixes in `"notes"`.
 
 ## 2. Token Efficiency & Context Management
 - **Targeted File Reading**: Never load large source files (>500 lines) fully. Read specific 50–200 line slices via `StartLine`/`EndLine`.

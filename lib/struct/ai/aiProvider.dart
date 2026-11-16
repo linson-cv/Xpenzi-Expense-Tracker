@@ -64,11 +64,11 @@ extension AiProviderTypeExtension on AiProviderType {
   String get defaultModel {
     switch (this) {
       case AiProviderType.gemini:
-        return "gemini-1.5-flash";
+        return "gemini-3.8-flash";
       case AiProviderType.openAi:
-        return "gpt-4o-mini";
+        return "gpt-6-luna";
       case AiProviderType.claude:
-        return "claude-3-5-haiku-latest";
+        return "claude-haiku-5-5";
       case AiProviderType.custom:
         return "deepseek/deepseek-chat";
     }
@@ -150,9 +150,31 @@ class AiConnectionTestResult {
   });
 }
 
+class AiModelListResult {
+  final List<AiModelOption> models;
+  final bool fromApi;
+  final String? errorMessage;
+
+  const AiModelListResult({
+    required this.models,
+    required this.fromApi,
+    this.errorMessage,
+  });
+}
+
 abstract class BaseAiProvider {
   AiProviderType get providerType;
   List<AiModelOption> get availableModels;
+
+  Future<AiModelListResult> fetchAvailableModels({
+    String? apiKey,
+    String? customEndpoint,
+  }) async {
+    return AiModelListResult(
+      models: availableModels,
+      fromApi: false,
+    );
+  }
 
   Future<AiConnectionTestResult> testConnection({
     String? apiKey,

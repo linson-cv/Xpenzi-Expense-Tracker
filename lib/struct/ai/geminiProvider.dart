@@ -10,25 +10,25 @@ class GeminiAiProvider extends BaseAiProvider {
   @override
   List<AiModelOption> get availableModels => const [
         AiModelOption(
-          key: "gemini-1.5-flash",
-          label: "Gemini 1.5 Flash",
-          description: "Recommended: Generous free quota, ultra fast and lightweight.",
+          key: "gemini-3.8-flash",
+          label: "Gemini 3.8 Flash",
+          description: "Recommended: Fast, cost-efficient, and great for daily categorization.",
           isDefault: true,
         ),
         AiModelOption(
-          key: "gemini-2.0-flash",
-          label: "Gemini 2.0 Flash",
-          description: "Next-generation model with enhanced speed and accuracy.",
+          key: "gemini-4-hydrogen",
+          label: "Gemini 4 Hydrogen",
+          description: "Balanced Gemini 4 model for strong reasoning and speed.",
         ),
         AiModelOption(
-          key: "gemini-1.5-pro",
-          label: "Gemini 1.5 Pro",
-          description: "Maximum reasoning capability for complex text and prompts.",
+          key: "gemini-4-carbon",
+          label: "Gemini 4 Carbon",
+          description: "High-capability Gemini 4 model for complex prompts and receipts.",
         ),
         AiModelOption(
-          key: "gemini-1.5-flash-8b",
-          label: "Gemini 1.5 Flash-8B",
-          description: "Ultra-high throughput, lowest latency.",
+          key: "gemini-4-argon",
+          label: "Gemini 4 Argon",
+          description: "Frontier Gemini 4 reasoning capability.",
         ),
       ];
 
@@ -36,9 +36,94 @@ class GeminiAiProvider extends BaseAiProvider {
     if (model == null ||
         model.trim().isEmpty ||
         model.trim().toLowerCase() == "default") {
-      return "gemini-1.5-flash";
+      return "gemini-3.8-flash";
     }
     return model.trim();
+  }
+
+  @override
+  Future<AiModelListResult> fetchAvailableModels({
+    String? apiKey,
+    String? customEndpoint,
+  }) async {
+    String key = (apiKey ?? "").trim();
+    if (key.isEmpty) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: "Enter a Gemini API key to fetch live models.",
+      );
+    }
+
+    try {
+      var resp = await http
+          .get(
+            Uri.parse(
+                "https://generativelanguage.googleapis.com/v1beta/models?key=$key"),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (resp.statusCode == 200) {
+        var decoded = jsonDecode(resp.body);
+        List<dynamic> rawModels = decoded["models"] as List<dynamic>? ?? [];
+        List<AiModelOption> fetched = [];
+        for (var item in rawModels) {
+          if (item is! Map) continue;
+          List<dynamic> methods =
+              item["supportedGenerationMethods"] as List<dynamic>? ?? [];
+          if (!methods.contains("generateContent")) continue;
+          String rawName = (item["name"] ?? "").toString();
+          String id = rawName.startsWith("models/")
+              ? rawName.substring("models/".length)
+              : rawName;
+          if (id.isEmpty) continue;
+          String lower = id.toLowerCase();
+          if (lower.contains("embedding") ||
+              lower.contains("imagen") ||
+              lower.contains("veo") ||
+              lower.contains("tts") ||
+              lower.contains("aqa") ||
+              lower.contains("robotics")) {
+            continue;
+          }
+          String label = (item["displayName"] ?? id).toString().trim();
+          String desc = (item["description"] ?? id).toString().trim();
+          fetched.add(AiModelOption(
+            key: id,
+            label: label.isEmpty ? id : label,
+            description: desc.isEmpty ? id : desc,
+            isDefault: id == providerType.defaultModel,
+          ));
+        }
+
+        if (fetched.isNotEmpty) {
+          fetched.sort((a, b) {
+            if (a.isDefault != b.isDefault) return a.isDefault ? -1 : 1;
+            return b.key.compareTo(a.key);
+          });
+          return AiModelListResult(models: fetched, fromApi: true);
+        }
+      }
+
+      String msg = "HTTP ${resp.statusCode}";
+      try {
+        var err = jsonDecode(resp.body);
+        if (err["error"]?["message"] != null) {
+          msg = err["error"]["message"].toString();
+        }
+      } catch (_) {}
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: msg,
+      );
+    } catch (e) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: e.toString().replaceFirst("Exception: ", ""),
+      );
+    }
   }
 
   @override

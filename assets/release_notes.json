@@ -1,16 +1,27 @@
 {
-  "version": "1.4.3+40",
-  "releaseName": "v1.4.3 Cashew Backup Compatibility & Category Polish",
-  "releasedDate": "2026-11-15",
-  "majorChanges": [
-    "🔄 Full Cashew v48 Backup Compatibility: Upgraded the local database schema from v46 to v48 so latest Cashew .sql/.sqlite backups restore cleanly",
-    "🏷️ Expanded Database Schema: Added support for tags, transaction tag links, archive flags, wallet emoji icons, and scanner template default titles"
-  ],
+  "version": "1.4.4+41",
+  "releaseName": "v1.4.4 Home UI Polish, Live AI Models & Notification Icon",
+  "releasedDate": "2026-11-16",
+  "majorChanges": [],
   "notes": [
-    "🍔 Category Polish: Renamed the default Dining category to Food with a vibrant orange fast-food icon",
-    "🛡️ Automatic Database Migration: Existing users smoothly migrate from schema v46 to v48 on app launch without data loss"
+    "🎨 Colored Grouped Account Amounts: Home screen grouped account balances and Color-group totals now match their account colors",
+    "🔔 Crisp Notification Icon: Replaced the Android status bar notification icon with a sharp 24dp Xpenzi vector icon",
+    "🤖 Live AI Model Picker: AI settings now fetch available models directly from Gemini, OpenAI, Claude, and custom/OpenRouter APIs with search and updated defaults"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.3+40",
+      "releaseName": "v1.4.3 Cashew Backup Compatibility & Category Polish",
+      "releasedDate": "2026-11-15",
+      "majorChanges": [
+        "🔄 Full Cashew v48 Backup Compatibility: Upgraded the local database schema from v46 to v48 so latest Cashew .sql/.sqlite backups restore cleanly",
+        "🏷️ Expanded Database Schema: Added support for tags, transaction tag links, archive flags, wallet emoji icons, and scanner template default titles"
+      ],
+      "notes": [
+        "🍔 Category Polish: Renamed the default Dining category to Food with a vibrant orange fast-food icon",
+        "🛡️ Automatic Database Migration: Existing users smoothly migrate from schema v46 to v48 on app launch without data loss"
+      ]
+    },
     {
       "version": "1.4.2+39",
       "releaseName": "v1.4.2 Backup Restore, CSV Import & UI Polish",

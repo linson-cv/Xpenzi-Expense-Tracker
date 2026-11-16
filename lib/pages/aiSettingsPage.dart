@@ -264,124 +264,26 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
 
     openBottomSheet(
       context,
-      PopupFramework(
-        title: "Select ${_selectedProviderType.displayName} Model",
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ...provider.availableModels.map((option) {
-              bool isSelected =
-                  currentModelKey.toLowerCase() == option.key.toLowerCase() ||
-                      (option.isDefault &&
-                          (currentModelKey.isEmpty ||
-                              currentModelKey.toLowerCase() == "default"));
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                child: Tappable(
-                  borderRadius: 14,
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
-                      : Colors.transparent,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    updateSettings(
-                      _selectedProviderType.modelSettingName,
-                      option.key,
-                      updateGlobalState: true,
-                    );
-                    popRoute(context);
-                    setState(() {});
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.12),
-                        width: isSelected ? 1.8 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  TextFont(
-                                    text: option.label,
-                                    fontSize: 14,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.w600,
-                                    textColor: isSelected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                  ),
-                                  if (option.isDefault) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: TextFont(
-                                        text: "Default",
-                                        fontSize: 10,
-                                        textColor: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-                              TextFont(
-                                text: option.description,
-                                fontSize: 12,
-                                textColor: getColor(context, "textLight"),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                title: const TextFont(text: "Custom Model Name..."),
-                subtitle: TextFont(
-                  text: "Specify any custom model identifier for this provider",
-                  fontSize: 12,
-                  textColor: getColor(context, "textLight"),
-                ),
-                leading: const Icon(Icons.edit_note_rounded),
-                onTap: () {
-                  popRoute(context);
-                  _openCustomModelDialog();
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
+      _ModelPickerSheet(
+        provider: provider,
+        providerType: _selectedProviderType,
+        currentModelKey: currentModelKey,
+        apiKey: _apiKeyController.text.trim(),
+        customEndpoint: _customEndpointController.text.trim(),
+        onSelectModel: (String modelKey) {
+          HapticFeedback.lightImpact();
+          updateSettings(
+            _selectedProviderType.modelSettingName,
+            modelKey,
+            updateGlobalState: true,
+          );
+          popRoute(context);
+          setState(() {});
+        },
+        onOpenCustomDialog: () {
+          popRoute(context);
+          _openCustomModelDialog();
+        },
       ),
     );
   }
@@ -1035,6 +937,276 @@ class _AiSettingsPageState extends State<AiSettingsPage> {
         ],
         const SizedBox(height: 40),
       ],
+    );
+  }
+}
+
+class _ModelPickerSheet extends StatefulWidget {
+  const _ModelPickerSheet({
+    required this.provider,
+    required this.providerType,
+    required this.currentModelKey,
+    required this.apiKey,
+    required this.customEndpoint,
+    required this.onSelectModel,
+    required this.onOpenCustomDialog,
+  });
+
+  final BaseAiProvider provider;
+  final AiProviderType providerType;
+  final String currentModelKey;
+  final String apiKey;
+  final String customEndpoint;
+  final ValueChanged<String> onSelectModel;
+  final VoidCallback onOpenCustomDialog;
+
+  @override
+  State<_ModelPickerSheet> createState() => _ModelPickerSheetState();
+}
+
+class _ModelPickerSheetState extends State<_ModelPickerSheet> {
+  bool _loading = true;
+  bool _fromApi = false;
+  String? _errorMessage;
+  List<AiModelOption> _models = [];
+  String _searchQuery = "";
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _models = widget.provider.availableModels;
+    _loadModels();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadModels() async {
+    setState(() {
+      _loading = true;
+    });
+    AiModelListResult result = await widget.provider.fetchAvailableModels(
+      apiKey: widget.apiKey,
+      customEndpoint: widget.customEndpoint,
+    );
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _models = result.models;
+      _fromApi = result.fromApi;
+      _errorMessage = result.errorMessage;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String q = _searchQuery.trim().toLowerCase();
+    final List<AiModelOption> filtered = q.isEmpty
+        ? _models
+        : _models
+            .where((m) =>
+                m.label.toLowerCase().contains(q) ||
+                m.key.toLowerCase().contains(q) ||
+                m.description.toLowerCase().contains(q))
+            .toList();
+
+    return PopupFramework(
+      title: "Select ${widget.providerType.displayName} Model",
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            child: Row(
+              children: [
+                Icon(
+                  _loading
+                      ? Icons.sync_rounded
+                      : _fromApi
+                          ? Icons.cloud_done_rounded
+                          : Icons.offline_bolt_rounded,
+                  size: 16,
+                  color: _fromApi
+                      ? Theme.of(context).colorScheme.primary
+                      : getColor(context, "textLight"),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: TextFont(
+                    text: _loading
+                        ? "Fetching models from ${widget.providerType.displayName}..."
+                        : _fromApi
+                            ? "Live from API (${_models.length} models)"
+                            : (_errorMessage ?? "Using default model list"),
+                    fontSize: 12,
+                    textColor: _fromApi
+                        ? Theme.of(context).colorScheme.primary
+                        : getColor(context, "textLight"),
+                    maxLines: 2,
+                  ),
+                ),
+                if (!_loading)
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    tooltip: "Refresh models",
+                    onPressed: _loadModels,
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
+          ),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+          if (_models.length > 6)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              child: TextInput(
+                labelText: "Search models...",
+                controller: _searchController,
+                icon: Icons.search_rounded,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+              ),
+            ),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.45,
+            ),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final option = filtered[index];
+                final bool isSelected =
+                    widget.currentModelKey.toLowerCase() ==
+                            option.key.toLowerCase() ||
+                        (option.isDefault &&
+                            (widget.currentModelKey.isEmpty ||
+                                widget.currentModelKey.toLowerCase() ==
+                                    "default"));
+
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  child: Tappable(
+                    borderRadius: 14,
+                    color: isSelected
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    onTap: () => widget.onSelectModel(option.key),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.12),
+                          width: isSelected ? 1.8 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: TextFont(
+                                        text: option.label,
+                                        fontSize: 14,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        textColor: isSelected
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : null,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                    if (option.isDefault) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.15),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: TextFont(
+                                          text: "Default",
+                                          fontSize: 10,
+                                          textColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                TextFont(
+                                  text: option.description,
+                                  fontSize: 12,
+                                  textColor: getColor(context, "textLight"),
+                                  maxLines: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            child: ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              title: const TextFont(text: "Custom Model Name..."),
+              subtitle: TextFont(
+                text: "Specify any custom model identifier for this provider",
+                fontSize: 12,
+                textColor: getColor(context, "textLight"),
+              ),
+              leading: const Icon(Icons.edit_note_rounded),
+              onTap: widget.onOpenCustomDialog,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
     );
   }
 }

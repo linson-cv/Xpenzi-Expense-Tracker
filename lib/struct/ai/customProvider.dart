@@ -48,6 +48,75 @@ class CustomAiProvider extends BaseAiProvider {
   }
 
   @override
+  Future<AiModelListResult> fetchAvailableModels({
+    String? apiKey,
+    String? customEndpoint,
+  }) async {
+    String baseUrl = _resolveBaseUrl(customEndpoint);
+    String key = (apiKey ?? "").trim();
+
+    try {
+      var resp = await http.get(
+        Uri.parse("$baseUrl/models"),
+        headers: {
+          if (key.isNotEmpty) "Authorization": "Bearer $key",
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (resp.statusCode == 200) {
+        var decoded = jsonDecode(resp.body);
+        List<dynamic> rawModels = (decoded["data"] as List<dynamic>?) ??
+            (decoded["models"] as List<dynamic>?) ??
+            [];
+        List<AiModelOption> fetched = [];
+        for (var item in rawModels) {
+          if (item is! Map) continue;
+          String id = (item["id"] ?? item["name"] ?? "").toString().trim();
+          if (id.isEmpty) continue;
+          String label = (item["name"] ?? id).toString().trim();
+          String desc = (item["description"] ?? id).toString().trim();
+          if (desc.length > 110) {
+            desc = "${desc.substring(0, 107)}...";
+          }
+          fetched.add(AiModelOption(
+            key: id,
+            label: label.isEmpty ? id : label,
+            description: desc.isEmpty ? id : desc,
+            isDefault: id == providerType.defaultModel,
+          ));
+        }
+
+        if (fetched.isNotEmpty) {
+          fetched.sort((a, b) {
+            if (a.isDefault != b.isDefault) return a.isDefault ? -1 : 1;
+            return a.label.toLowerCase().compareTo(b.label.toLowerCase());
+          });
+          return AiModelListResult(models: fetched, fromApi: true);
+        }
+      }
+
+      String msg = "HTTP ${resp.statusCode}";
+      try {
+        var err = jsonDecode(resp.body);
+        if (err["error"]?["message"] != null) {
+          msg = err["error"]["message"].toString();
+        }
+      } catch (_) {}
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: msg,
+      );
+    } catch (e) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: e.toString().replaceFirst("Exception: ", ""),
+      );
+    }
+  }
+
+  @override
   Future<AiConnectionTestResult> testConnection({
     String? apiKey,
     String? model,

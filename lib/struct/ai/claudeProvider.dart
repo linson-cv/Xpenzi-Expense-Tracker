@@ -10,15 +10,20 @@ class ClaudeProvider extends BaseAiProvider {
   @override
   List<AiModelOption> get availableModels => const [
         AiModelOption(
-          key: "claude-3-5-haiku-latest",
-          label: "Claude 3.5 Haiku",
+          key: "claude-haiku-5-5",
+          label: "Claude Haiku 5.5",
           description: "Recommended: Lightning-fast speed, low latency, and highly accurate.",
           isDefault: true,
         ),
         AiModelOption(
-          key: "claude-3-5-sonnet-latest",
-          label: "Claude 3.5 Sonnet",
-          description: "State-of-the-art reasoning for receipts and complex financial data.",
+          key: "claude-sonnet-5-5",
+          label: "Claude Sonnet 5.5",
+          description: "Balanced speed and intelligence for receipts and financial data.",
+        ),
+        AiModelOption(
+          key: "claude-opus-5-5",
+          label: "Claude Opus 5.5",
+          description: "Maximum reasoning capability for complex tasks.",
         ),
       ];
 
@@ -26,9 +31,83 @@ class ClaudeProvider extends BaseAiProvider {
     if (model == null ||
         model.trim().isEmpty ||
         model.trim().toLowerCase() == "default") {
-      return "claude-3-5-haiku-latest";
+      return "claude-haiku-5-5";
     }
     return model.trim();
+  }
+
+  @override
+  Future<AiModelListResult> fetchAvailableModels({
+    String? apiKey,
+    String? customEndpoint,
+  }) async {
+    String key = (apiKey ?? "").trim();
+    if (key.isEmpty) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: "Enter an Anthropic API key to fetch live models.",
+      );
+    }
+
+    try {
+      var resp = await http.get(
+        Uri.parse("https://api.anthropic.com/v1/models"),
+        headers: {
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (resp.statusCode == 200) {
+        var decoded = jsonDecode(resp.body);
+        List<dynamic> rawModels = decoded["data"] as List<dynamic>? ?? [];
+        List<AiModelOption> fetched = [];
+        for (var item in rawModels) {
+          if (item is! Map) continue;
+          String id = (item["id"] ?? "").toString().trim();
+          if (id.isEmpty) continue;
+          String displayName = (item["display_name"] ?? id).toString().trim();
+          bool isDefault = id == providerType.defaultModel ||
+              id.startsWith("${providerType.defaultModel}-");
+          fetched.add(AiModelOption(
+            key: id,
+            label: displayName.isEmpty ? id : displayName,
+            description: id,
+            isDefault: isDefault,
+          ));
+        }
+
+        if (fetched.isNotEmpty) {
+          fetched.sort((a, b) {
+            if (a.isDefault != b.isDefault) {
+              return a.isDefault ? -1 : 1;
+            }
+            return 0;
+          });
+          return AiModelListResult(models: fetched, fromApi: true);
+        }
+      }
+
+      String msg = "HTTP ${resp.statusCode}";
+      try {
+        var err = jsonDecode(resp.body);
+        if (err["error"]?["message"] != null) {
+          msg = err["error"]["message"].toString();
+        }
+      } catch (_) {}
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: msg,
+      );
+    } catch (e) {
+      return AiModelListResult(
+        models: availableModels,
+        fromApi: false,
+        errorMessage: e.toString().replaceFirst("Exception: ", ""),
+      );
+    }
   }
 
   @override

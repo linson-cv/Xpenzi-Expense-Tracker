@@ -190,6 +190,7 @@ class WalletEntryRow extends StatelessWidget {
     this.percent,
     this.closedColor,
     this.showAccountIcon = true,
+    this.useAccountColor = false,
   });
   final WalletWithDetails walletWithDetails;
   final bool selected;
@@ -197,6 +198,7 @@ class WalletEntryRow extends StatelessWidget {
   final double? percent;
   final Color? closedColor;
   final bool showAccountIcon;
+  final bool useAccountColor;
 
   @override
   Widget build(BuildContext context) {
@@ -330,6 +332,7 @@ class WalletEntryRow extends StatelessWidget {
                     walletWithDetails: walletWithDetails,
                     textAlign: TextAlign.end,
                     fontSize: 18,
+                    useAccountColor: useAccountColor && !isCurrencyRow,
                   )
                 ],
               ),
@@ -375,20 +378,27 @@ class AmountAccount extends StatelessWidget {
     required this.walletWithDetails,
     required this.textAlign,
     required this.fontSize,
+    this.useAccountColor = false,
     super.key,
   });
 
   final WalletWithDetails walletWithDetails;
   final TextAlign textAlign;
   final double fontSize;
+  final bool useAccountColor;
 
   @override
   Widget build(BuildContext context) {
     double? roundedWalletWithTotal = (double.tryParse(
         absoluteZero(walletWithDetails.totalSpent ?? 0)
             .toStringAsFixed(walletWithDetails.wallet.decimals)));
-    Color textColor =
-        appStateSettings["accountColorfulAmountsWithArrows"] == true
+    final String? colourHex = walletWithDetails.wallet.colour;
+    final Color accountColor = (colourHex != null && colourHex.isNotEmpty)
+        ? HexColor(colourHex, defaultColor: Theme.of(context).colorScheme.primary)
+        : Theme.of(context).colorScheme.primary;
+    Color textColor = useAccountColor
+        ? accountColor
+        : appStateSettings["accountColorfulAmountsWithArrows"] == true
             ? roundedWalletWithTotal == 0
                 ? getColor(context, "black")
                 : (walletWithDetails.totalSpent ?? 0) > 0
@@ -411,6 +421,7 @@ class AmountAccount extends StatelessWidget {
                 : IncomeOutcomeArrow(
                     key: const ValueKey(2),
                     isIncome: (walletWithDetails.totalSpent ?? 0) > 0,
+                    color: useAccountColor ? accountColor : null,
                     iconSize: 24,
                     width: 14,
                     height: 10,

@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Upward-right arrow stroke of Xpenzi X -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2.3,20.0 L14.3,8.0 L11.5,4.8 L20.5,3.5 L19.2,12.5 L16.0,9.7 L5.7,20.0 Z" />
+    <!-- Top-left arm of X -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M2.3,4.0 L5.7,4.0 L11.3,9.6 L9.6,11.3 Z" />
+    <!-- Bottom-right arm of X -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12.7,14.4 L14.4,12.7 L21.7,20.0 L18.3,20.0 Z" />
+</vector>
