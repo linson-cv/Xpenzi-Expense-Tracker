@@ -106,7 +106,7 @@ class AboutPageState extends State<AboutPage> {
                       ),
                       const SizedBox(width: 6),
                       TextFont(
-                        text: "Developed by LN.Dev",
+                        text: "Developed by Navlin Labs",
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),

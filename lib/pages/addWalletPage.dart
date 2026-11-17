@@ -69,6 +69,11 @@ class _AddWalletPageState extends State<AddWalletPage> {
   String selectedAccountType = "Bank Account";
   bool _userManuallySelectedAccountType = false;
   final FocusNode _titleFocusNode = FocusNode();
+  late final TextEditingController _accountIdController = TextEditingController(
+    text: widget.wallet != null
+        ? getWalletAccountIdentifiers(widget.wallet!.walletPk)
+        : "",
+  );
 
   String _getDefaultUserAccountType() {
     try {
@@ -120,12 +125,17 @@ class _AddWalletPageState extends State<AddWalletPage> {
     final int rowId = await database.createOrUpdateWallet(
         insert: widget.wallet == null, await createTransactionWallet());
 
+    final TransactionWallet walletSaved = widget.wallet ??
+        await database.getWalletFromRowId(rowId);
+    await setWalletAccountIdentifiers(
+      walletSaved.walletPk,
+      _accountIdController.text,
+    );
+
     // set initial amount
     if (widget.wallet == null && initialBalance != 0) {
-      final TransactionWallet walletJustAdded =
-          await database.getWalletFromRowId(rowId);
       await correctWalletBalance(context, initialBalance, initialBalance,
-          walletJustAdded, DateTime.now(), "");
+          walletSaved, DateTime.now(), "");
     }
 
     if (popContext) {
@@ -213,6 +223,7 @@ class _AddWalletPageState extends State<AddWalletPage> {
 
   @override
   void dispose() {
+    _accountIdController.dispose();
     super.dispose();
   }
 
@@ -549,8 +560,36 @@ class _AddWalletPageState extends State<AddWalletPage> {
               ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextInput(
+                    controller: _accountIdController,
+                    labelText: "Account / Card ID (e.g. 1710, 4321)",
+                    icon: appStateSettings["outlinedIcons"]
+                        ? Icons.tag_outlined
+                        : Icons.tag_rounded,
+                    padding: EdgeInsetsDirectional.zero,
+                  ),
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: TextFont(
+                      text:
+                          "Optional last 4 digits or IDs to match SMS & notifications",
+                      fontSize: 11.5,
+                      textColor: getColor(context, "textLight"),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SliverToBoxAdapter(
-            child: SizedBox(height: 14),
+            child: SizedBox(height: 10),
           ),
           SliverToBoxAdapter(
             child: SizedBox(

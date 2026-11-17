@@ -230,7 +230,6 @@ class HomePageWalletList extends StatelessWidget {
                                         walletWithDetails: w,
                                         closedColor: Colors.transparent,
                                         showAccountIcon: false,
-                                        useAccountColor: true,
                                       ),
                                     if (groupWallets.length > 1) ...[
                                       const SizedBox(height: 4),
@@ -369,7 +368,6 @@ class HomePageWalletList extends StatelessWidget {
                                             w.wallet.walletPk,
                                         walletWithDetails: w,
                                         closedColor: Colors.transparent,
-                                        useAccountColor: true,
                                       ),
                                     if (groupWallets.length > 1) ...[
                                       const SizedBox(height: 4),
@@ -410,7 +408,6 @@ class HomePageWalletList extends StatelessWidget {
                                                             end: 4),
                                                     child: IncomeOutcomeArrow(
                                                       isIncome: groupTotal > 0,
-                                                      color: groupColor,
                                                       iconSize: 24,
                                                       width: 14,
                                                       height: 10,
@@ -428,7 +425,21 @@ class HomePageWalletList extends StatelessWidget {
                                                   ),
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
-                                                  textColor: groupColor,
+                                                  textColor: appStateSettings[
+                                                              "accountColorfulAmountsWithArrows"] ==
+                                                          true
+                                                      ? (groupTotal == 0
+                                                          ? getColor(
+                                                              context, "black")
+                                                          : (groupTotal > 0
+                                                              ? getColor(
+                                                                  context,
+                                                                  "incomeAmount")
+                                                              : getColor(
+                                                                  context,
+                                                                  "expenseAmount")))
+                                                      : getColor(
+                                                          context, "black"),
                                                 ),
                                               ],
                                             ),

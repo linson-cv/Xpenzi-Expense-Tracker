@@ -38,19 +38,36 @@ class ReleaseNoteItem {
 }
 
 ReleaseNoteItem? _cachedReleaseNotes;
+List<ReleaseNoteItem>? _cachedAllReleaseNotes;
 
-Future<ReleaseNoteItem?> loadLatestReleaseNotes() async {
-  if (_cachedReleaseNotes != null) return _cachedReleaseNotes;
+Future<List<ReleaseNoteItem>> loadAllReleaseNotes() async {
+  if (_cachedAllReleaseNotes != null) return _cachedAllReleaseNotes!;
   try {
     final String jsonString =
         await rootBundle.loadString('assets/release_notes.json');
     final Map<String, dynamic> data = json.decode(jsonString);
-    _cachedReleaseNotes = ReleaseNoteItem.fromJson(data);
-    return _cachedReleaseNotes;
+    final List<ReleaseNoteItem> all = [ReleaseNoteItem.fromJson(data)];
+    final List<dynamic> prev = data['previousReleases'] as List<dynamic>? ?? [];
+    for (final item in prev) {
+      if (item is Map<String, dynamic>) {
+        all.add(ReleaseNoteItem.fromJson(item));
+      } else if (item is Map) {
+        all.add(ReleaseNoteItem.fromJson(Map<String, dynamic>.from(item)));
+      }
+    }
+    _cachedAllReleaseNotes = all;
+    _cachedReleaseNotes = all.first;
+    return all;
   } catch (e) {
     print('Error loading release_notes.json: $e');
-    return null;
+    return [];
   }
+}
+
+Future<ReleaseNoteItem?> loadLatestReleaseNotes() async {
+  if (_cachedReleaseNotes != null) return _cachedReleaseNotes;
+  final all = await loadAllReleaseNotes();
+  return all.isNotEmpty ? all.first : null;
 }
 
 bool showChangelog(
@@ -132,14 +149,21 @@ Widget buildReleaseContent(BuildContext context, ReleaseNoteItem release) {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.new_releases_rounded,
-                size: 18, color: Theme.of(context).colorScheme.primary),
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(Icons.new_releases_rounded,
+                  size: 18, color: Theme.of(context).colorScheme.primary),
+            ),
             const SizedBox(width: 8),
-            TextFont(
-              text: "${release.releaseName} • ${release.releasedDate}",
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            Flexible(
+              child: TextFont(
+                text: "${release.releaseName} • ${release.releasedDate}",
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                maxLines: 3,
+              ),
             ),
           ],
         ),

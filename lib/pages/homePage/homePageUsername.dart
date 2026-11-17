@@ -114,7 +114,8 @@ class HomePageUsername extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
                   final spent = snapshot.data!;
-                  final spentFormatted = convertToMoney(Provider.of<AllWallets>(context), spent);
+                  final spentFormatted = convertToMoney(
+                      Provider.of<AllWallets>(context), spent.abs());
                   final IconData statusIcon;
                   final String message;
                   if (spent == 0) {

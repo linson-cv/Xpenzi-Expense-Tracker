@@ -19,7 +19,7 @@
 - **Compatibility**: Maintain full backup/restore and CSV/JSON import compatibility with legacy Cashew files.
 
 ## 5. Architecture & Stack
-- **Database**: Drift (SQLite) in `lib/database/tables.dart`. Schema version: 46.
+- **Database**: Drift (SQLite) in `lib/database/tables.dart`. Schema version: 48.
 - **State & Preferences**: `appStateSettings` (`lib/struct/settings.dart`), `sharedPreferences`, `databaseGlobal.dart`.
 - **Localization**: `easy_localization` with CSV/JSON maps in `assets/translations/`.
 - **Core Modules**: Multi-wallet/currency, On-device offline SMS & notification intelligence, Gemini AI categorization, Goals/Loans, and Google Drive cloud backups.

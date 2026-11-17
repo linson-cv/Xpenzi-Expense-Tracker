@@ -965,6 +965,8 @@ class _ModelPickerSheet extends StatefulWidget {
 }
 
 class _ModelPickerSheetState extends State<_ModelPickerSheet> {
+  static final Map<String, AiModelListResult> _modelListCache = {};
+
   bool _loading = true;
   bool _fromApi = false;
   String? _errorMessage;
@@ -972,12 +974,22 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
   String _searchQuery = "";
   late final TextEditingController _searchController;
 
+  String get _cacheKey =>
+      "${widget.providerType.id}|${widget.apiKey}|${widget.customEndpoint}";
+
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _models = widget.provider.availableModels;
-    _loadModels();
+    final cached = _modelListCache[_cacheKey];
+    if (cached != null && cached.fromApi) {
+      _models = cached.models;
+      _fromApi = true;
+      _loading = false;
+    } else {
+      _models = widget.provider.availableModels;
+      _loadModels();
+    }
   }
 
   @override
@@ -986,7 +998,19 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
     super.dispose();
   }
 
-  Future<void> _loadModels() async {
+  Future<void> _loadModels({bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      final cached = _modelListCache[_cacheKey];
+      if (cached != null && cached.fromApi) {
+        setState(() {
+          _loading = false;
+          _models = cached.models;
+          _fromApi = true;
+          _errorMessage = null;
+        });
+        return;
+      }
+    }
     setState(() {
       _loading = true;
     });
@@ -994,6 +1018,9 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
       apiKey: widget.apiKey,
       customEndpoint: widget.customEndpoint,
     );
+    if (result.fromApi) {
+      _modelListCache[_cacheKey] = result;
+    }
     if (!mounted) return;
     setState(() {
       _loading = false;
@@ -1054,7 +1081,7 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
                   IconButton(
                     icon: const Icon(Icons.refresh_rounded, size: 18),
                     tooltip: "Refresh models",
-                    onPressed: _loadModels,
+                    onPressed: () => _loadModels(forceRefresh: true),
                     visualDensity: VisualDensity.compact,
                   ),
               ],

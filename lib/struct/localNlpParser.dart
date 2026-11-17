@@ -795,6 +795,13 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
       final TransactionWallet? userDefaultWallet = defaultWalletPk != null
           ? wallets.where((w) => w.walletPk == defaultWalletPk).firstOrNull
           : null;
+      Map<String, dynamic> typeDefaults = {};
+      try {
+        if (appStateSettings["defaultWalletByAccountType"] is Map) {
+          typeDefaults = Map<String, dynamic>.from(
+              appStateSettings["defaultWalletByAccountType"] as Map);
+        }
+      } catch (_) {}
 
       // Universal Multi-Signal Wallet / Account Scoring
       final String fullSearchText = "${input.toLowerCase()} $textLower";
@@ -839,11 +846,24 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
         final String wNameLower = w.name.trim().toLowerCase();
         final String wType = getWalletAccountType(w);
 
-        // Signal 1: Last 3-4 digits of card/account number match digits in wallet name
+        // Signal 1: Last 3-4 digits of card/account number or configured account IDs match
+        final List<String> identifierTokens =
+            getWalletAccountIdentifierTokens(w.walletPk);
+        bool matchedSignal1 = false;
         if (messageDigits.isNotEmpty) {
           for (final digits in messageDigits) {
-            if (wNameLower.contains(digits)) {
+            if (wNameLower.contains(digits) ||
+                identifierTokens.contains(digits.toLowerCase())) {
               score += 120;
+              matchedSignal1 = true;
+            }
+          }
+        }
+        if (!matchedSignal1 && identifierTokens.isNotEmpty) {
+          for (final token in identifierTokens) {
+            if (token.length >= 3 && fullSearchText.contains(token)) {
+              score += 100;
+              break;
             }
           }
         }
@@ -878,8 +898,10 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
           }
         }
 
-        // Signal 5: Tie-breaker preference for user's chosen default account
-        if (userDefaultWallet != null &&
+        // Signal 5: Tie-breaker preference for per-account-type default or global primary account
+        if (typeDefaults[wType]?.toString() == w.walletPk && score > 0) {
+          score += 20;
+        } else if (userDefaultWallet != null &&
             w.walletPk == userDefaultWallet.walletPk &&
             score > 0) {
           score += 5;
@@ -891,8 +913,20 @@ Future<LocalNlpParsedTransaction?> parseTransactionFromNotificationText(
         }
       }
 
-      // Use the highest-scoring matched wallet, or fall back to the user's chosen default account
-      matchedWallet = bestScoredWallet ?? userDefaultWallet ?? wallets.firstOrNull;
+      // Use the highest-scoring matched wallet, or fall back to type default / global default
+      TransactionWallet? typeFallbackWallet;
+      if (bestScoredWallet == null && inferredMsgAccountType.isNotEmpty) {
+        final String? typeDefaultPk =
+            typeDefaults[inferredMsgAccountType]?.toString();
+        if (typeDefaultPk != null && typeDefaultPk.isNotEmpty) {
+          typeFallbackWallet =
+              wallets.where((w) => w.walletPk == typeDefaultPk).firstOrNull;
+        }
+      }
+      matchedWallet = bestScoredWallet ??
+          typeFallbackWallet ??
+          userDefaultWallet ??
+          wallets.firstOrNull;
     } catch (_) {}
   }
 

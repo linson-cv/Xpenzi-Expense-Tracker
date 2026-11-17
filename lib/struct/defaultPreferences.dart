@@ -142,6 +142,9 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "notificationScanning": false,
     "accountColorfulAmountsWithArrows": true,
     "netTotalsColorful": true,
+    "groupWalletsByAccountType": true,
+    "defaultWalletByAccountType": <String, dynamic>{},
+    "walletAccountIdentifiers": <String, dynamic>{},
     "EmailAutoTransactions-amountOfEmails": 10,
     "autoBackups": true,
     "autoBackupsFrequency": 3, //in days

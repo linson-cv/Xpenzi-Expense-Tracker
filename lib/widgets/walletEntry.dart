@@ -190,7 +190,6 @@ class WalletEntryRow extends StatelessWidget {
     this.percent,
     this.closedColor,
     this.showAccountIcon = true,
-    this.useAccountColor = false,
   });
   final WalletWithDetails walletWithDetails;
   final bool selected;
@@ -198,7 +197,6 @@ class WalletEntryRow extends StatelessWidget {
   final double? percent;
   final Color? closedColor;
   final bool showAccountIcon;
-  final bool useAccountColor;
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +330,6 @@ class WalletEntryRow extends StatelessWidget {
                     walletWithDetails: walletWithDetails,
                     textAlign: TextAlign.end,
                     fontSize: 18,
-                    useAccountColor: useAccountColor && !isCurrencyRow,
                   )
                 ],
               ),
@@ -378,27 +375,20 @@ class AmountAccount extends StatelessWidget {
     required this.walletWithDetails,
     required this.textAlign,
     required this.fontSize,
-    this.useAccountColor = false,
     super.key,
   });
 
   final WalletWithDetails walletWithDetails;
   final TextAlign textAlign;
   final double fontSize;
-  final bool useAccountColor;
 
   @override
   Widget build(BuildContext context) {
     double? roundedWalletWithTotal = (double.tryParse(
         absoluteZero(walletWithDetails.totalSpent ?? 0)
             .toStringAsFixed(walletWithDetails.wallet.decimals)));
-    final String? colourHex = walletWithDetails.wallet.colour;
-    final Color accountColor = (colourHex != null && colourHex.isNotEmpty)
-        ? HexColor(colourHex, defaultColor: Theme.of(context).colorScheme.primary)
-        : Theme.of(context).colorScheme.primary;
-    Color textColor = useAccountColor
-        ? accountColor
-        : appStateSettings["accountColorfulAmountsWithArrows"] == true
+    Color textColor =
+        appStateSettings["accountColorfulAmountsWithArrows"] == true
             ? roundedWalletWithTotal == 0
                 ? getColor(context, "black")
                 : (walletWithDetails.totalSpent ?? 0) > 0
@@ -421,7 +411,6 @@ class AmountAccount extends StatelessWidget {
                 : IncomeOutcomeArrow(
                     key: const ValueKey(2),
                     isIncome: (walletWithDetails.totalSpent ?? 0) > 0,
-                    color: useAccountColor ? accountColor : null,
                     iconSize: 24,
                     width: 14,
                     height: 10,
@@ -562,20 +551,93 @@ String getWalletAccountType(TransactionWallet wallet) {
   );
 }
 
-IconData getWalletAccountIconData(TransactionWallet wallet) {
-  String accountType = getWalletAccountType(wallet);
+IconData getAccountTypeIconData(String accountType, {bool outlined = false}) {
   switch (accountType) {
     case "Credit Card":
-      return Icons.credit_card_rounded;
+      return outlined ? Icons.credit_card_outlined : Icons.credit_card_rounded;
     case "Meal Card":
-      return Icons.restaurant_rounded;
+      return outlined ? Icons.restaurant_outlined : Icons.restaurant_rounded;
     case "Cash":
-      return Icons.payments_rounded;
+      return outlined ? Icons.payments_outlined : Icons.payments_rounded;
     case "Savings":
-      return Icons.savings_rounded;
+      return outlined ? Icons.savings_outlined : Icons.savings_rounded;
     case "Bank Account":
-      return Icons.account_balance_rounded;
+      return outlined
+          ? Icons.account_balance_outlined
+          : Icons.account_balance_rounded;
     default:
-      return Icons.account_balance_wallet_rounded;
+      return outlined
+          ? Icons.account_balance_wallet_outlined
+          : Icons.account_balance_wallet_rounded;
   }
+}
+
+IconData getWalletAccountIconData(TransactionWallet wallet) {
+  return getAccountTypeIconData(getWalletAccountType(wallet));
+}
+
+String? getDefaultWalletPkForAccountType(String accountType) {
+  final raw = appStateSettings["defaultWalletByAccountType"];
+  if (raw is Map) {
+    final val = raw[accountType]?.toString();
+    if (val != null && val.isNotEmpty) return val;
+  }
+  return null;
+}
+
+Future<void> setDefaultWalletForAccountType(
+    String accountType, String? walletPk) async {
+  final Map<String, dynamic> updated = Map<String, dynamic>.from(
+    appStateSettings["defaultWalletByAccountType"] is Map
+        ? appStateSettings["defaultWalletByAccountType"] as Map
+        : const {},
+  );
+  if (walletPk == null || walletPk.isEmpty) {
+    updated.remove(accountType);
+  } else {
+    updated[accountType] = walletPk;
+  }
+  await updateSettings(
+    "defaultWalletByAccountType",
+    updated,
+    updateGlobalState: true,
+  );
+}
+
+String getWalletAccountIdentifiers(String walletPk) {
+  final raw = appStateSettings["walletAccountIdentifiers"];
+  if (raw is Map) {
+    return (raw[walletPk]?.toString() ?? "").trim();
+  }
+  return "";
+}
+
+List<String> getWalletAccountIdentifierTokens(String walletPk) {
+  final String raw = getWalletAccountIdentifiers(walletPk);
+  if (raw.isEmpty) return const [];
+  return raw
+      .split(RegExp(r'[\s,;]+'))
+      .map((t) => t.trim().toLowerCase())
+      .where((t) => t.isNotEmpty)
+      .toList();
+}
+
+Future<void> setWalletAccountIdentifiers(
+    String walletPk, String identifiers) async {
+  final Map<String, dynamic> updated = Map<String, dynamic>.from(
+    appStateSettings["walletAccountIdentifiers"] is Map
+        ? appStateSettings["walletAccountIdentifiers"] as Map
+        : const {},
+  );
+  final String cleaned = identifiers.trim();
+  if (cleaned.isEmpty) {
+    updated.remove(walletPk);
+  } else {
+    updated[walletPk] = cleaned;
+  }
+  await updateSettings(
+    "walletAccountIdentifiers",
+    updated,
+    updateGlobalState: true,
+  );
 }

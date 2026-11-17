@@ -1,14 +1,27 @@
 {
-  "version": "1.4.4+41",
-  "releaseName": "v1.4.4 Home UI Polish, Live AI Models & Notification Icon",
-  "releasedDate": "2026-11-16",
+  "version": "1.4.5+42",
+  "releaseName": "v1.4.5 UX Polish, Model Caching & Branding",
+  "releasedDate": "2026-11-17",
   "majorChanges": [],
   "notes": [
-    "🎨 Colored Grouped Account Amounts: Home screen grouped account balances and Color-group totals now match their account colors",
-    "🔔 Crisp Notification Icon: Replaced the Android status bar notification icon with a sharp 24dp Xpenzi vector icon",
-    "🤖 Live AI Model Picker: AI settings now fetch available models directly from Gemini, OpenAI, Claude, and custom/OpenRouter APIs with search and updated defaults"
+    "🗂️ Grouped Accounts & Type Defaults: Accounts screen now groups accounts by Account Type and lets you set a default account per type for smarter auto-added transactions",
+    "🔢 Account / Card ID Matching: Add optional last-4 digits or IDs to any account so SMS & notification auto-detection matches the exact card or bank account",
+    "💚❤️ Weekly Spend & Account Polish: Cleaned up the home screen weekly spend banner to display positive spend amounts and kept green/red directional arrows on grouped account balances and totals",
+    "⚡ Instant AI Model Picker: Added in-memory caching for live provider model lists with one-tap manual refresh",
+    "🏷️ About Page Branding: Updated developer attribution to Navlin Labs"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.4+41",
+      "releaseName": "v1.4.4 Home UI Polish, Live AI Models & Notification Icon",
+      "releasedDate": "2026-11-16",
+      "majorChanges": [],
+      "notes": [
+        "💚❤️ Colorful Account Totals & Weekly Spend Polish: Restored green/red income/expense colors with directional arrows on grouped account balances and removed the negative sign from the weekly spend banner",
+        "🔔 Crisp Notification Icon: Replaced the Android status bar notification icon with a sharp 24dp Xpenzi vector icon",
+        "🤖 Live AI Model Picker: AI settings now fetch available models directly from Gemini, OpenAI, Claude, and custom/OpenRouter APIs with search and updated defaults"
+      ]
+    },
     {
       "version": "1.4.3+40",
       "releaseName": "v1.4.3 Cashew Backup Compatibility & Category Polish",

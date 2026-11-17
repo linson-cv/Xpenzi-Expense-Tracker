@@ -17,16 +17,31 @@ class DetailedChangelogPage extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: FutureBuilder<ReleaseNoteItem?>(
-              future: loadLatestReleaseNotes(),
+            child: FutureBuilder<List<ReleaseNoteItem>>(
+              future: loadAllReleaseNotes(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data == null) {
+                if (!snapshot.hasData) {
                   return const SizedBox(
                     height: 120,
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
-                return buildReleaseContent(context, snapshot.data!);
+                final releases = snapshot.data!;
+                if (releases.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (int i = 0; i < releases.length; i++) ...[
+                      if (i > 0) ...[
+                        const Divider(height: 32),
+                        const SizedBox(height: 4),
+                      ],
+                      buildReleaseContent(context, releases[i]),
+                    ],
+                  ],
+                );
               },
             ),
           ),

@@ -16,6 +16,7 @@ import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:budget/widgets/navigationFramework.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
+import 'package:budget/widgets/walletEntry.dart';
 import 'package:budget/struct/backgroundNotificationHandler.dart';
 import 'package:budget/struct/errorLog.dart';
 import 'package:flutter/material.dart';
@@ -1361,7 +1362,20 @@ Future queueTransactionFromMessage(String messageString,
       if (wallet == null) {
         try {
           List<TransactionWallet> allW = await database.getAllWallets();
-          wallet = allW.where((w) => w.walletPk == appStateSettings["selectedWalletPk"]).firstOrNull ?? allW.firstOrNull;
+          final String inferredType = inferAccountTypeFromName(
+            "$title $transactionNote",
+            defaultType: "",
+          );
+          final String? typeDefaultPk = inferredType.isNotEmpty
+              ? getDefaultWalletPkForAccountType(inferredType)
+              : null;
+          if (typeDefaultPk != null) {
+            wallet = allW.where((w) => w.walletPk == typeDefaultPk).firstOrNull;
+          }
+          wallet ??= allW
+                  .where((w) => w.walletPk == appStateSettings["selectedWalletPk"])
+                  .firstOrNull ??
+              allW.firstOrNull;
         } catch (_) {}
       }
       String walletPk = wallet?.walletPk ?? "0";

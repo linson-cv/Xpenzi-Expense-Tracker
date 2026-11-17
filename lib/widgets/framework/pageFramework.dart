@@ -961,8 +961,17 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
         String titleString = capitalizeTitle ? title.capitalizeFirst : title;
         return FlexibleSpaceBar(
           centerTitle: centeredTitleWithDefault,
-          titlePadding:
-              const EdgeInsetsDirectional.symmetric(vertical: 15, horizontal: 18),
+          titlePadding: EdgeInsetsDirectional.only(
+            top: 15,
+            bottom: 15,
+            start: 18,
+            end: 18 +
+                (actions != null &&
+                        actions!.isNotEmpty &&
+                        !centeredTitleWithDefault
+                    ? actions!.length * 44.0 * percent
+                    : 0),
+          ),
           title: MediaQuery(
             data: MediaQuery.of(context)
                 .copyWith(textScaler: const TextScaler.linear(1.0)),
@@ -981,12 +990,15 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
                     ),
               child: Transform.scale(
                 scale: percent * 0.15 + 1,
+                alignment: centeredTitleWithDefault
+                    ? Alignment.center
+                    : AlignmentDirectional.centerStart,
                 child: titleWidget ??
                     AnimatedSizeSwitcher(
                       child: TextFont(
                         key: ValueKey(titleString),
                         text: titleString,
-                        maxLines: 2,
+                        maxLines: percent > 0.5 ? 1 : 2,
                         autoSizeText: true,
                         minFontSize: centeredTitleSmallWithDefault ? 13 : 16,
                         overflow: TextOverflow.ellipsis,
