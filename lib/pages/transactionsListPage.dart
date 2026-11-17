@@ -235,7 +235,6 @@ class TransactionsListPageState extends State<TransactionsListPage>
               ),
             );
           },
-          padding: const EdgeInsetsDirectional.all(15),
           icon: Icon(
             appStateSettings["outlinedIcons"]
                 ? Icons.settings_outlined
