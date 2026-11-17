@@ -126,6 +126,12 @@ Future<bool> initializeSettings() async {
   fixHomePageOrder(defaultPreferences, "homePageOrder");
   fixHomePageOrder(defaultPreferences, "homePageOrderFullScreen");
 
+  // One-time migration for v1.4.6+: enable colorful account amounts & arrows for existing/restored installs
+  if (appStateSettings["migratedAccountColorfulAmountsV146"] != true) {
+    appStateSettings["accountColorfulAmountsWithArrows"] = true;
+    appStateSettings["migratedAccountColorfulAmountsV146"] = true;
+  }
+
   // save settings
   await sharedPreferences.setString(
       "userSettings", json.encode(appStateSettings));

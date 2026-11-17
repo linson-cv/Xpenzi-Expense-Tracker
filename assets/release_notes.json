@@ -1,14 +1,25 @@
 {
-  "version": "1.4.6+43",
-  "releaseName": "v1.4.6 Header Spacing, Full Changelog & UI Fixes",
+  "version": "1.4.7+44",
+  "releaseName": "v1.4.7 Dynamic App Bar, Account Balance Migration & UI Polish",
   "releasedDate": "2026-11-17",
   "majorChanges": [],
   "notes": [
-    "🧭 Transactions Top Bar Polish: Fixed collapsed header spacing and compacted action buttons so the title no longer overlaps the Ask AI icon while scrolling",
-    "📜 Full Changelog History: What's New & Changelog now display all previous releases with cleanly wrapping release title badges",
-    "💚❤️ Account Balance Colors & Arrows: Ensured colorful green/red account totals and directional arrows default on cleanly across restored or upgraded settings"
+    "🧭 Dynamic Top Bar Overflow: App bars across the app now automatically group extra action buttons into a More (⋮) menu on narrower screens so titles never overlap icons",
+    "💚❤️ Automatic Account Colors & Arrows: Migrated existing and restored settings so home screen account balances and totals display green/red colors with directional arrows",
+    "📜 Full Changelog History: Changelog now displays all previous releases with cleanly wrapping release title badges"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.6+43",
+      "releaseName": "v1.4.6 Header Spacing, Full Changelog & UI Fixes",
+      "releasedDate": "2026-11-17",
+      "majorChanges": [],
+      "notes": [
+        "🧭 Transactions Top Bar Polish: Fixed collapsed header spacing and compacted action buttons so the title no longer overlaps the Ask AI icon while scrolling",
+        "📜 Full Changelog History: What's New & Changelog now display all previous releases with cleanly wrapping release title badges",
+        "💚❤️ Account Balance Colors & Arrows: Ensured colorful green/red account totals and directional arrows default on cleanly across restored or upgraded settings"
+      ]
+    },
     {
       "version": "1.4.5+42",
       "releaseName": "v1.4.5 UX Polish, Model Caching & Branding",

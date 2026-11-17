@@ -959,6 +959,8 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
                 (expandedHeightCalculated - collapsedHeight);
         if (collapsedHeight == expandedHeightCalculated) percent = 1;
         final double clampedPercent = percent.clamp(0.0, 1.0);
+        final int visibleActionCount =
+            getVisibleActionsCount(context, actions);
         String titleString = capitalizeTitle ? title.capitalizeFirst : title;
         return FlexibleSpaceBar(
           centerTitle: centeredTitleWithDefault,
@@ -967,10 +969,8 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
             bottom: 15,
             start: 18,
             end: 18 +
-                (actions != null &&
-                        actions!.isNotEmpty &&
-                        !centeredTitleWithDefault
-                    ? actions!.length * 36.0 * clampedPercent
+                (visibleActionCount > 0 && !centeredTitleWithDefault
+                    ? visibleActionCount * 40.0 * clampedPercent
                     : 0),
           ),
           title: MediaQuery(
@@ -990,7 +990,9 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
                       -(subtitleSize ?? 0) * (1 - percent) + -0.5 * percent,
                     ),
               child: Transform.scale(
-                scale: percent * 0.15 + 1,
+                scale: (centeredTitleWithDefault || visibleActionCount <= 2)
+                    ? (percent * 0.15 + 1)
+                    : 1.0,
                 alignment: centeredTitleWithDefault
                     ? Alignment.center
                     : AlignmentDirectional.centerStart,
@@ -1280,10 +1282,96 @@ List<Widget> getAppBarBackgroundColorLayers({
   ];
 }
 
+int getMaxVisibleAppBarActions(BuildContext context, int totalCount) {
+  final double width = MediaQuery.sizeOf(context).width;
+  if (width < 360) return 2;
+  if (width < 430) return 3;
+  if (width < 560) return 4;
+  return totalCount;
+}
+
+int getVisibleActionsCount(BuildContext context, List<Widget>? actions) {
+  final int total = actions?.length ?? 0;
+  if (total == 0) return 0;
+  final int maxVisible = getMaxVisibleAppBarActions(context, total);
+  return total > maxVisible ? maxVisible : total;
+}
+
 List<Widget> pushActionsTogether(BuildContext context, List<Widget>? actions) {
-  return (actions ?? []).asMap().entries.map((action) {
+  final List<Widget> allActions = actions ?? [];
+  if (allActions.isEmpty) return [];
+
+  final int maxVisible =
+      getMaxVisibleAppBarActions(context, allActions.length);
+  List<Widget> displayActions = allActions;
+
+  if (allActions.length > maxVisible && maxVisible >= 2) {
+    final int keepCount = maxVisible - 1;
+    final List<Widget> visible = allActions.sublist(0, keepCount);
+    final List<Widget> overflow = allActions.sublist(keepCount);
+
+    final Widget moreButton = PopupMenuButton<int>(
+      tooltip: "More",
+      padding: const EdgeInsetsDirectional.all(6),
+      constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+      icon: Icon(
+        appStateSettings["outlinedIcons"]
+            ? Icons.more_vert_outlined
+            : Icons.more_vert_rounded,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      onSelected: (int index) {
+        final Widget item = overflow[index];
+        if (item is IconButton && item.onPressed != null) {
+          item.onPressed!();
+        }
+      },
+      itemBuilder: (BuildContext ctx) {
+        return overflow.asMap().entries.map((entry) {
+          final int idx = entry.key;
+          final Widget item = entry.value;
+          if (item is IconButton) {
+            final String label = (item.tooltip ?? "").trim().isNotEmpty
+                ? item.tooltip!.capitalizeFirst
+                : "Option";
+            return PopupMenuItem<int>(
+              value: idx,
+              enabled: item.onPressed != null,
+              child: Row(
+                children: [
+                  IconTheme(
+                    data: IconThemeData(
+                      size: 20,
+                      color: Theme.of(ctx).colorScheme.onSurface,
+                    ),
+                    child: item.icon,
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: TextFont(
+                      text: label,
+                      fontSize: 14,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return PopupMenuItem<int>(
+            value: idx,
+            child: item,
+          );
+        }).toList();
+      },
+    );
+
+    displayActions = [...visible, moreButton];
+  }
+
+  return displayActions.asMap().entries.map((action) {
     int idx = action.key;
-    int length = (actions ?? []).length;
+    int length = displayActions.length;
     Widget widget = action.value;
     double offsetX = (length - 1 - idx) * 7;
     return Transform.translate(
