@@ -157,7 +157,8 @@ class TransactionsListPageState extends State<TransactionsListPage>
       scrollbar: false,
       actions: [
         IconButton(
-          padding: const EdgeInsetsDirectional.all(15 - 8),
+          padding: const EdgeInsetsDirectional.all(6),
+          constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
           tooltip: "Ask AI",
           onPressed: () {
             openAskAiBottomSheet(context);
@@ -165,7 +166,8 @@ class TransactionsListPageState extends State<TransactionsListPage>
           icon: const Icon(Icons.auto_awesome_rounded),
         ),
         IconButton(
-          padding: const EdgeInsetsDirectional.all(15 - 8),
+          padding: const EdgeInsetsDirectional.all(6),
+          constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
           tooltip: "search-transactions".tr(),
           onPressed: () {
             pushRoute(context, const TransactionsSearchPage());
@@ -181,7 +183,8 @@ class TransactionsListPageState extends State<TransactionsListPage>
           onPressed: () {
             selectFilters(context);
           },
-          padding: const EdgeInsetsDirectional.all(15 - 8),
+          padding: const EdgeInsetsDirectional.all(6),
+          constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
           icon: SelectedIconForIconButton(
             iconData: appStateSettings["outlinedIcons"]
                 ? Icons.filter_alt_outlined
@@ -194,7 +197,8 @@ class TransactionsListPageState extends State<TransactionsListPage>
           onPressed: () {
             selectSort(context);
           },
-          padding: const EdgeInsetsDirectional.all(15 - 8),
+          padding: const EdgeInsetsDirectional.all(6),
+          constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
           icon: SelectedIconForIconButton(
             iconData: appStateSettings["outlinedIcons"]
                 ? Icons.sort_outlined
@@ -204,6 +208,8 @@ class TransactionsListPageState extends State<TransactionsListPage>
         ),
         IconButton(
           tooltip: "preferences".tr(),
+          padding: const EdgeInsetsDirectional.all(6),
+          constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
           onPressed: () {
             openBottomSheet(
               context,

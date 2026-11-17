@@ -958,6 +958,7 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
                     MediaQuery.paddingOf(context).top) /
                 (expandedHeightCalculated - collapsedHeight);
         if (collapsedHeight == expandedHeightCalculated) percent = 1;
+        final double clampedPercent = percent.clamp(0.0, 1.0);
         String titleString = capitalizeTitle ? title.capitalizeFirst : title;
         return FlexibleSpaceBar(
           centerTitle: centeredTitleWithDefault,
@@ -969,7 +970,7 @@ class PageFrameworkSliverAppBar extends StatelessWidget {
                 (actions != null &&
                         actions!.isNotEmpty &&
                         !centeredTitleWithDefault
-                    ? actions!.length * 44.0 * percent
+                    ? actions!.length * 36.0 * clampedPercent
                     : 0),
           ),
           title: MediaQuery(

@@ -387,22 +387,22 @@ class AmountAccount extends StatelessWidget {
     double? roundedWalletWithTotal = (double.tryParse(
         absoluteZero(walletWithDetails.totalSpent ?? 0)
             .toStringAsFixed(walletWithDetails.wallet.decimals)));
-    Color textColor =
-        appStateSettings["accountColorfulAmountsWithArrows"] == true
-            ? roundedWalletWithTotal == 0
-                ? getColor(context, "black")
-                : (walletWithDetails.totalSpent ?? 0) > 0
-                    ? getColor(context, "incomeAmount")
-                    : getColor(context, "expenseAmount")
-            : getColor(context, "black");
-    double finalTotal =
-        appStateSettings["accountColorfulAmountsWithArrows"] == true
-            ? (walletWithDetails.totalSpent ?? 0).abs()
-            : (absoluteZero(walletWithDetails.totalSpent ?? 0));
+    final bool colorfulWithArrows =
+        appStateSettings["accountColorfulAmountsWithArrows"] != false;
+    Color textColor = colorfulWithArrows
+        ? roundedWalletWithTotal == 0
+            ? getColor(context, "black")
+            : (walletWithDetails.totalSpent ?? 0) > 0
+                ? getColor(context, "incomeAmount")
+                : getColor(context, "expenseAmount")
+        : getColor(context, "black");
+    double finalTotal = colorfulWithArrows
+        ? (walletWithDetails.totalSpent ?? 0).abs()
+        : (absoluteZero(walletWithDetails.totalSpent ?? 0));
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (appStateSettings["accountColorfulAmountsWithArrows"] == true)
+        if (colorfulWithArrows)
           AnimatedSizeSwitcher(
             child: roundedWalletWithTotal == 0
                 ? Container(

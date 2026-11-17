@@ -1,16 +1,27 @@
 {
-  "version": "1.4.5+42",
-  "releaseName": "v1.4.5 UX Polish, Model Caching & Branding",
+  "version": "1.4.6+43",
+  "releaseName": "v1.4.6 Header Spacing, Full Changelog & UI Fixes",
   "releasedDate": "2026-11-17",
   "majorChanges": [],
   "notes": [
-    "🗂️ Grouped Accounts & Type Defaults: Accounts screen now groups accounts by Account Type and lets you set a default account per type for smarter auto-added transactions",
-    "🔢 Account / Card ID Matching: Add optional last-4 digits or IDs to any account so SMS & notification auto-detection matches the exact card or bank account",
-    "💚❤️ Weekly Spend & Account Polish: Cleaned up the home screen weekly spend banner to display positive spend amounts and kept green/red directional arrows on grouped account balances and totals",
-    "⚡ Instant AI Model Picker: Added in-memory caching for live provider model lists with one-tap manual refresh",
-    "🏷️ About Page Branding: Updated developer attribution to Navlin Labs"
+    "🧭 Transactions Top Bar Polish: Fixed collapsed header spacing and compacted action buttons so the title no longer overlaps the Ask AI icon while scrolling",
+    "📜 Full Changelog History: What's New & Changelog now display all previous releases with cleanly wrapping release title badges",
+    "💚❤️ Account Balance Colors & Arrows: Ensured colorful green/red account totals and directional arrows default on cleanly across restored or upgraded settings"
   ],
   "previousReleases": [
+    {
+      "version": "1.4.5+42",
+      "releaseName": "v1.4.5 UX Polish, Model Caching & Branding",
+      "releasedDate": "2026-11-17",
+      "majorChanges": [],
+      "notes": [
+        "🗂️ Grouped Accounts & Type Defaults: Accounts screen now groups accounts by Account Type and lets you set a default account per type for smarter auto-added transactions",
+        "🔢 Account / Card ID Matching: Add optional last-4 digits or IDs to any account so SMS & notification auto-detection matches the exact card or bank account",
+        "💚❤️ Weekly Spend & Account Polish: Cleaned up the home screen weekly spend banner to display positive spend amounts and kept green/red directional arrows on grouped account balances and totals",
+        "⚡ Instant AI Model Picker: Added in-memory caching for live provider model lists with one-tap manual refresh",
+        "🏷️ About Page Branding: Updated developer attribution to Navlin Labs"
+      ]
+    },
     {
       "version": "1.4.4+41",
       "releaseName": "v1.4.4 Home UI Polish, Live AI Models & Notification Icon",

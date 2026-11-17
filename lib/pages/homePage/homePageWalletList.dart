@@ -271,8 +271,8 @@ class HomePageWalletList extends StatelessWidget {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 if (appStateSettings[
-                                                            "accountColorfulAmountsWithArrows"] ==
-                                                        true &&
+                                                            "accountColorfulAmountsWithArrows"] !=
+                                                        false &&
                                                     groupTotal != 0)
                                                   Padding(
                                                     padding:
@@ -290,16 +290,16 @@ class HomePageWalletList extends StatelessWidget {
                                                     Provider.of<AllWallets>(
                                                         context),
                                                     appStateSettings[
-                                                                "accountColorfulAmountsWithArrows"] ==
-                                                            true
+                                                                "accountColorfulAmountsWithArrows"] !=
+                                                            false
                                                         ? groupTotal.abs()
                                                         : groupTotal,
                                                   ),
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.bold,
                                                   textColor: appStateSettings[
-                                                              "accountColorfulAmountsWithArrows"] ==
-                                                          true
+                                                              "accountColorfulAmountsWithArrows"] !=
+                                                          false
                                                       ? (groupTotal == 0
                                                           ? getColor(
                                                               context, "black")
@@ -399,8 +399,8 @@ class HomePageWalletList extends StatelessWidget {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 if (appStateSettings[
-                                                            "accountColorfulAmountsWithArrows"] ==
-                                                        true &&
+                                                            "accountColorfulAmountsWithArrows"] !=
+                                                        false &&
                                                     groupTotal != 0)
                                                   Padding(
                                                     padding:
@@ -418,16 +418,16 @@ class HomePageWalletList extends StatelessWidget {
                                                     Provider.of<AllWallets>(
                                                         context),
                                                     appStateSettings[
-                                                                "accountColorfulAmountsWithArrows"] ==
-                                                            true
+                                                                "accountColorfulAmountsWithArrows"] !=
+                                                            false
                                                         ? groupTotal.abs()
                                                         : groupTotal,
                                                   ),
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
                                                   textColor: appStateSettings[
-                                                              "accountColorfulAmountsWithArrows"] ==
-                                                          true
+                                                              "accountColorfulAmountsWithArrows"] !=
+                                                          false
                                                       ? (groupTotal == 0
                                                           ? getColor(
                                                               context, "black")
